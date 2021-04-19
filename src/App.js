@@ -1,5 +1,22 @@
+import React, { useState, useEffect } from 'react';
 import logo from './logo.svg';
 import './App.css';
+
+
+const Time = () => {
+  const [currentTime, setCurrentTime] = useState(0);
+
+  useEffect(() => {
+    fetch('/api/time/')
+      .then(res => res.json())
+      .then(data => {
+        setCurrentTime(data.time);
+      });
+  }, []);
+
+  return <p>The current time is {(new Date(currentTime)).toTimeString()}.</p>;
+}
+
 
 function App() {
   return (
@@ -17,6 +34,7 @@ function App() {
         >
           Learn React
         </a>
+        <Time />
       </header>
     </div>
   );

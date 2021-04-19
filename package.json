@@ -19,6 +19,7 @@
     "api": "cd api/ && FLASK_ENV='development' ${npm_config_api_venv}/flask run -h localhost -p 5000 --no-debugger",
     "drf": "cd drf/ && ${npm_config_drf_venv}/python manage.py runserver localhost:5000"
   },
+  "proxy": "http://localhost:5000",
   "eslintConfig": {
     "extends": [
       "react-app",
