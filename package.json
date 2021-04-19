@@ -15,7 +15,8 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "api": "cd api/ && FLASK_ENV='development' ${npm_config_api_venv}/flask run -h localhost -p 5000 --no-debugger"
   },
   "eslintConfig": {
     "extends": [
