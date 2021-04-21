@@ -31,12 +31,18 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    # default
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
+    # local
+    'users.apps.UsersConfig',
+
+    # 3rd party
 ]
 
 MIDDLEWARE = [
@@ -123,3 +129,11 @@ STATIC_URL = '/static/'
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+
+# It is highly recommended to set up a custom user model when starting a new Django project
+# https://docs.djangoproject.com/en/3.1/topics/auth/customizing/#using-a-custom-user-model-when-starting-a-project
+# The model referenced by AUTH_USER_MODEL must be created in the first migration 
+# of its app (usually called 0001_initial); otherwise, you’ll have dependency issues.
+AUTH_USER_MODEL = 'users.CustomUser'
