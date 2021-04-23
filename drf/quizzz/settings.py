@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'users.apps.UsersConfig',
 
     # 3rd party
+    'rest_framework',
 ]
 
 MIDDLEWARE = [
@@ -137,3 +138,12 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # The model referenced by AUTH_USER_MODEL must be created in the first migration 
 # of its app (usually called 0001_initial); otherwise, you’ll have dependency issues.
 AUTH_USER_MODEL = 'users.CustomUser'
+
+        
+# By default, 'rest_framework.authentication.BasicAuthentication' is the first in the list.
+# I remove it for clarity because I am using SessionAuthentication.
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',
+    ]
+}

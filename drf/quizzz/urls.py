@@ -14,13 +14,10 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
-from django.conf.urls import url
-
-from .views import get_current_time
+from django.urls import path, include
 
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    url('api/time/', get_current_time),
+    path('api/', include('users.urls')),
 ]
