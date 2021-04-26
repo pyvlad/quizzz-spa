@@ -1,21 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import logo from './logo.svg';
 import './App.css';
 
-
-const Time = () => {
-  const [currentTime, setCurrentTime] = useState(0);
-
-  useEffect(() => {
-    fetch('/api/time/')
-      .then(res => res.json())
-      .then(data => {
-        setCurrentTime(data.time);
-      });
-  }, []);
-
-  return <p>The current time is {(new Date(currentTime)).toTimeString()}.</p>;
-}
+import Auth from 'components/Auth';
+import Time from 'components/Time';
 
 
 function App() {
@@ -34,7 +22,9 @@ function App() {
         >
           Learn React
         </a>
-        <Time />
+        <Auth>
+          <Time />
+        </Auth>
       </header>
     </div>
   );

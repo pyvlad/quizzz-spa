@@ -21,3 +21,7 @@ There are two backends developed in parallel for study purposes:
 
 Run one backend at a time via `$ npm run api` or `$ npm run drf` from another terminal.
 To run these commands, define `api_venv` and `drf_venv` in an `.nrpmc` file (as paths to the /bin directories of the respective virtual environments).
+
+# Frontend
+
+- 'jsconfig.json' is needed for absolute imports - see [details](https://create-react-app.dev/docs/importing-a-component/#absolute-imports). This feature was introduced in CRA3 and replaced the use of $NODE_PATH environment variable - see [create-react-app/packages/react-scripts/config/modules.js] (https://github.com/facebook/create-react-app/blob/4b8b38bf7c55326f8d51ea9deeea76d7feee307d/packages/react-scripts/config/modules.js#L21).
