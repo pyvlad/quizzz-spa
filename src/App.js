@@ -2,8 +2,7 @@ import React from 'react';
 import logo from './logo.svg';
 import './App.css';
 
-import Auth from 'components/Auth';
-import Time from 'components/Time';
+import MyApp from 'app/MyApp';
 
 
 function App() {
@@ -22,9 +21,7 @@ function App() {
         >
           Learn React
         </a>
-        <Auth>
-          <Time />
-        </Auth>
+        <MyApp />
       </header>
     </div>
   );

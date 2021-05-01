@@ -1,16 +1,11 @@
 import React from 'react';
 
-import { logout } from 'api';
 
-
-const LogoutForm = ({ onSuccess, onFail }) => {
+const LogoutForm = ({ submitForm }) => {
+  
   const handleSubmit = (event) => {
     event.preventDefault();
-    logout()
-      .then(({ status }) => {
-        if (status === 200) onSuccess();
-        else onFail();
-      });
+    submitForm();
   }
 
   return (

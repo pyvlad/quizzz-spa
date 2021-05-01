@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { fetchCurrentTime } from 'api';
+import { fetchCurrentTime } from './api';
 
 
 const Time = () => {
