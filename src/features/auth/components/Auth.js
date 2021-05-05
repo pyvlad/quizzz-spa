@@ -1,7 +1,8 @@
 import React from 'react';
 import { connect } from 'react-redux';
 
-import { sendLoginRequest, sendLogoutRequest, sendUserRequest } from '../actions';
+import { sendLoginRequest, sendLogoutRequest, sendUserRequest } from '../authSlice';
+import { selectUser, selectAuthenticated, selectMessage } from '../authSlice';
 import User from './User';
 import LoginForm from './LoginForm';
 import LogoutForm from './LogoutForm';
@@ -38,13 +39,13 @@ const Auth = ({ authenticated, user, message,
 }
 
 
-// Now this a container component, completely self-sufficient
+// Now this is a container component, completely self-sufficient
 // and can be used inside presentational components without passing extra props
 const AuthContainer = connect(
   (state, ownProps) => ({ 
-    authenticated: state.auth.authenticated,
-    user: state.auth.user,
-    message: state.auth.message,
+    authenticated: selectAuthenticated(state),
+    user: selectUser(state),
+    message: selectMessage(state),
   }),
   {
     sendLoginRequest, 

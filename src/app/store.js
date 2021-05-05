@@ -1,21 +1,27 @@
-import { createStore, applyMiddleware, compose, combineReducers } from 'redux';
-import thunk from 'redux-thunk';
-
+import { configureStore } from '@reduxjs/toolkit';
+import { authReducer } from 'features/auth';
 import logger from './logger';
 
-import { authReducer } from 'features/auth';
 
+export default configureStore({
+  reducer: {
+    auth: authReducer
+  },
+  middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(logger),
+})
+// https://redux-toolkit.js.org/api/configureStore
+// accepts a single configuration object parameter, with the following options:
+//  "reducer" [required]: function / object to pass to "combineReducers"
+//  "middleware": defaults to `getDefaultMiddleware()` which currently returns: 
+//      - in development: [thunk, immutableStateInvariant, serializableStateInvariant]
+//      - in production: [thunk]
+//      see: https://redux-toolkit.js.org/api/getDefaultMiddleware
+//  "devTools" [true]: whether to enable DevTools
+//  "preloadedState": optional object with main reducer keys
+//      preloaded state takes precedence over initial state:
+//      https://redux.js.org/recipes/structuring-reducers/initializing-state
+//  "enhancers"
 
-// configure store
-const reducer = combineReducers({
-  auth: authReducer,
-});
-
-const preloadedState = {};
-// preloaded state takes precedence over initial state:
-// https://redux.js.org/recipes/structuring-reducers/initializing-state
-
-const middleware = applyMiddleware(thunk, logger);
 /*
   Redux Thunk: 
     Any time you attempt to dispatch a function instead of an action object, 
@@ -31,9 +37,3 @@ const middleware = applyMiddleware(thunk, logger);
     Only plain object actions reach the logger and then the reducers.
     https://stackoverflow.com/questions/35411423/how-to-dispatch-a-redux-action-with-a-timeout/35415559#35415559
 */
-
-const composeEnhancers = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;
-
-const store = createStore(reducer, preloadedState, composeEnhancers(middleware));
-
-export default store;
