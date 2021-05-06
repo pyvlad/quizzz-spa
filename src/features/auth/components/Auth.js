@@ -1,30 +1,27 @@
 import React from 'react';
 import { connect } from 'react-redux';
 
-import { sendLoginRequest, sendLogoutRequest, sendUserRequest } from '../authSlice';
-import { selectUser, selectAuthenticated, selectMessage } from '../authSlice';
-import User from './User';
+import { sendLoginRequest, sendLogoutRequest } from '../authSlice';
+import { selectCurrentUser, selectAuthLoading, selectAuthError } from '../authSlice';
 import LoginForm from './LoginForm';
 import LogoutForm from './LogoutForm';
+import Greeting from './Greeting';
+import Message from './Message';
 
 
-const Auth = ({ authenticated, user, message, 
-  sendLoginRequest, sendLogoutRequest, sendUserRequest, children }) => {
+const Auth = ({ user, isLoading, authError, 
+  sendLoginRequest, sendLogoutRequest, children }) => {
   
-  React.useEffect(() => sendUserRequest(), [sendUserRequest])
+  const msg = isLoading 
+    ? 'Please, wait...'
+    : ((authError) ? authError : "")
 
-  React.useEffect(() => {
-    if (authenticated && !user) sendUserRequest();
-  }, [authenticated, user, sendUserRequest])
-  
   return (
     <div>
-      <div style={{color:"red", fontStyle:"italic"}}>
-        { message ? JSON.stringify(message) : "" }
-      </div>
-      <User user={ user } />
+      <Greeting user={ user } />
+      <Message msg={ msg } />
       { 
-        authenticated 
+        user 
         ? <div>
             <LogoutForm submitForm={ sendLogoutRequest } />
             { children }
@@ -43,14 +40,13 @@ const Auth = ({ authenticated, user, message,
 // and can be used inside presentational components without passing extra props
 const AuthContainer = connect(
   (state, ownProps) => ({ 
-    authenticated: selectAuthenticated(state),
-    user: selectUser(state),
-    message: selectMessage(state),
+    user: selectCurrentUser(state),
+    isLoading: selectAuthLoading(state),
+    authError: selectAuthError(state),
   }),
   {
     sendLoginRequest, 
     sendLogoutRequest,
-    sendUserRequest,
   }
   // Such object notation does this for each action creator:
   //    sendLoginRequest: (...args) => dispatch(sendLoginRequest(...args))

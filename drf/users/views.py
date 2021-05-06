@@ -36,15 +36,15 @@ class UserList(APIView):
         return Response(serializer.data)
 
 
-class CurrentUserDetail(APIView):
-    """
-    Return current user profile.
-    """
-    def get(self, request):
-        if request.user.is_anonymous:
-            return Response("Non authenticated user.", status=status.HTTP_401_UNAUTHORIZED)
-        serializer = UserSerializer(request.user)
-        return Response(serializer.data)
+# class CurrentUserDetail(APIView):
+#     """
+#     Return current user profile.
+#     """
+#     def get(self, request):
+#         if request.user.is_anonymous:
+#             return Response("Non authenticated user.", status=status.HTTP_401_UNAUTHORIZED)
+#         serializer = UserSerializer(request.user)
+#         return Response(serializer.data)
 
 
 class UserCreate(APIView):
@@ -72,8 +72,9 @@ class Login(APIView):
             if user is None:
                 return Response("Wrong credentials", status=status.HTTP_400_BAD_REQUEST)
             else:
+                serializer = UserSerializer(user)
                 login(request._request, user)
-                return Response("Logged in")
+                return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 

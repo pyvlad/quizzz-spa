@@ -5,7 +5,7 @@ import logger from './logger';
 
 export default configureStore({
   reducer: {
-    auth: authReducer
+    auth: authReducer,
   },
   middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(logger),
 })

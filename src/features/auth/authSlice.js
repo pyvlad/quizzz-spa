@@ -1,22 +1,22 @@
 import { createSlice } from '@reduxjs/toolkit';
 
-import { login, logout, fetchCurrentUser } from './api';
+import { login, logout, loadUser } from './api';
 
 
-// createSlice takes care of the work of generating:
+// authSlice takes care of the work of generating:
 //  - action type strings (named as reducer functions below 
 //    prefixed by the slice 'name' string below, i.e 'auth/'), 
 //  - action creator functions (named as reducer functions below),
 //  - action objects.
-export const counterSlice = createSlice({
+export const authSlice = createSlice({
   name: 'auth',
   // This string is used as the first part of each action type
   // (the key name of each reducer function is used as the second part).
 
   initialState: {
-    authenticated: false,
-    user: null,
-    message: null
+    user: loadUser(),
+    loading: false,
+    error: '',
   },
 
   // Redux Toolkit allows us to write "mutating" logic in reducers. It
@@ -25,55 +25,39 @@ export const counterSlice = createSlice({
   // immutable state based off those changes.
   reducers: {
     loginRequestStart: state => {
-      state.message = 'Please, wait...';
+      state.loading = true;
+      state.error = '';
     },
-    loginRequestSuccess: state => {
-      state.authenticated = true;
-      state.message = null;
+    loginRequestSuccess: (state, action) => {
+      state.loading = false;
+      state.user = action.payload;
     },
     loginRequestFail: (state, action) => {
-      state.message = action.payload;
+      state.loading = false;
+      state.error = JSON.stringify(action.payload);
     },
     logoutRequestStart: state => {
-      state.message = 'Please, wait...';
+      state.loading = true;
+      state.error = '';
     },
     logoutRequestSuccess: state => {
-      state.authenticated = false;
-      state.message = null;
+      state.loading = false;
       state.user = null;
     },
     logoutRequestFail: (state, action) => {
-      state.message = action.payload;
-    },
-    userRequestStart: state => {
-      state.message = 'Please, wait...';
-    },
-    userRequestSuccess: (state, action) => {
-      state.authenticated = true;
-      state.user = action.payload;
-      state.message = null;
-    },
-    userRequestFail: (state, action) => {
-      const { error } = action.payload;
-      const message = (state.authenticated) ? error : null;
-      return {
-        ...state,
-        authenticated: false,
-        user: null,
-        message
-      }
+      state.loading = false;
+      state.error = JSON.stringify(action.payload);
     },
   }
 })
 
-export default counterSlice.reducer;
+export default authSlice.reducer;
 
 
 const { 
   loginRequestStart, loginRequestSuccess, loginRequestFail,
   logoutRequestStart, logoutRequestSuccess, logoutRequestFail,
-  userRequestStart, userRequestSuccess, userRequestFail 
-} = counterSlice.actions;
+} = authSlice.actions;
 
 
 export const sendLoginRequest = (username, password) => async (dispatch) => {
@@ -82,11 +66,11 @@ export const sendLoginRequest = (username, password) => async (dispatch) => {
   try {
     const { status, data } = await login(username, password);
     dispatch((status === 200) 
-      ? loginRequestSuccess() 
-      : loginRequestFail({ error: data })
+      ? loginRequestSuccess(data) 
+      : loginRequestFail(data)
     );
   } catch(error) {
-    dispatch(loginRequestFail({ error }));
+    dispatch(loginRequestFail(error));
   }
 }
 
@@ -98,25 +82,10 @@ export const sendLogoutRequest = () => async (dispatch) => {
     const { status, data } = await logout();
     dispatch((status === 200) 
       ? logoutRequestSuccess() 
-      : logoutRequestFail({ error: data })
+      : logoutRequestFail(data)
     );
   } catch(error) {
-    dispatch(logoutRequestFail({ error }));
-  }
-}
-
-
-export const sendUserRequest = () => async (dispatch) => {
-  dispatch(userRequestStart());
-
-  try {
-    const { status, data } = await fetchCurrentUser();
-    dispatch((status === 200) 
-      ? userRequestSuccess(data)
-      : userRequestFail({error: data, status})
-    );
-  } catch(error) {
-    dispatch(userRequestFail({error}))
+    dispatch(logoutRequestFail(error));
   }
 }
 
@@ -125,6 +94,6 @@ export const sendUserRequest = () => async (dispatch) => {
 // The functions below are called a selector and allow us to select values from
 // the state. Selectors can also be defined inline where they're used instead of
 // in the slice file. For example: `useSelector((state) => state.counter.value)`
-export const selectAuthenticated = state => state.auth.authenticated;
-export const selectUser = state => state.auth.user;
-export const selectMessage = state => state.auth.message;
+export const selectCurrentUser = state => state.auth.user;
+export const selectAuthLoading = state => state.auth.loading;
+export const selectAuthError = state => state.auth.error;

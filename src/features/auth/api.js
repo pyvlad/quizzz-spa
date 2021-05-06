@@ -1,13 +1,14 @@
-export async function fetchCurrentUser() {
-  /*
-    Request current user information from the server.
-    If the user is logged in, user profile data is returned.
-    If the user is not logged in, 401 is returned.
-  */
-  const response = await fetch("/api/me/");
-  const data = await response.json();
+// key to save user in local storage
+const LS_USER_KEY = 'activeUser';
 
-  return {status: response.status, data};
+
+export const saveUser = (user) => {
+  localStorage.setItem(LS_USER_KEY, JSON.stringify(user));
+}
+
+
+export const loadUser = () => {
+  return JSON.parse(localStorage.getItem(LS_USER_KEY)); // returns null if does not exist
 }
 
 
@@ -25,6 +26,8 @@ export async function login(username, password) {
     body: formData
   });
   const data = await response.json();
+
+  if (response.status === 200) saveUser(data);
 
   return {status: response.status, data};
 };
@@ -44,6 +47,8 @@ export async function logout() {
     }
   });
   const data = await response.json();
+
+  if (response.status === 200) saveUser(null);
 
   return {status: response.status, data};
 }
