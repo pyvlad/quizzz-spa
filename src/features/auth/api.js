@@ -1,66 +1,43 @@
-// key to save user in local storage
-const LS_USER_KEY = 'activeUser';
+import { client as apiClient } from 'api/client';
+
+const LS_USER_KEY = 'activeUser'; 
 
 
-export const saveUser = (user) => {
+const saveUser = (user) => {
+  /* Save user to localStorage. */
   localStorage.setItem(LS_USER_KEY, JSON.stringify(user));
 }
 
+const removeUser = () => {
+  /* Remove user item from localStorage. */
+  localStorage.removeItem(LS_USER_KEY);
+}
 
 export const loadUser = () => {
-  return JSON.parse(localStorage.getItem(LS_USER_KEY)); // returns null if does not exist
+  /* Load user from localStorage. Returns null if key does not exist. */
+  return JSON.parse(localStorage.getItem(LS_USER_KEY)); 
 }
 
 
 export async function login(username, password) {
   /* 
     Send login credentials to backend.
-    On success, returns 200 and sets a cookie.
+    On success, a cookie and a user object are received.
+    The cookie is handled by the browser, the user object is saved in localStorage.
   */
-  const formData = new FormData();
-  formData.append("username", username);
-  formData.append("password", password);
-
-  const response = await fetch("/api/login/", {
-    method: "POST", 
-    body: formData
-  });
-  const data = await response.json();
-
-  if (response.status === 200) saveUser(data);
-
-  return {status: response.status, data};
+  const data = await apiClient.post("/api/login/", {username, password});
+  saveUser(data);
+  return data;
 };
 
 
 export async function logout() {
   /* 
     Log user out. 
-    Invalidates session cookie if present.
+    On success, the session cookie is invalidated (if present) by the browser. 
+    The user object is removed from localStorage.
   */
-  const csrfToken = getCookie("csrftoken");
-
-  const response = await fetch("/api/logout/", { 
-    method: "POST", 
-    headers: {
-      'X-CSRFToken': csrfToken
-    }
-  });
-  const data = await response.json();
-
-  if (response.status === 200) saveUser(null);
-
-  return {status: response.status, data};
-}
-
-
-function getCookie(name) {
-  /* 
-    Helper function to get cookie.
-    Source: https://javascript.info/cookie
-  */
-  let matches = document.cookie.match(new RegExp(
-    "(?:^|; )" + name.replace(/([.$?*|{}()[\]\\/+^])/g, '\\$1') + "=([^;]*)"
-  ));
-  return matches ? decodeURIComponent(matches[1]) : undefined;
+  const data = await apiClient.post("/api/logout/", {});
+  removeUser();
+  return data;
 }

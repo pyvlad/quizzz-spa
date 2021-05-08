@@ -56,7 +56,11 @@ class UserCreate(APIView):
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        body = {
+            "userMessage": "Bad form submitted.",
+            "data": serializer.errors
+        }
+        return Response(body, status=status.HTTP_400_BAD_REQUEST)
 
 
 class Login(APIView):
@@ -70,12 +74,19 @@ class Login(APIView):
             data = serializer.validated_data
             user = authenticate(username=data["username"], password=data["password"])
             if user is None:
-                return Response("Wrong credentials", status=status.HTTP_400_BAD_REQUEST)
+                body = {
+                    "userMessage": "Wrong credentials."
+                }
+                return Response(body, status=status.HTTP_400_BAD_REQUEST)
             else:
                 serializer = UserSerializer(user)
                 login(request._request, user)
                 return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        body = {
+            "userMessage": "Bad form submitted.",
+            "data": serializer.errors
+        }
+        return Response(body, status=status.HTTP_400_BAD_REQUEST)
 
 
 class Logout(APIView):
@@ -84,4 +95,4 @@ class Logout(APIView):
     """
     def post(self, request):
         logout(request._request)
-        return Response("Logged Out")
+        return Response({})

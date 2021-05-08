@@ -1,6 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit';
 
-import { login, logout, loadUser } from './api';
+import { login, logout, loadUser } from './api'; 
 
 
 // authSlice takes care of the work of generating:
@@ -34,7 +34,8 @@ export const authSlice = createSlice({
     },
     loginRequestFail: (state, action) => {
       state.loading = false;
-      state.error = JSON.stringify(action.payload);
+      const { message, userMessage } = action.payload;
+      state.error = userMessage ? userMessage : message;
     },
     logoutRequestStart: state => {
       state.loading = true;
@@ -46,7 +47,8 @@ export const authSlice = createSlice({
     },
     logoutRequestFail: (state, action) => {
       state.loading = false;
-      state.error = JSON.stringify(action.payload);
+      const { message, userMessage } = action.payload;
+      state.error = userMessage ? userMessage : message;
     },
   }
 })
@@ -64,13 +66,10 @@ export const sendLoginRequest = (username, password) => async (dispatch) => {
   dispatch(loginRequestStart());
 
   try {
-    const { status, data } = await login(username, password);
-    dispatch((status === 200) 
-      ? loginRequestSuccess(data) 
-      : loginRequestFail(data)
-    );
-  } catch(error) {
-    dispatch(loginRequestFail(error));
+    const data = await login(username, password);
+    dispatch(loginRequestSuccess(data));
+  } catch(e) {
+    dispatch(loginRequestFail((e.data) ? e.data : {message: e.message}));
   }
 }
 
@@ -79,13 +78,10 @@ export const sendLogoutRequest = () => async (dispatch) => {
   dispatch(logoutRequestStart());
 
   try {
-    const { status, data } = await logout();
-    dispatch((status === 200) 
-      ? logoutRequestSuccess() 
-      : logoutRequestFail(data)
-    );
-  } catch(error) {
-    dispatch(logoutRequestFail(error));
+    await logout();
+    dispatch(logoutRequestSuccess());
+  } catch(e) {
+    dispatch(logoutRequestFail((e.data) ? e.data : {message: e.message}));
   }
 }
 
