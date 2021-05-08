@@ -1,7 +1,7 @@
 import React from 'react';
 import { connect } from 'react-redux';
 
-import { sendLoginRequest, sendLogoutRequest } from '../authSlice';
+import { fetchLogin, fetchLogout } from '../authSlice';
 import { selectCurrentUser, selectAuthLoading, selectAuthError } from '../authSlice';
 import LoginForm from './LoginForm';
 import LogoutForm from './LogoutForm';
@@ -10,7 +10,7 @@ import Message from './Message';
 
 
 const Auth = ({ user, isLoading, authError, 
-  sendLoginRequest, sendLogoutRequest, children }) => {
+  fetchLogin, fetchLogout, children }) => {
   
   const msg = isLoading 
     ? 'Please, wait...'
@@ -23,12 +23,12 @@ const Auth = ({ user, isLoading, authError,
       { 
         user 
         ? <div>
-            <LogoutForm submitForm={ sendLogoutRequest } />
+            <LogoutForm submitForm={ fetchLogout } />
             { children }
           </div>
         : <div>
             <p>Please log in.</p>
-            <LoginForm submitForm={ sendLoginRequest } />
+            <LoginForm submitForm={ (username, password) => fetchLogin({username, password}) } />
           </div>
       }
     </div>
@@ -45,8 +45,8 @@ const AuthContainer = connect(
     authError: selectAuthError(state),
   }),
   {
-    sendLoginRequest, 
-    sendLogoutRequest,
+    fetchLogin, 
+    fetchLogout,
   }
   // Such object notation does this for each action creator:
   //    sendLoginRequest: (...args) => dispatch(sendLoginRequest(...args))

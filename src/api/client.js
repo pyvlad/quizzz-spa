@@ -31,7 +31,6 @@ export async function client(endpoint, { body, ...customConfig } = {}) {
   // get response data / error message
   try {
     const response = await window.fetch(endpoint, config);
-    const data = await response.json();
 
     if (response.status === 401) {
       // redirect user to the login screen
@@ -39,18 +38,17 @@ export async function client(endpoint, { body, ...customConfig } = {}) {
       // return
     }
 
+    // This shouldn't be needed but React proxy doesn't return json on proxy fails
+    if (response.status === 500) {
+      throw new Error('Internal Server Error');
+    }
+
+    const body = await response.json();
+
     if (response.ok) {
-      return data;
+      return body;
     } else {
-      // handle user errors
-      const error = new Error(response.statusText);
-      error.data = {
-        message: response.statusText,
-        status: response.status,
-        userMessage: (data && data.userMessage) ? data.userMessage : '',
-        body: (data && data.data) ? data.data : {}
-      }
-      throw error;
+      throw apiError(response, body);
     }
   } catch (e) {
     return Promise.reject(e);
@@ -72,6 +70,23 @@ client.put = function (endpoint, body, customConfig = {}) {
 client.delete = function (endpoint, customConfig = {}) {
   return client(endpoint, { ...customConfig, method: 'DELETE' });
 }
+
+
+function apiError(response, body) {
+  /*
+    Handle api responses with non-OK status codes.
+  */
+  const error = new Error(response.statusText);
+
+  error.data = {
+    message: response.statusText,
+    status: response.status,
+    userMessage: (body && body.userMessage) ? body.userMessage : '',
+    body: (body && body.data) ? body.data : {},
+  }
+
+  return error;
+} 
 
 
 function getCookie(name) {
