@@ -17,6 +17,13 @@
 
     text-decoration: none;
     outline: none;
+
+    /* TODO quick and dirty to make Login and Logout buttons look similar */
+    font-size: 1em;
+    font-family: 'Times New Roman';
+    cursor: pointer;
+    background: none;
+    border: none;
   }
   &__item--link:hover {
     color: $main-color-light;

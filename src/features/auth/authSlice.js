@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 
-import { login, logout, loadUser } from './api'; 
+import { login, logout, loadUser } from 'api'; 
 
 
 function makeError(e) {

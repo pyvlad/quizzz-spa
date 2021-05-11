@@ -1,4 +1,4 @@
-import { client as apiClient } from 'api/client';
+import { client as apiClient } from './client';
 
 const LS_USER_KEY = 'activeUser'; 
 

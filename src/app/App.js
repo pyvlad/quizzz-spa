@@ -1,18 +1,28 @@
 import { Provider } from 'react-redux';
-import store from './store';
+import {
+  BrowserRouter as Router,
+  Switch,
+  Route,
+  Redirect,
+} from 'react-router-dom';
 
-import Page from 'features/page/Page';
-import { Auth } from 'features/auth';
-import { Time } from 'features/time';
+import store from './store';
+import BasePage from 'features/base/BasePage';
+import Login from 'features/auth/Login';
+import Content from 'features/content/Content';
 
 
 const App = () => (
   <Provider store={ store }>
-    <Page>    
-      <Auth>
-        <Time />
-      </Auth>
-    </Page>
+    <Router>
+      <BasePage>
+        <Switch>
+          <Route exact path="/login/" component={ Login } />
+          <Route exact path="/" component={ Content } />
+          <Redirect to="/" />
+        </Switch>
+      </BasePage>
+    </Router>
   </Provider>
 )
 

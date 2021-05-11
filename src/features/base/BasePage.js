@@ -1,14 +1,15 @@
 import React from 'react';
 
 import Header from './Header/Header';
+import Message from './Message/Message';
 
-import './Page.scss';
+import './BasePage.scss';
 
 import 'styles/grid.scss';
 import 'styles/spacing.scss';
 
 
-const Page = ({ children }) => (
+const BasePage = ({ children }) => (
   <div className="page">
     <header className="page__section page__section--header">
       <div className="container-fluid-lg px-2 py-1">
@@ -18,6 +19,9 @@ const Page = ({ children }) => (
 
     <section className="page__section page__section--main">
       <div className="container-fluid-lg px-2">
+        <section className="my-3">
+          <Message />
+        </section>
         <section className="my-3">
           { children }
         </section>
@@ -34,4 +38,4 @@ const Page = ({ children }) => (
   </div>
 )
 
-export default Page;
+export default BasePage;
