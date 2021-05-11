@@ -5,7 +5,7 @@ import { Auth } from 'features/auth';
 import { Time } from 'features/time';
 
 
-const MyApp = () => (
+const App = () => (
   <Provider store={ store }>
     <Auth>
       <Time />
@@ -13,4 +13,4 @@ const MyApp = () => (
   </Provider>
 )
 
-export default MyApp;
+export default App;
