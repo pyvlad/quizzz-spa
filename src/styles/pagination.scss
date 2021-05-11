@@ -1,0 +1,24 @@
+@import '_variables';
+
+$COLOR: $blue-color-dark;
+
+.pagination {
+  display: flex;
+  justify-content: space-between;
+}
+
+.pagination-button {
+  text-decoration: none;
+  outline: none;
+  margin: 5px;
+  padding: 5px;
+  color: $COLOR;
+  cursor: pointer;
+  border: none;
+  border-radius: 10px;
+
+  &:hover {
+    background-color: $COLOR;
+    color: $white-color;
+  }
+}

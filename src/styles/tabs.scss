@@ -1,0 +1,33 @@
+@import '_variables';
+
+$COLOR: $grey-color-dark;
+$HOVER-COLOR: $grey-color;
+$COLOR2: $grey-color-lighter;
+
+.tabs {
+  display: flex;
+  justify-content: flex-end;
+  background-color: $grey-color-lighter;
+
+  &__button {
+    display: block;
+    border-radius: 5px;
+    cursor: pointer;
+    padding: 6px 16px;
+    margin-left: 6px;
+
+    text-decoration: none;
+    outline: none;
+    color: $COLOR;
+    background-color: inherit;
+
+    &:hover {
+      background-color: $HOVER-COLOR;
+      color: $COLOR2;
+    }
+    &--active {
+      background-color: $COLOR;
+      color: $COLOR2;
+    }
+  }
+}

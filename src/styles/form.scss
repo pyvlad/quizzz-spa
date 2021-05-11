@@ -1,0 +1,122 @@
+/* Generic Form */
+@import "_variables";
+
+
+.form {
+  font-family: "Helvetica", "Arial", sans-serif;
+
+  &__header {
+    font-weight: bold;
+    font-size: 1.5em;
+    line-height: 1.8;
+    border-bottom: 2px solid $grey-color-light;
+  }
+
+  &__help {
+    color: $grey-color-dark;
+  }
+
+  &__item {
+    margin: 1em 0;
+
+    &--outlined {
+      border: 1px solid $grey-color-light;
+      border-radius: 3px;
+      padding: 1em;
+      background-color: $grey-color-lighter;
+    }
+  }
+
+  &__label {
+    font-size: 1.2em;
+    font-weight: bold;
+    color: $grey-color-darker;
+    line-height: 1.5;
+    margin-bottom: 0.5em;
+
+    &--secondary {
+      font-size: 1.1em;
+      color: $grey-color-dark;
+      text-decoration: underline;
+    }
+  }
+
+  &__input {
+    font-size: 16px;
+    border: 1px solid $grey-color-light;
+    border-radius: 3px;
+
+    padding: 0.5em;
+    margin: 0.25em 0;
+    width: 100%;
+  }
+
+  &__textarea {
+    font-size: 16px;
+    border: 1px solid $grey-color-light;
+    border-radius: 3px;
+
+    resize: none;
+    height: 60px;
+    padding: 0.5em;
+    margin: 0.25em 0;
+    width: 100%;
+
+    &--lg {
+      height: 250px;
+    }
+  }
+
+  &__fieldset {
+    border: none;
+    margin: 0.25em 0 0.25em 0.25em;
+  }
+
+  &__fieldset-item {
+    display: flex;
+    justify-content: flex-start;
+    margin: 0.25em 0;
+  }
+
+  &__fieldset-item-input {
+    flex: 1;
+    padding-left: 10px;
+  }
+
+  &__input-help {
+    font-size: 0.8em;
+    color: $grey-color-dark;
+    margin: 0.25em 0.1em;
+  }
+
+  &__errors {
+    list-style: none;
+    font-size: 0.9em;
+    font-weight: bold;
+  }
+
+  &__error {
+    color: $red-color;
+    border-left: 3px solid $red-color-dark;
+    background-color: $red-color-lightest;
+    padding: 0.5em;
+  }
+}
+
+
+.form--validated .form__input:valid,
+.form--validated .form__textarea:valid {
+  background-color: $green-color-light;
+}
+.form--validated .form__input:invalid,
+.form--validated .form__textarea:invalid {
+  box-shadow: none;
+}
+.form--validated .form__input:focus,
+.form--validated .form__textarea:focus {
+  box-shadow: 0 0 10px $grey-color-light;
+}
+.form--validated .form__input:focus:invalid,
+.form--validated .form__textarea:focus:invalid {
+  box-shadow: 0 0 10px $red-color-light;
+}

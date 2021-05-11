@@ -1,0 +1,81 @@
+@import '_variables';
+@import '_mixins';
+
+
+@mixin create-col-classes($modifier, $breakpoint) {
+  $modsuffix: get-modsuffix($modifier);
+
+  @include create-media-query($breakpoint) {
+
+    .col#{$modsuffix}-offset-0 {
+      margin-left: 0;
+    }
+
+    @for $i from 1 through $NCOLUMNS {
+      .col#{$modsuffix}-#{$i} {
+        width: $i / $NCOLUMNS * 100%;
+      }
+      .col#{$modsuffix}-offset-#{$i} {
+        margin-left: $i / $NCOLUMNS * 100%;
+      }
+    }
+  }
+
+  @include create-media-query($breakpoint - 1px, 'max') {
+    .hidden#{$modsuffix}-down {
+      display: none !important;
+    }
+  }
+
+  @include create-media-query($breakpoint, 'min') {
+    .hidden#{$modsuffix}-up {
+      display: none !important;
+    }
+  }
+}
+
+
+.container {
+  width: 100%;
+}
+
+.container-responsive {
+  width: 100%;
+  max-width: 100%;
+  margin: 0 auto;
+
+  @media screen and (min-width: $layout-breakpoint-sm) {
+    width: $layout-breakpoint-sm;
+  }
+
+  @media screen and (min-width: $layout-breakpoint-md) {
+    width: $layout-breakpoint-md;
+  }
+
+  @media screen and (min-width: $layout-breakpoint-lg) {
+    width: $layout-breakpoint-lg;
+  }
+}
+
+@each $modifier, $breakpoint in $BREAKPOINTS {
+  $modsuffix: get-modsuffix($modifier);
+
+  @include create-media-query($breakpoint) {
+    .container-fluid#{$modsuffix} {
+      width: 100%;
+      max-width: $breakpoint;
+      margin: 0 auto;
+    }
+  }
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  width: 100%;
+}
+
+@each $modifier, $breakpoint in $BREAKPOINTS {
+  @include create-col-classes($modifier, $breakpoint);
+}
