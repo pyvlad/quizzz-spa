@@ -4,14 +4,18 @@ import { connect } from 'react-redux';
 import { selectCurrentUser } from 'features/auth/authSlice';
 import Time from './Time';
 import Home from './Home';
+import GroupsPage from 'features/groups/GroupsPage';
 
 
 const Content = ({ user }) => {
+  // return user
+  //   ? <div>
+  //       <p>{ user ? `Hello, ${user.username}!` : 'Welcome to the website!' }</p>
+  //       <div>{ user ? <Time /> : 'Please log in.' }</div>
+  //     </div>
+  //   : <Home />
   return user
-    ? <div>
-        <p>{ user ? `Hello, ${user.username}!` : 'Welcome to the website!' }</p>
-        <div>{ user ? <Time /> : 'Please log in.' }</div>
-      </div>
+    ? <GroupsPage />
     : <Home />
 }
 

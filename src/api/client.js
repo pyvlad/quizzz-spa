@@ -86,7 +86,20 @@ function apiError(response, body) {
   }
 
   return error;
-} 
+}
+
+
+export function clientError(e) {
+  /* 
+    Make error serializable so that it can be passed as action.payload.
+    Successful requests with codes other than 200-299 return extra data
+    attached to the error: { message, userMessage, status, body }. Return 
+    that object if it is present.
+    Other errors don't have such an object attached to them. 
+    Return { message } with e.message in that case.
+  */
+  return (e.data) ? e.data : { message: e.message };
+}
 
 
 function getCookie(name) {

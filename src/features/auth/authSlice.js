@@ -1,19 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 
-import { login, logout, loadUser } from 'api'; 
+import { login, logout, loadUser, clientError } from 'api'; 
 
-
-function makeError(e) {
-  /* 
-    Make error serializable so that it can be passed as action.payload.
-    Successful requests with codes other than 200-299 return extra data
-    attached to the error: { message, userMessage, status, body }. Return 
-    that object if it is present.
-    Other errors don't have such an object attached to them. 
-    Return { message } with e.message in that case.
-  */
-  return (e.data) ? e.data : { message: e.message };
-}
 
 // createAsyncThunk returns a thunk action creator
 export const fetchLogin = createAsyncThunk(
@@ -24,7 +12,7 @@ export const fetchLogin = createAsyncThunk(
     try {
       return await login(username, password);
     } catch(e) {
-      return rejectWithValue(makeError(e));
+      return rejectWithValue(clientError(e));
     }
   }
 )
@@ -36,7 +24,7 @@ export const fetchLogout = createAsyncThunk(
     try {
       return await logout();
     } catch(e) {
-      return rejectWithValue(makeError(e));
+      return rejectWithValue(clientError(e));
     }
   }
 )
