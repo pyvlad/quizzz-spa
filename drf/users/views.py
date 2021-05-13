@@ -13,6 +13,7 @@ from rest_framework import permissions
 
 from .models import CustomUser
 from .serializers import UserSerializer, NewUserSerializer, LoginSerializer
+from .permissions import IsSuperuser
 
 
 class CurrentTime(APIView):
@@ -30,21 +31,15 @@ class UserList(APIView):
     """ 
     List all users.
     """
+    permission_classes = [
+        permissions.IsAuthenticated,
+        IsSuperuser,
+    ]
+
     def get(self, request):
         users = CustomUser.objects.all()
         serializer = UserSerializer(users, many=True)
         return Response(serializer.data)
-
-
-# class CurrentUserDetail(APIView):
-#     """
-#     Return current user profile.
-#     """
-#     def get(self, request):
-#         if request.user.is_anonymous:
-#             return Response("Non authenticated user.", status=status.HTTP_401_UNAUTHORIZED)
-#         serializer = UserSerializer(request.user)
-#         return Response(serializer.data)
 
 
 class UserCreate(APIView):
@@ -55,7 +50,7 @@ class UserCreate(APIView):
         serializer = NewUserSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(status=status.HTTP_201_CREATED)
         body = {
             "userMessage": "Bad form submitted.",
             "data": serializer.errors
@@ -95,4 +90,4 @@ class Logout(APIView):
     """
     def post(self, request):
         logout(request._request)
-        return Response({})
+        return Response()
