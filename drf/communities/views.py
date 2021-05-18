@@ -5,7 +5,8 @@ from rest_framework.response import Response
 from rest_framework import permissions
 from rest_framework import status
 
-from .serializers import MembershipSerializer, CommunitySerializer, JoinCommunitySerializer
+from .serializers import MembershipSerializer, CommunitySerializer, \
+    JoinCommunitySerializer, MembershipForMemberListSerializer
 from .models import Membership, Community
 from .permissions import AuthenticatedAsUrlUserId, IsCommunityAdmin, IsCommunityMember, \
     IsSafeMethod, IsDeleteMethod
@@ -38,7 +39,7 @@ class CommunityDetail(APIView):
     """
     permission_classes = [
         permissions.IsAuthenticated,
-        IsCommunityAdmin | (IsCommunityMember & IsSafeMethod),
+        (IsSafeMethod & IsCommunityMember) | IsCommunityAdmin,
     ]
 
     def get_object(self):
@@ -143,8 +144,12 @@ class MembershipList(APIView):
     ]
 
     def get(self, request, community_id):
-        memberships = Membership.objects.filter(community__id=community_id).all()
-        serializer = MembershipSerializer(memberships, many=True)
+        memberships = (
+            Membership.objects.all()
+            .filter(community__id=community_id)
+            .select_related('user')
+        )
+        serializer = MembershipForMemberListSerializer(memberships, many=True)
         return Response(serializer.data)
 
 
@@ -155,9 +160,9 @@ class MembershipDetail(APIView):
     """
     permission_classes = [
         permissions.IsAuthenticated,
-        (IsCommunityMember & IsSafeMethod) 
-        | (IsCommunityAdmin & ~(AuthenticatedAsUrlUserId & IsDeleteMethod)) 
-        | (~IsCommunityAdmin & (AuthenticatedAsUrlUserId & IsDeleteMethod))
+        (IsSafeMethod & IsCommunityMember) 
+        | (~(AuthenticatedAsUrlUserId & IsDeleteMethod) & IsCommunityAdmin) 
+        | ((AuthenticatedAsUrlUserId & IsDeleteMethod) & (~IsCommunityAdmin))
     ]
 
     def get_object(self):

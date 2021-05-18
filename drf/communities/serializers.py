@@ -1,6 +1,10 @@
 from rest_framework import serializers
 from rest_framework.settings import api_settings
-from .models import Community, Membership, MemberLimitException, MemberAlreadyExistsException
+from .models import Community, Membership, \
+    MemberLimitException, MemberAlreadyExistsException
+
+from django.contrib.auth import get_user_model
+User = get_user_model()
 
 
 class JoinCommunitySerializer(serializers.Serializer):
@@ -74,3 +78,30 @@ class MembershipSerializer(serializers.ModelSerializer):
             'time_created',
         ]
         read_only_fields = ['user', 'time_created']
+
+
+
+class UserForMembershipListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = [
+            'id', 
+            'username', 
+            'first_name', 
+            'last_name', 
+            'last_login'
+        ]
+
+
+class MembershipForMemberListSerializer(serializers.ModelSerializer):
+    user = UserForMembershipListSerializer()
+
+    class Meta:
+        model = Membership
+        fields = [
+            'user',
+            'community',
+            'is_admin', 
+            'is_approved',
+            'time_created',
+        ]

@@ -22,7 +22,8 @@ class RegistrationViewTest(APITestCase):
         """
         User with correct credentials is registered and created in database.
         """
-        response = self.client.post(self.url, self.user, format='json')
+        with self.assertNumQueries(2):  # (1) unique check (2) insert 
+            response = self.client.post(self.url, self.user, format='json')
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data, None)
@@ -30,11 +31,12 @@ class RegistrationViewTest(APITestCase):
         self.assertEqual(CustomUser.objects.get().username, self.user["username"])
 
     def test_password_too_short(self):
-        response = self.client.post(
-            self.url, 
-            {"username": "bob", "password": "dog"}, 
-            format='json'
-        )
+        with self.assertNumQueries(1):  # (1) unique check
+            response = self.client.post(
+                self.url, 
+                {"username": "bob", "password": "dog"}, 
+                format='json'
+            )
         test_utils.assert_400_validation_failed(self, response, 
             error="Bad data submitted.",
             data={"password": [
@@ -46,11 +48,12 @@ class RegistrationViewTest(APITestCase):
         self.assertEqual(CustomUser.objects.count(), 0)
 
     def test_empty_username(self):
-        response = self.client.post(
-            self.url, 
-            {"username": "", "password": "dog12345"}, 
-            format='json'
-        )
+        with self.assertNumQueries(0):
+            response = self.client.post(
+                self.url, 
+                {"username": "", "password": "dog12345"}, 
+                format='json'
+            )
         test_utils.assert_400_validation_failed(self, response, 
             error="Bad data submitted.",
             data={"username": ["This field may not be blank."]})
@@ -67,7 +70,8 @@ class RegistrationViewTest(APITestCase):
         self.assertEqual(CustomUser.objects.count(), 1)
 
         # b. try creating same user again
-        response = self.client.post(self.url, self.user, format='json')
+        with self.assertNumQueries(1):  # (1) unique check
+            response = self.client.post(self.url, self.user, format='json')
 
         test_utils.assert_400_validation_failed(self, response, 
             error="Bad data submitted.",
@@ -91,11 +95,12 @@ class LoginViewTest(SetupUsersMixin, APITestCase):
         """
         user = self.user_by_name["bob"]
 
-        response = self.client.post(
-            self.url, 
-            {"username": user["username"], "password": user["password"]}, 
-            format="json"
-        )
+        with self.assertNumQueries(9):
+            response = self.client.post(
+                self.url, 
+                {"username": user["username"], "password": user["password"]}, 
+                format="json"
+            )
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertListEqual(
@@ -112,11 +117,12 @@ class LoginViewTest(SetupUsersMixin, APITestCase):
         user = self.user_by_name["bob"]
         bad_credentials = {"username": user["username"], "password": "wrooooong12345"}
 
-        response = self.client.post(
-            self.url, 
-            bad_credentials, 
-            format="json"
-        )
+        with self.assertNumQueries(1):
+            response = self.client.post(
+                self.url, 
+                bad_credentials, 
+                format="json"
+            )
         test_utils.assert_400_validation_failed(self, response, 
             error="Bad data submitted.",
             data={"non_field_errors": ["Wrong credentials."]})
@@ -138,7 +144,8 @@ class LogoutViewTest(SetupUsersMixin, APITestCase):
         Logs a user out by unsetting the session cookies.
         """
         self.login_as("bob")
-        response = self.client.post(self.url, format="json")
+        with self.assertNumQueries(4): # (1-2) - request.user, (3-4) - load session & delete  
+            response = self.client.post(self.url, format="json")
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, None)
@@ -150,7 +157,8 @@ class LogoutViewTest(SetupUsersMixin, APITestCase):
         Works for not logged in users just as well.
         """
         # 200 is returned, but since there is no cookie - it is not unset:
-        response = self.client.post(self.url, format="json")
+        with self.assertNumQueries(0):
+            response = self.client.post(self.url, format="json")
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTrue("sessionid" not in response.cookies)
@@ -175,17 +183,20 @@ class UserListViewTest(SetupUsersMixin, APITestCase):
 
     def test_normal(self):
         # view is not shown to anonymous users
-        response = self.client.get(self.url, format="json")
+        with self.assertNumQueries(0):
+            response = self.client.get(self.url, format="json")
         test_utils.assert_403_not_authenticated(self, response)
 
         # view is not shown to non super users
         self.login_as("bob")
-        response = self.client.get(self.url, format="json")
+        with self.assertNumQueries(2):
+            response = self.client.get(self.url, format="json")
         test_utils.assert_403_not_authorized(self, response)
 
         # view is shown to superuser
         self.login_as("admin")
-        response = self.client.get(self.url, format="json")
+        with self.assertNumQueries(3):
+            response = self.client.get(self.url, format="json")
         self.assertEqual(len(response.data), len(self.users))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
