@@ -57,10 +57,9 @@ class CommunityDetail(APIView):
     def put(self, request, community_id):
         community = self.get_object()
         serializer = CommunitySerializer(community, data=request.data)
-        if serializer.is_valid():
+        if serializer.is_valid(raise_exception=True):
             serializer.save()
             return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, community_id):
         community = self.get_object()
@@ -179,10 +178,9 @@ class MembershipDetail(APIView):
     def put(self, request, user_id, community_id):
         membership = self.get_object()
         serializer = MembershipSerializer(membership, data=request.data)
-        if serializer.is_valid():
+        if serializer.is_valid(raise_exception=True):
             serializer.save()
             return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, user_id, community_id):
         membership = self.get_object()

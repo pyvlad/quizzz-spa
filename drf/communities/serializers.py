@@ -74,13 +74,3 @@ class MembershipSerializer(serializers.ModelSerializer):
             'time_created',
         ]
         read_only_fields = ['user', 'time_created']
-
-    def create(self, validated_data):
-        """
-        Create a new regular community membership.
-        Requires 'user' and 'community' objects to be injected when calling '.save()'.
-        """
-        user = validated_data.pop('user')
-        community = validated_data.pop('community')
-        membership = community.join(user)
-        return membership

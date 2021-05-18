@@ -6,6 +6,8 @@
 #
 click==7.1.2
     # via pip-tools
+coverage==5.5
+    # via -r dev.in
 pep517==0.10.0
     # via pip-tools
 pip-tools==6.0.1

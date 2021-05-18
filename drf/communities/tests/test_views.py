@@ -369,6 +369,19 @@ class CommunityDetailTest(SetupCommunityDataMixin, APITestCase):
         self.assertEqual(response.data["password"], self.new_data["password"])
         self.assertEqual(Community.objects.get(name="A").password, self.new_data["password"])
 
+    def test_update_community_name_to_an_existing_one_fails(self):
+        self.login_as("bob")
+
+        new_data = self.community_by_name["A"].copy()
+        new_data["name"] = "B"
+
+        response = self.client.put(self.url, new_data, format="json")
+        test_utils.assert_400_validation_failed(self, response, 
+            error="Bad data submitted.", 
+            data={"name": ["community with this name already exists."]}
+        )
+        self.assertEqual(Community.objects.filter(name="B").count(), 1)
+
     def test_update_community_for_non_admins_should_fail(self):
         alice_joins_the_community()
 
@@ -470,9 +483,7 @@ class MembershipDetailTest(SetupCommunityDataMixin, APITestCase):
         # bob is group admin, he can update the data:
         self.login_as("bob")
 
-        # let's say he is tired of being an admin
-        new_data = {"is_admin": False}
-        response = self.client.put(self.url, new_data, format="json")
+        response = self.client.put(self.url, self.new_data, format="json")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(
             list(response.data.keys()),
@@ -481,6 +492,33 @@ class MembershipDetailTest(SetupCommunityDataMixin, APITestCase):
         self.assertEqual(response.data["is_admin"], False)
         self.assertFalse(Membership.objects.get(
             community_id=self.COMMUNITY, user_id=self.USER).is_admin)
+
+    def test_submit_bad_data_when_updating_membership(self):
+        """
+        Modified read-only fields are ignored.
+        Trying to update with invalid values results in an error.
+        """
+        self.login_as("bob")
+
+        # let's try to change bob's membership to ben
+        new_data = {"user": self.user_by_name["ben"]["id"]}
+        response = self.client.put(self.url, new_data, format="json")
+
+        # user name is a read-only field so it is simply ignored:
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["user"], self.user_by_name["bob"]["id"])
+
+        # now, let's try to submit bad value:
+        new_data = {"is_admin": "Of course!"}
+        response = self.client.put(self.url, new_data, format="json")
+
+        test_utils.assert_400_validation_failed(self, response, 
+            error="Bad data submitted.", 
+            data={"is_admin": ["Must be a valid boolean."]}
+        )
+        self.assertTrue(Membership.objects.get(
+            user__username="bob", community_id=self.COMMUNITY).is_admin)
+
 
     def test_update_community_for_non_admins_should_fail(self):
         alice_joins_the_community()
