@@ -1,4 +1,3 @@
-from django.db import IntegrityError
 from django.http import Http404
 from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
@@ -7,7 +6,7 @@ from rest_framework import permissions
 from rest_framework import status
 
 from .serializers import MembershipSerializer, CommunitySerializer, JoinCommunitySerializer
-from .models import Membership, Community, MemberLimitException
+from .models import Membership, Community
 from .permissions import AuthenticatedAsUrlUserId, IsCommunityAdmin, IsCommunityMember, \
     IsSafeMethod, IsDeleteMethod
 from users.permissions import IsSuperuser
@@ -100,22 +99,14 @@ class CreateCommunity(APIView):
     ]
 
     def post(self, request):
-        user_id = request.user.id
         serializer = CommunitySerializer(data=request.data)
         
-        if serializer.is_valid():
-            try:
-                user = User.objects.get(pk=user_id)
-            except User.DoesNotExist:
-                return Response(status=status.HTTP_404_NOT_FOUND)
-
-            membership = serializer.save(user=user) # returns Membership ORM object
+        if serializer.is_valid(raise_exception=True):
+            membership = serializer.save(user=request.user)
 
             # return membership and community data to user
             ms = MembershipSerializer(membership)
             return Response(ms.data, status=status.HTTP_201_CREATED)
-
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 
@@ -128,49 +119,18 @@ class JoinCommunity(APIView):
     ]
 
     def post(self, request):
-        user_id = request.user.id
         serializer = JoinCommunitySerializer(data=request.data)
         
-        if serializer.is_valid():
+        if serializer.is_valid(raise_exception=True):
             data = serializer.validated_data
             
-            # make sure group credentials match
-            try:
-                community = Community.objects.get(name=data["name"])
-            except Community.DoesNotExist:
-                return Response({"userMessage": "No such group."}, 
-                    status=status.HTTP_404_NOT_FOUND)
-            if community.password != data["password"]:
-                return Response({"userMessage": "Wrong password."}, 
-                    status=status.HTTP_400_BAD_REQUEST)
+            community = serializer.get_community(data)
+            serializer.check_password(data, community)
+            membership = serializer.create_membership(request.user, community)
 
-            # create new membership
-            try:
-                try:
-                    user = User.objects.get(pk=user_id)
-                except User.DoesNotExist:
-                    return Response(status=status.HTTP_404_NOT_FOUND)
-                membership = community.join(user=user)
-
-            except MemberLimitException:
-                return Response(
-                    {"userMessage": "This group has reached its member limit."}, 
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            except IntegrityError as e:
-                if 'UNIQUE constraint failed' in str(e):
-                    return Response(
-                        {"userMessage": "You are already a member of this group."}, 
-                        status=status.HTTP_400_BAD_REQUEST
-                    )
-                else:
-                    raise
-            
             # return membership and community data to user
             ms = MembershipSerializer(membership)
             return Response(ms.data)
-
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 

@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     # local
+    'common.apps.CommonConfig',
     'users.apps.UsersConfig',
     'communities.apps.CommunitiesConfig',
 
@@ -146,7 +147,8 @@ AUTH_USER_MODEL = 'users.CustomUser'
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.SessionAuthentication',
-    ]
+    ],
+    'EXCEPTION_HANDLER': 'common.exceptions.custom_exception_handler'
 }
 
 

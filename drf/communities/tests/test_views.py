@@ -9,6 +9,8 @@ from .setup_mixin import SetupCommunityDataMixin
 
 from users.models import CustomUser
 from communities.models import Community, Membership
+from common import test_utils
+
 
 
 class CommunityListTest(SetupCommunityDataMixin, APITestCase):
@@ -19,16 +21,16 @@ class CommunityListTest(SetupCommunityDataMixin, APITestCase):
 
     def test_normal(self):
         """
-        Superuser sees all existing communities.
+        Only superuser sees all existing communities.
         """
         # anonymous users cannot access
         response = self.client.get(self.url, format="json")
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        test_utils.assert_403_not_authenticated(self, response)
 
         # regular users cannot access
         self.login_as("bob")
         response = self.client.get(self.url, format="json")
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        test_utils.assert_403_not_authorized(self, response)
 
         # superuser can access
         self.login_as("admin")
@@ -54,35 +56,24 @@ class UserCommunitiesTest(SetupCommunityDataMixin, APITestCase):
 
     def test_normal(self):
         """
-        User can see his list of communities.
-        """
-        self.login_as("bob")
-
-        response = self.client.get(self.url, format="json")
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-        bob = CustomUser.objects.get(username="bob")
-        self.assertEqual(len(response.data), len(bob.communities.all()))
-
-    def test_authentication_required(self):
-        """
-        Anonymous users cannot see someone's list of communities.
-        """
-        response = self.client.get(self.url, format="json")
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-        self.assertEqual(response.data["detail"],
-            "Authentication credentials were not provided.")
-        
-    def test_other_users_cannot_access(self):
-        """
         Only the user himself can see his own list of communities.
         """
-        self.login_as("alice")
-
+        # Anonymous users cannot see someone's list of communities:
         response = self.client.get(self.url, format="json")
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-        self.assertEqual(response.data["detail"],
-            "You do not have permission to perform this action.")
+        test_utils.assert_403_not_authenticated(self, response)
+
+        # Regular users cannot see someone's list of communities:
+        self.login_as("alice")
+        response = self.client.get(self.url, format="json")
+        test_utils.assert_403_not_authorized(self, response)
+
+        # User can see his list of communities:
+        self.login_as("bob")
+        response = self.client.get(self.url, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        bob = CustomUser.objects.get(username="bob")
+        self.assertEqual(len(response.data), len(bob.communities.all()))
 
 
 
@@ -93,21 +84,17 @@ class CreateCommunityTest(SetupCommunityDataMixin, APITestCase):
         self.url = reverse('communities:create-community')
         self.new_community = {"name": "Group 4"}
 
-    def test_authentication_required(self):
-        """
-        Anonymous users cannot create communities.
-        """
-        response = self.client.post(self.url, self.new_community, format="json")
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-        self.assertEqual(response.data["detail"],
-            "Authentication credentials were not provided.")
-        self.assertEqual(Community.objects.count(), len(self.communities))
-
     def test_normal(self):
         """
         A registered user can create a new community.
         The view returns the user's new membership.
         """
+        # Anonymous users cannot create communities:
+        response = self.client.post(self.url, self.new_community, format="json")
+        test_utils.assert_403_not_authenticated(self, response)
+        self.assertEqual(Community.objects.count(), len(self.communities))
+
+        # A regular registered user can create communities:
         self.login_as("bob")
         response = self.client.post(
             self.url, 
@@ -139,10 +126,9 @@ class CreateCommunityTest(SetupCommunityDataMixin, APITestCase):
             format="json"
         )
 
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertDictEqual(
-            response.data, 
-            {"name": ["community with this name already exists."]}
+        test_utils.assert_400_validation_failed(self, response,
+            error="Bad data submitted.", 
+            data={"name": ["community with this name already exists."]}
         )
         self.assertEqual(Community.objects.count(), len(self.communities))
 
@@ -167,9 +153,7 @@ class JoinCommunityTest(SetupCommunityDataMixin, APITransactionTestCase):
         Anonymous users cannot join communities.
         """
         response = self.client.post(self.url, self.join_data, format="json")
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-        self.assertEqual(response.data["detail"],
-            "Authentication credentials were not provided.")
+        test_utils.assert_403_not_authenticated(self, response)
         self.assertEqual(Community.objects.count(), len(self.communities))
     
     def test_normal(self):
@@ -209,16 +193,15 @@ class JoinCommunityTest(SetupCommunityDataMixin, APITransactionTestCase):
             .update(max_members=1)
         
         self.login_as("alice")
+
         response = self.client.post(
             self.url, 
             self.join_data, 
             format="json"
         )
-
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertDictEqual(
-            response.data, 
-            {"userMessage": "This group has reached its member limit."}
+        test_utils.assert_400_validation_failed(self, response, 
+            error="Bad data submitted.", 
+            data={"non_field_errors": ["This group has reached its member limit."]}
         )
         self.assertEqual(Membership.objects.count(), len(self.communities))
 
@@ -227,16 +210,15 @@ class JoinCommunityTest(SetupCommunityDataMixin, APITransactionTestCase):
         Can only join a group once.
         """
         self.login_as("bob")
+
         response = self.client.post(
             self.url, 
             self.join_data, 
             format="json"
         )
-
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertDictEqual(
-            response.data, 
-            {"userMessage": "You are already a member of this group."}
+        test_utils.assert_400_validation_failed(self, response, 
+            error="Bad data submitted.", 
+            data={"non_field_errors": ["You are already a member of this group."]}
         )
         self.assertEqual(Membership.objects.count(), len(self.communities))
 
@@ -254,11 +236,9 @@ class JoinCommunityTest(SetupCommunityDataMixin, APITransactionTestCase):
             bad_credentials, 
             format="json"
         )
-
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertDictEqual(
-            response.data, 
-            {"userMessage": "Wrong password."}
+        test_utils.assert_400_validation_failed(self, response, 
+            error="Bad data submitted.", 
+            data={"non_field_errors": ["Wrong password."]}
         )
         self.assertEqual(Membership.objects.count(), len(self.communities))
 
@@ -276,11 +256,9 @@ class JoinCommunityTest(SetupCommunityDataMixin, APITransactionTestCase):
             bad_credentials, 
             format="json"
         )
-
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-        self.assertDictEqual(
-            response.data, 
-            {"userMessage": "No such group."}
+        test_utils.assert_400_validation_failed(self, response,
+            error="Bad data submitted.", 
+            data={"non_field_errors": ["No such group."]}
         )
         self.assertEqual(Membership.objects.count(), len(self.communities))
 
@@ -300,9 +278,7 @@ class MembershipListTest(SetupCommunityDataMixin, APITestCase):
         Anonymous users cannot see any community's members.
         """
         response = self.client.get(self.url, format="json")
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-        self.assertEqual(response.data["detail"],
-            "Authentication credentials were not provided.")
+        test_utils.assert_403_not_authenticated(self, response)
 
     def test_non_members_cannot_see(self):
         """
@@ -310,9 +286,7 @@ class MembershipListTest(SetupCommunityDataMixin, APITestCase):
         """
         self.login_as("ben")
         response = self.client.get(self.url, format="json")
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-        self.assertEqual(response.data["detail"],
-            "You do not have permission to perform this action.")
+        test_utils.assert_403_not_authorized(self, response)
 
     def test_normal(self):
         """
@@ -336,6 +310,13 @@ class MembershipListTest(SetupCommunityDataMixin, APITestCase):
 
 
 
+def alice_joins_the_community():
+    """ Reusable helper method """
+    community = Community.objects.get(name="A")
+    alice = CustomUser.objects.get(username="alice")
+    community.join(alice)
+
+
 class CommunityDetailTest(SetupCommunityDataMixin, APITestCase):
     def setUp(self):
         self.set_up_community_data()
@@ -345,81 +326,67 @@ class CommunityDetailTest(SetupCommunityDataMixin, APITestCase):
         )
         self.new_data = self.community_by_name["A"].copy()
         self.new_data["password"] = "new-password"
+        self.expected_keys = [
+            "name", "password", "approval_required", "max_members", "time_created"
+        ]
 
     def test_get_community(self):
-        community = Community.objects.get(name="A")
-        alice = CustomUser.objects.get(username="alice")
-        community.join(alice)
+        alice_joins_the_community()
 
         # anonymous users have no access:
         response = self.client.get(self.url, format="json")
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-        self.assertEqual(response.data["detail"],
-            "Authentication credentials were not provided.")
+        test_utils.assert_403_not_authenticated(self, response)
 
         # bob is group admin, he sees the data:
         self.login_as("bob")
+
         response = self.client.get(self.url, format="json")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(
-            list(response.data.keys()),
-            ["name", "password", "approval_required", "max_members", "time_created"]
-        )
+        self.assertEqual(list(response.data.keys()), self.expected_keys)
         self.assertEqual(response.data["name"], "A")
 
         # alice is group member, she sees the data:
         self.login_as("alice")
+
         response = self.client.get(self.url, format="json")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(
-            list(response.data.keys()),
-            ["name", "password", "approval_required", "max_members", "time_created"]
-        )
+        self.assertEqual(list(response.data.keys()), self.expected_keys)
         self.assertEqual(response.data["name"], "A")
 
         # ben is not a group member, he sees nothing:
         self.login_as("ben")
+
         response = self.client.get(self.url, format="json")
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-        self.assertEqual(response.data["detail"],
-            "You do not have permission to perform this action.")
+        test_utils.assert_403_not_authorized(self, response)
 
     def test_update_community_works_for_group_admins(self):
         # bob is group admin, he can update the data:
         self.login_as("bob")
+
         response = self.client.put(self.url, self.new_data, format="json")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(
-            list(response.data.keys()),
-            ["name", "password", "approval_required", "max_members", "time_created"]
-        )
+        self.assertEqual(list(response.data.keys()), self.expected_keys)
         self.assertEqual(response.data["password"], self.new_data["password"])
         self.assertEqual(Community.objects.get(name="A").password, self.new_data["password"])
 
     def test_update_community_for_non_admins_should_fail(self):
-        community = Community.objects.get(name="A")
-        alice = CustomUser.objects.get(username="alice")
-        community.join(alice)
+        alice_joins_the_community()
 
         # anonymous users have no access:
         response = self.client.put(self.url, format="json")
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-        self.assertEqual(response.data["detail"],
-            "Authentication credentials were not provided.")
+        test_utils.assert_403_not_authenticated(self, response)
 
         # alice is now regular group member, she cannot update the data:
         self.login_as("alice")
+
         response = self.client.put(self.url, self.new_data, format="json")
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-        self.assertEqual(response.data["detail"],
-            "You do not have permission to perform this action.")
+        test_utils.assert_403_not_authorized(self, response)
 
         # ben is not a group member at all, he cannot update the data either:
         self.login_as("ben")
+
         response = self.client.put(self.url, self.new_data, format="json")
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-        self.assertEqual(response.data["detail"],
-            "You do not have permission to perform this action.")
+        test_utils.assert_403_not_authorized(self, response)
 
         self.assertNotEqual(Community.objects.get(name="A").password, self.new_data["password"])
 
@@ -427,35 +394,28 @@ class CommunityDetailTest(SetupCommunityDataMixin, APITestCase):
     def test_delete_community_works_for_group_admins(self):
         # bob is group admin, he can delete the group:
         self.login_as("bob")
+
         response = self.client.delete(self.url, format="json")
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(response.data, None)
         self.assertEqual(Community.objects.filter(name="A").count(), 0)
 
     def test_delete_community_for_non_admins_should_fail(self):
-        community = Community.objects.get(name="A")
-        alice = CustomUser.objects.get(username="alice")
-        community.join(alice)
+        alice_joins_the_community()
 
         # anonymous users have no access
         response = self.client.delete(self.url, format="json")
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-        self.assertEqual(response.data["detail"],
-            "Authentication credentials were not provided.")
+        test_utils.assert_403_not_authenticated(self, response)
 
         # alice is now regular group member, she cannot update the data:
         self.login_as("alice")
         response = self.client.delete(self.url, format="json")
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-        self.assertEqual(response.data["detail"],
-            "You do not have permission to perform this action.")
+        test_utils.assert_403_not_authorized(self, response)
 
         # ben is not a group member at all, he cannot update the data either:
         self.login_as("ben")
         response = self.client.delete(self.url, format="json")
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-        self.assertEqual(response.data["detail"],
-            "You do not have permission to perform this action.")
+        test_utils.assert_403_not_authorized(self, response)
 
         self.assertEqual(Community.objects.filter(name="A").count(), 1)
 
@@ -475,44 +435,35 @@ class MembershipDetailTest(SetupCommunityDataMixin, APITestCase):
         )
         # let's try making bob not an admin:
         self.new_data = {"is_admin": False}
+        self.expected_keys = [
+            'user', 'community', 'is_admin', 'is_approved', 'time_created'
+        ]
 
     def test_get_membership(self):
-        community = Community.objects.get(name="A")
-        alice = CustomUser.objects.get(username="alice")
-        community.join(alice)
+        alice_joins_the_community()
 
         # anonymous users have no access:
         response = self.client.get(self.url, format="json")
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-        self.assertEqual(response.data["detail"],
-            "Authentication credentials were not provided.")
+        test_utils.assert_403_not_authenticated(self, response)
 
         # bob is group admin and it's his data, he sees the data:
         self.login_as("bob")
         response = self.client.get(self.url, format="json")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(
-            list(response.data.keys()),
-            ['user', 'community', 'is_admin', 'is_approved', 'time_created']
-        )
+        self.assertEqual(list(response.data.keys()), self.expected_keys)
         self.assertEqual(response.data["user"], self.USER)
 
         # alice is group member, she sees the data:
         self.login_as("alice")
         response = self.client.get(self.url, format="json")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(
-            list(response.data.keys()),
-            ['user', 'community', 'is_admin', 'is_approved', 'time_created']
-        )
+        self.assertEqual(list(response.data.keys()), self.expected_keys)
         self.assertEqual(response.data["user"], self.USER)
 
         # ben is not a group member, he sees nothing:
         self.login_as("ben")
         response = self.client.get(self.url, format="json")
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-        self.assertEqual(response.data["detail"],
-            "You do not have permission to perform this action.")
+        test_utils.assert_403_not_authorized(self, response)
 
 
     def test_update_membership_works_for_group_admins(self):
@@ -532,39 +483,28 @@ class MembershipDetailTest(SetupCommunityDataMixin, APITestCase):
             community_id=self.COMMUNITY, user_id=self.USER).is_admin)
 
     def test_update_community_for_non_admins_should_fail(self):
-        community = Community.objects.get(name="A")
-        alice = CustomUser.objects.get(username="alice")
-        community.join(alice)
+        alice_joins_the_community()
 
         # anonymous users have no access:
         response = self.client.put(self.url, self.new_data, format="json")
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-        self.assertEqual(response.data["detail"],
-            "Authentication credentials were not provided.")
+        test_utils.assert_403_not_authenticated(self, response)
 
         # alice is a regular group member, she cannot update the data:
         self.login_as("alice")
         response = self.client.put(self.url, self.new_data, format="json")
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-        self.assertEqual(response.data["detail"],
-            "You do not have permission to perform this action.")
+        test_utils.assert_403_not_authorized(self, response)
 
         # ben is not a group member at all, he cannot update the data either:
         self.login_as("ben")
         response = self.client.put(self.url, self.new_data, format="json")
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-        self.assertEqual(response.data["detail"],
-            "You do not have permission to perform this action.")
-
+        test_utils.assert_403_not_authorized(self, response)
         self.assertTrue(Membership.objects.get(
             community_id=self.COMMUNITY, user_id=self.USER).is_admin)
 
 
     def test_delete_membership_works_for_group_admins(self):
-        community = Community.objects.get(name="A")
-        alice = CustomUser.objects.get(username="alice")
-        ALICE_ID = alice.id
-        community.join(alice)
+        alice_joins_the_community()
+        ALICE_ID = 2
 
         url = reverse(
             'communities:membership-detail',  
@@ -575,6 +515,7 @@ class MembershipDetailTest(SetupCommunityDataMixin, APITestCase):
         )
         # bob is group admin, he can delete alice:
         self.login_as("bob")
+
         response = self.client.delete(url, format="json")
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(response.data, None)
@@ -583,18 +524,14 @@ class MembershipDetailTest(SetupCommunityDataMixin, APITestCase):
 
         # but he cannot delete himself because he is an admin:
         response = self.client.delete(self.url, format="json")
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-        self.assertEqual(response.data["detail"],
-            "You do not have permission to perform this action.")
+        test_utils.assert_403_not_authorized(self, response)
         self.assertEqual(Membership.objects.filter(
             community_id=self.COMMUNITY, user_id=self.USER).count(), 1)
 
 
     def test_users_can_leave_a_group(self):
-        community = Community.objects.get(name="A")
-        alice = CustomUser.objects.get(username="alice")
-        ALICE_ID = alice.id
-        community.join(alice)
+        alice_joins_the_community()
+        ALICE_ID = 2
 
         url = reverse(
             'communities:membership-detail',  
@@ -603,39 +540,32 @@ class MembershipDetailTest(SetupCommunityDataMixin, APITestCase):
                 'user_id': ALICE_ID,
             }
         )
-        # bob is group admin, he can delete alice:
+        # alice can leave the community:
         self.login_as("alice")
         response = self.client.delete(url, format="json")
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(response.data, None)
+
         self.assertEqual(Membership.objects.filter(
             community_id=self.COMMUNITY, user_id=ALICE_ID).count(), 0)
 
 
     def test_delete_membership_for_non_admins_should_fail(self):
-        community = Community.objects.get(name="A")
-        alice = CustomUser.objects.get(username="alice")
-        community.join(alice)
+        alice_joins_the_community()
 
         # anonymous users have no access
         response = self.client.delete(self.url, format="json")
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-        self.assertEqual(response.data["detail"],
-            "Authentication credentials were not provided.")
+        test_utils.assert_403_not_authenticated(self, response)
 
-        # alice is a regular group member, she cannot delete a member:
+        # alice is a regular community member, she cannot delete a member:
         self.login_as("alice")
         response = self.client.delete(self.url, format="json")
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-        self.assertEqual(response.data["detail"],
-            "You do not have permission to perform this action.")
+        test_utils.assert_403_not_authorized(self, response)
 
         # ben is not a group member at all, he cannot delete the data either:
         self.login_as("ben")
         response = self.client.delete(self.url, format="json")
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-        self.assertEqual(response.data["detail"],
-            "You do not have permission to perform this action.")
+        test_utils.assert_403_not_authorized(self, response)
 
         self.assertEqual(Membership.objects.filter(
             community_id=self.COMMUNITY, user_id=self.USER).count(), 1)

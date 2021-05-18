@@ -2,7 +2,7 @@
 # By default, drf views are only protected if the client has authenticated:
 # https://stackoverflow.com/questions/49275069/csrf-is-only-checked-when-authenticated-in-drf
 # https://stackoverflow.com/a/47491560
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import login, logout
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import never_cache
 
@@ -48,14 +48,9 @@ class UserCreate(APIView):
     """
     def post(self, request):
         serializer = NewUserSerializer(data=request.data)
-        if serializer.is_valid():
+        if serializer.is_valid(raise_exception=True):
             serializer.save()
             return Response(status=status.HTTP_201_CREATED)
-        body = {
-            "userMessage": "Bad form submitted.",
-            "data": serializer.errors
-        }
-        return Response(body, status=status.HTTP_400_BAD_REQUEST)
 
 
 class Login(APIView):
@@ -65,23 +60,11 @@ class Login(APIView):
     @method_decorator(never_cache)
     def post(self, request):
         serializer = LoginSerializer(data=request.data)
-        if serializer.is_valid():
+        if serializer.is_valid(raise_exception=True):
             data = serializer.validated_data
-            user = authenticate(username=data["username"], password=data["password"])
-            if user is None:
-                body = {
-                    "userMessage": "Wrong credentials."
-                }
-                return Response(body, status=status.HTTP_400_BAD_REQUEST)
-            else:
-                serializer = UserSerializer(user)
-                login(request._request, user)
-                return Response(serializer.data)
-        body = {
-            "userMessage": "Bad form submitted.",
-            "data": serializer.errors
-        }
-        return Response(body, status=status.HTTP_400_BAD_REQUEST)
+            login(request._request, data["user"])
+            serializer = UserSerializer(data["user"])
+            return Response(serializer.data)
 
 
 class Logout(APIView):

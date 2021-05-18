@@ -1,3 +1,4 @@
+from django.contrib.auth import authenticate
 from django.core.exceptions import ValidationError
 from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.contrib.auth.password_validation import validate_password
@@ -36,6 +37,17 @@ class LoginSerializer(serializers.Serializer):
     username = serializers.CharField(required=True, max_length=150, 
         validators=[UnicodeUsernameValidator])
     password = serializers.CharField(required=True, max_length=128)
+
+    def validate(self, data):
+        """
+        Authenticate user on correct credentials.
+        """
+        user = authenticate(username=data["username"], password=data["password"])
+        if user is None:
+            raise serializers.ValidationError("Wrong credentials.")
+        data["user"] = user           
+        return data
+
 
 
 class UserSerializer(serializers.ModelSerializer):

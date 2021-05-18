@@ -7,6 +7,7 @@ from rest_framework.test import APITestCase
 
 from users.models import CustomUser
 from users.tests.setup_mixin import SetupUsersMixin
+from common import test_utils
 
 
 class RegistrationViewTest(APITestCase):
@@ -34,12 +35,13 @@ class RegistrationViewTest(APITestCase):
             {"username": "bob", "password": "dog"}, 
             format='json'
         )
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertListEqual(list(response.data.keys()), ["userMessage", "data"])
-        self.assertEqual(response.data["userMessage"], "Bad form submitted.")
-        self.assertDictEqual(
-            response.data["data"], 
-            {"password": ["This password is too short. It must contain at least 8 characters. This password is too common."]}
+        test_utils.assert_400_validation_failed(self, response, 
+            error="Bad data submitted.",
+            data={"password": [
+                ("This password is too short. "
+                 "It must contain at least 8 characters. "
+                 "This password is too common.")
+            ]}
         )
         self.assertEqual(CustomUser.objects.count(), 0)
 
@@ -49,13 +51,9 @@ class RegistrationViewTest(APITestCase):
             {"username": "", "password": "dog12345"}, 
             format='json'
         )
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertListEqual(list(response.data.keys()), ["userMessage", "data"])
-        self.assertEqual(response.data["userMessage"], "Bad form submitted.")
-        self.assertDictEqual(
-            response.data["data"], 
-            {"username": ["This field may not be blank."]}
-        )
+        test_utils.assert_400_validation_failed(self, response, 
+            error="Bad data submitted.",
+            data={"username": ["This field may not be blank."]})
         self.assertEqual(CustomUser.objects.count(), 0)
 
     def test_duplicate_user(self):
@@ -71,13 +69,9 @@ class RegistrationViewTest(APITestCase):
         # b. try creating same user again
         response = self.client.post(self.url, self.user, format='json')
 
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertListEqual(list(response.data.keys()), ["userMessage", "data"])
-        self.assertEqual(response.data["userMessage"], "Bad form submitted.")
-        self.assertDictEqual(
-            response.data["data"], 
-            {"username": ["A user with that username already exists."]}
-        )
+        test_utils.assert_400_validation_failed(self, response, 
+            error="Bad data submitted.",
+            data={"username": ["A user with that username already exists."]})
         self.assertEqual(CustomUser.objects.count(), 1)
 
 
@@ -123,11 +117,9 @@ class LoginViewTest(SetupUsersMixin, APITestCase):
             bad_credentials, 
             format="json"
         )
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertDictEqual(
-            response.data, 
-            {"userMessage": "Wrong credentials."}
-        )
+        test_utils.assert_400_validation_failed(self, response, 
+            error="Bad data submitted.",
+            data={"non_field_errors": ["Wrong credentials."]})
         self.assertTrue("sessionid" not in response.cookies)
 
 
@@ -184,20 +176,12 @@ class UserListViewTest(SetupUsersMixin, APITestCase):
     def test_normal(self):
         # view is not shown to anonymous users
         response = self.client.get(self.url, format="json")
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-        self.assertEqual(
-            response.data["detail"], 
-            "Authentication credentials were not provided."
-        )
-        # why not 401? see:
-        # https://www.django-rest-framework.org/api-guide/authentication/#unauthorized-and-forbidden-responses
+        test_utils.assert_403_not_authenticated(self, response)
 
         # view is not shown to non super users
         self.login_as("bob")
         response = self.client.get(self.url, format="json")
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-        self.assertEqual(response.data["detail"],
-            "You do not have permission to perform this action.")
+        test_utils.assert_403_not_authorized(self, response)
 
         # view is shown to superuser
         self.login_as("admin")
@@ -219,14 +203,14 @@ class TimeViewTest(SetupUsersMixin, APITestCase):
 
         # view is not shown to anonymous users
         response = self.client.get(url, format="json")
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        test_utils.assert_403_not_authenticated(self, response)
 
         # view is shown to authenticated users
         self.login_as("bob")
         response = self.client.get(url, format="json")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        # test logout
+        # test after logout
         self.logout()
         response = self.client.get(url, format="json")
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        test_utils.assert_403_not_authenticated(self, response)

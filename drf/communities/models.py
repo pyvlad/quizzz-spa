@@ -1,9 +1,13 @@
-from django.db import models
+from django.db import models, IntegrityError
 from django.conf import settings
 
 
 class MemberLimitException(ValueError):
     pass
+
+class MemberAlreadyExistsException(ValueError):
+    pass
+
 
 
 class TimeStampedModel(models.Model):
@@ -37,11 +41,17 @@ class Community(TimeStampedModel):
         if len(self.members.all()) >= self.max_members:
             raise MemberLimitException()
 
-        return Membership.objects.create(
-            user=user,
-            community=self,
-            is_approved=(False if self.approval_required else True),
-        )
+        try: 
+            return Membership.objects.create(
+                user=user,
+                community=self,
+                is_approved=(False if self.approval_required else True),
+            )
+        except IntegrityError as e:
+            if 'UNIQUE constraint failed' in str(e):
+                raise MemberAlreadyExistsException()
+            else:
+                raise
 
     @classmethod
     def create(cls, user, **kwargs):
