@@ -43,7 +43,12 @@ export async function client(endpoint, { body, ...customConfig } = {}) {
       throw new Error('Internal Server Error');
     }
 
-    const body = await response.json();
+    let body;
+    try {
+      body = await response.json();
+    } catch(e) {
+      body = null;  // some endpoints return an empty body, e.g. logout
+    }
 
     if (response.ok) {
       return body;
@@ -79,9 +84,8 @@ function apiError(response, body) {
   const error = new Error(response.statusText);
 
   error.data = {
-    message: response.statusText,
+    message: (body && body.error) ? body.error : response.statusText,
     status: response.status,
-    userMessage: (body && body.userMessage) ? body.userMessage : '',
     body: (body && body.data) ? body.data : {},
   }
 
@@ -93,7 +97,7 @@ export function clientError(e) {
   /* 
     Make error serializable so that it can be passed as action.payload.
     Successful requests with codes other than 200-299 return extra data
-    attached to the error: { message, userMessage, status, body }. Return 
+    attached to the error: { message, status, body }. Return 
     that object if it is present.
     Other errors don't have such an object attached to them. 
     Return { message } with e.message in that case.

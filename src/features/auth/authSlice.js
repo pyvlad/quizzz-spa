@@ -50,34 +50,7 @@ export const authSlice = createSlice({
   // doesn't actually mutate the state because it uses the immer library,
   // which detects changes to a "draft state" and produces a brand new
   // immutable state based off those changes.
-  reducers: {
-    // loginRequestStart: state => {
-    //   state.loading = true;
-    //   state.error = '';
-    // },
-    // loginRequestSuccess: (state, action) => {
-    //   state.loading = false;
-    //   state.user = action.payload;
-    // },
-    // loginRequestFail: (state, action) => {
-    //   state.loading = false;
-    //   const { message, userMessage } = action.payload;
-    //   state.error = userMessage ? userMessage : message;
-    // },
-    // logoutRequestStart: state => {
-    //   state.loading = true;
-    //   state.error = '';
-    // },
-    // logoutRequestSuccess: state => {
-    //   state.loading = false;
-    //   state.user = null;
-    // },
-    // logoutRequestFail: (state, action) => {
-    //   state.loading = false;
-    //   const { message, userMessage } = action.payload;
-    //   state.error = userMessage ? userMessage : message;
-    // },
-  },
+  reducers: {},
   extraReducers: {
     [fetchLogin.pending]: (state, action) => {
       state.loading = true;
@@ -89,8 +62,7 @@ export const authSlice = createSlice({
     },
     [fetchLogin.rejected]: (state, action) => {
       state.loading = false;
-      const { message, userMessage } = action.payload;
-      state.error = userMessage ? userMessage : message;
+      state.error = action.payload.message;
     },
     [fetchLogout.pending]: state => {
       state.loading = true;
@@ -102,8 +74,7 @@ export const authSlice = createSlice({
     },
     [fetchLogout.rejected]: (state, action) => {
       state.loading = false;
-      const { message, userMessage } = action.payload;
-      state.error = userMessage ? userMessage : message;
+      state.error = action.payload.message;
     },
   }
 })

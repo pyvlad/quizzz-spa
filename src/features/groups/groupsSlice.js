@@ -45,8 +45,7 @@ const groupsSlice = createSlice({
     },
     [fetchUserGroupsThunk.rejected]: (state, action) => {
       state.loading = false;
-      const { message, userMessage } = action.payload;
-      state.error = userMessage ? userMessage : message;
+      state.error = action.payload.message;
     },
     [fetchJoinGroupThunk.pending]: state => {
       state.loading = true;
@@ -58,8 +57,7 @@ const groupsSlice = createSlice({
     },
     [fetchJoinGroupThunk.rejected]: (state, action) => {
       state.loading = false;
-      const { message, userMessage } = action.payload;
-      state.error = userMessage ? userMessage : message;
+      state.error = action.payload.message;
     },
   }
 });

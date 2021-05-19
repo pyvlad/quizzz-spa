@@ -7,9 +7,9 @@ import {
 } from 'react-router-dom';
 
 import store from './store';
+import Content from './Content';
 import BasePage from 'features/base/BasePage';
 import Login from 'features/auth/Login';
-import Content from 'features/content/Content';
 
 
 const App = () => (
