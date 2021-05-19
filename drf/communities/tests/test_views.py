@@ -42,7 +42,7 @@ class CommunityListTest(SetupCommunityDataMixin, APITestCase):
         self.assertEqual(len(response.data), len(self.communities))
         self.assertListEqual(
             list(response.data[0].keys()), 
-            ["name", "password", "approval_required", "max_members", "time_created"]
+            ["id", "name", "password", "approval_required", "max_members", "time_created"]
         )
 
 
@@ -117,7 +117,7 @@ class CreateCommunityTest(SetupCommunityDataMixin, APITestCase):
         )
         self.assertListEqual(
             list(response.data["community"].keys()), 
-            ["name", "password", "approval_required", "max_members", "time_created"]
+            ["id", "name", "password", "approval_required", "max_members", "time_created"]
         )
         self.assertEqual(Community.objects.count(), len(self.communities) + 1)
 
@@ -189,7 +189,7 @@ class JoinCommunityTest(SetupCommunityDataMixin, APITransactionTestCase):
         )
         self.assertListEqual(
             list(response.data["community"].keys()), 
-            ["name", "password", "approval_required", "max_members", "time_created"]
+            ["id", "name", "password", "approval_required", "max_members", "time_created"]
         )
         self.assertEqual(response.data["user"], self.user_by_name[USER]["id"])
         self.assertEqual(response.data["is_admin"], False)
@@ -346,7 +346,7 @@ class CommunityDetailTest(SetupCommunityDataMixin, APITestCase):
         self.new_data = self.community_by_name["A"].copy()
         self.new_data["password"] = "new-password"
         self.expected_keys = [
-            "name", "password", "approval_required", "max_members", "time_created"
+            "id", "name", "password", "approval_required", "max_members", "time_created"
         ]
 
     def test_get_community(self):

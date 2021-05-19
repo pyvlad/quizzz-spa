@@ -19,10 +19,10 @@ export async function fetchJoinCommunity({ name, password }) {
 }
 
 
-export async function fetchLeaveCommunity(communityId, userId) {
+export async function fetchLeaveCommunity({ communityId, userId }) {
   /* 
-    Send group credentials to backend.
-    On success, a group object is received.
+    Send request to leave the group.
+    On success, None is received with 204 code.
   */
   return await apiClient.delete(`/api/communities/${communityId}/members/${userId}/`);
 }

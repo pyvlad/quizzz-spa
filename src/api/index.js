@@ -11,4 +11,5 @@ export {
 export {
   fetchUserCommunities,
   fetchJoinCommunity,
+  fetchLeaveCommunity,
 } from './communities';

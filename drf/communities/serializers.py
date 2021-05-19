@@ -46,6 +46,7 @@ class CommunitySerializer(serializers.ModelSerializer):
     class Meta:
         model = Community
         fields = [
+            'id',
             'name',
             'password',
             'approval_required',

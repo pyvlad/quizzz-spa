@@ -1,11 +1,25 @@
 import React from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 
+import { fetchLeaveGroupThunk } from '../groupsSlice';
+import { selectCurrentUser } from 'features/auth/authSlice';
 import 'styles/btn.scss';
 import './groups.scss';
 
 
 const GroupItem = ({ groupMembership }) => {
   const { is_admin: isGroupAdmin, community: { name } = {} } = groupMembership;
+
+  const user = useSelector(selectCurrentUser);
+  const dispatch = useDispatch();
+
+  const handleLeaveGroup = (e) => {
+    e.preventDefault();
+    dispatch(fetchLeaveGroupThunk({ 
+      userId: user.id, 
+      communityId: groupMembership.community.id 
+    }));
+  }
 
   return <li className="groups__li">
     <a className="groups__li-link groups__li-link--with-actions" 
@@ -19,14 +33,9 @@ const GroupItem = ({ groupMembership }) => {
              href="">
             Edit
           </a>
-        : <form action="" method="post">
-            <input 
-              className="btn btn--red btn--rounded"
-              type="submit" 
-              value="Leave"
-              onClick={() => window.confirm('Are you sure you want to leave this group?')} 
-            />
-          </form>
+        : <button className="btn btn--red btn--rounded" onClick={ handleLeaveGroup } >
+            Leave
+          </button>
       }
     </div>
   </li>

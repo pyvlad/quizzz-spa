@@ -1,6 +1,11 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 
-import { fetchUserCommunities, fetchJoinCommunity, clientError } from 'api';
+import { 
+  fetchUserCommunities, 
+  fetchJoinCommunity, 
+  fetchLeaveCommunity, 
+  clientError 
+} from 'api';
 
 
 export const fetchUserGroupsThunk = createAsyncThunk(
@@ -19,6 +24,18 @@ export const fetchJoinGroupThunk = createAsyncThunk(
   async ({ name, password }, { rejectWithValue }) => {
     try {
       return await fetchJoinCommunity({ name, password });
+    } catch(e) {
+      return rejectWithValue(clientError(e));
+    }
+  }
+)
+
+export const fetchLeaveGroupThunk = createAsyncThunk(
+  'groups/fetchLeaveGroup', 
+  async ({ userId, communityId }, { rejectWithValue }) => {
+    try {
+      await fetchLeaveCommunity({ userId, communityId }); // this returns null
+      return { userId, communityId };
     } catch(e) {
       return rejectWithValue(clientError(e));
     }
@@ -56,6 +73,20 @@ const groupsSlice = createSlice({
       state.groups.push(action.payload);
     },
     [fetchJoinGroupThunk.rejected]: (state, action) => {
+      state.loading = false;
+      state.error = action.payload.message;
+    },
+    [fetchLeaveGroupThunk.pending]: state => {
+      state.loading = true;
+      state.error = '';
+    },
+    [fetchLeaveGroupThunk.fulfilled]: (state, action) => {
+      state.loading = false;
+      const { communityId } = action.payload;
+      const itemIndex = state.groups.findIndex(g => (communityId === g.community.id));
+      state.groups.splice(itemIndex, 1);
+    },
+    [fetchLeaveGroupThunk.rejected]: (state, action) => {
       state.loading = false;
       state.error = action.payload.message;
     },
