@@ -8,7 +8,7 @@ import 'styles/spacing.scss';
 import 'styles/headings.scss';
 
 
-const GroupManageWidget = ({ canCreateGroups }) => (
+const GroupActionsWidget = ({ canCreateGroups }) => (
   <React.Fragment>
     <h3 className="heading heading--2">
       Manage Groups
@@ -26,4 +26,4 @@ const GroupManageWidget = ({ canCreateGroups }) => (
   </React.Fragment>
 )
 
-export default GroupManageWidget;
+export default GroupActionsWidget;

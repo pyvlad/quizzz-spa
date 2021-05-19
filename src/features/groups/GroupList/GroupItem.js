@@ -4,20 +4,22 @@ import 'styles/btn.scss';
 import './groups.scss';
 
 
-const GroupItem = ({ group }) => (
-  <li className="groups__li">
+const GroupItem = ({ groupMembership }) => {
+  const { is_admin: isGroupAdmin, community: { name } = {} } = groupMembership;
+
+  return <li className="groups__li">
     <a className="groups__li-link groups__li-link--with-actions" 
-       href={ group.view_url }>
-      { group.name }
+       href="">
+      { name }
     </a>
     <div className="groups__li-actions">
       {
-        group.isAdmin 
+        isGroupAdmin
         ? <a className="btn btn--grey btn--rounded" 
-             href={ group.edit_url }>
+             href="">
             Edit
           </a>
-        : <form action="{{ group.leave_url }}" method="post">
+        : <form action="" method="post">
             <input 
               className="btn btn--red btn--rounded"
               type="submit" 
@@ -28,6 +30,6 @@ const GroupItem = ({ group }) => (
       }
     </div>
   </li>
-)
+}
 
 export default GroupItem;

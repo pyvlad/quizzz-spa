@@ -1,13 +1,13 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 
-import { fetchUserGroups, fetchJoinGroup, clientError } from 'api';
+import { fetchUserCommunities, fetchJoinCommunity, clientError } from 'api';
 
 
 export const fetchUserGroupsThunk = createAsyncThunk(
   'groups/fetchUserGroups', 
-  async (_, { rejectWithValue }) => {
+  async (userId, { rejectWithValue }) => {
     try {
-      return await fetchUserGroups();
+      return await fetchUserCommunities(userId);
     } catch(e) {
       return rejectWithValue(clientError(e));
     }
@@ -18,7 +18,7 @@ export const fetchJoinGroupThunk = createAsyncThunk(
   'groups/fetchJoinGroup', 
   async ({ name, password }, { rejectWithValue }) => {
     try {
-      return await fetchJoinGroup({ name, password });
+      return await fetchJoinCommunity({ name, password });
     } catch(e) {
       return rejectWithValue(clientError(e));
     }

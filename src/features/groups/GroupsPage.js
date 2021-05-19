@@ -1,7 +1,7 @@
 import React from 'react';
 
 import GroupList from './GroupList/GroupList';
-import GroupManageWidget from './GroupManagement/GroupManageWidget';
+import GroupActionsWidget from './GroupManagement/GroupActionsWidget';
 import 'styles/grid.scss';
 import 'styles/headings.scss';
 
@@ -18,7 +18,7 @@ const GroupsPage = () => {
           <GroupList />
         </div>
         <div className="col-12 col-sm-offset-1 col-sm-3">
-          <GroupManageWidget />
+          <GroupActionsWidget canCreateGroups={ true } />
         </div>
       </div>
     </div>

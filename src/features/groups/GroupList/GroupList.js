@@ -7,6 +7,7 @@ import {
   selectUserGroups, 
   selectUserGroupsLoading,
 } from '../groupsSlice';
+import { selectCurrentUser } from 'features/auth/authSlice';
 import 'styles/headings.scss';
 import 'styles/paper.scss';
 import 'styles/spacing.scss';
@@ -15,12 +16,15 @@ import './groups.scss';
 
 const GroupList = () => {
   const dispatch = useDispatch();
+  const user = useSelector(selectCurrentUser);
   const userGroups = useSelector(selectUserGroups);
   const isLoading = useSelector(selectUserGroupsLoading);
 
+  const userId = user.id;
+
   React.useEffect(() => {
-    dispatch(fetchUserGroupsThunk())
-  }, [dispatch]);
+    dispatch(fetchUserGroupsThunk(userId))
+  }, [dispatch, userId]);
 
   return (
     <React.Fragment>
@@ -34,7 +38,7 @@ const GroupList = () => {
           : <ul className="groups">
               {
                 userGroups.length
-                ? userGroups.map(g => <GroupItem group={g} key={g.id} />)
+                ? userGroups.map(g => <GroupItem groupMembership={g} key={g.community.name} />)
                 : <p>You are not a member of any group yet.</p>
               }
             </ul>

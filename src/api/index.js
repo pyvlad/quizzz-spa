@@ -9,6 +9,6 @@ export {
 } from './auth';
 
 export {
-  fetchUserGroups,
-  fetchJoinGroup,
-} from './groups';
+  fetchUserCommunities,
+  fetchJoinCommunity,
+} from './communities';
