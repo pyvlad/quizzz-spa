@@ -9,7 +9,10 @@ export {
 } from './auth';
 
 export {
-  fetchUserCommunities,
+  fetchUserMemberships,
   fetchJoinCommunity,
-  fetchLeaveCommunity,
+  fetchCreateCommunity,
+  fetchEditCommunity,
+  fetchDeleteMembership,
+  fetchDeleteCommunity,
 } from './communities';

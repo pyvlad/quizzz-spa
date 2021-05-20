@@ -7,6 +7,11 @@
 
 
 export async function client(endpoint, { body, ...customConfig } = {}) {
+  /*
+    Returns:
+    - on success: body of the response;
+    - on failure: rejected promise with clientError object.
+  */
   const csrfToken = getCookie("csrftoken");
   
   // set up headers
@@ -32,12 +37,6 @@ export async function client(endpoint, { body, ...customConfig } = {}) {
   try {
     const response = await window.fetch(endpoint, config);
 
-    if (response.status === 401) {
-      // redirect user to the login screen
-      // window.location.assign('/login/')
-      // return
-    }
-
     // This shouldn't be needed but React proxy doesn't return json on proxy fails
     if (response.status === 500) {
       throw new Error('Internal Server Error');
@@ -55,8 +54,8 @@ export async function client(endpoint, { body, ...customConfig } = {}) {
     } else {
       throw apiError(response, body);
     }
-  } catch (e) {
-    return Promise.reject(e);
+  } catch (err) {
+    return Promise.reject(clientError(err));
   }
 }
 

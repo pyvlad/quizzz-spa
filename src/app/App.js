@@ -18,7 +18,7 @@ const App = () => (
       <BasePage>
         <Switch>
           <Route exact path="/login/" component={ Login } />
-          <Route exact path="/" component={ Content } />
+          <Route path="/" component={ Content } />
           <Redirect to="/" />
         </Switch>
       </BasePage>
