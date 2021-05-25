@@ -1,21 +1,14 @@
 from django.db import models, IntegrityError
 from django.conf import settings
 
+from common.models import TimeStampedModel
+
 
 class MemberLimitException(ValueError):
     pass
 
 class MemberAlreadyExistsException(ValueError):
     pass
-
-
-
-class TimeStampedModel(models.Model):
-    time_created = models.DateTimeField(auto_now_add=True)
-    time_updated = models.DateTimeField(auto_now=True)
-    
-    class Meta:
-        abstract = True
 
 
 class Community(TimeStampedModel):

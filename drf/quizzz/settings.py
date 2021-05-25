@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'common.apps.CommonConfig',
     'users.apps.UsersConfig',
     'communities.apps.CommunitiesConfig',
+    'chat.apps.ChatConfig',
 
     # 3rd party
     'rest_framework',
@@ -148,7 +149,10 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.SessionAuthentication',
     ],
-    'EXCEPTION_HANDLER': 'common.exceptions.custom_exception_handler'
+    'EXCEPTION_HANDLER': 'common.exceptions.custom_exception_handler',
+    # Pagination is only performed automatically for generic views and viewsets:
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 100,
 }
 
 
@@ -173,3 +177,5 @@ REST_FRAMEWORK = {
 #         }
 #     }
 # }
+
+QUIZZZ_CHAT_PAGE_SIZE = 10

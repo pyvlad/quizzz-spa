@@ -8,9 +8,9 @@ from rest_framework import status
 from .serializers import MembershipSerializer, CommunitySerializer, \
     JoinCommunitySerializer, MembershipForMemberListSerializer
 from .models import Membership, Community
-from .permissions import AuthenticatedAsUrlUserId, IsCommunityAdmin, IsCommunityMember, \
-    IsSafeMethod, IsDeleteMethod
-from users.permissions import IsSuperuser
+from .permissions import IsCommunityAdmin, IsCommunityMember
+from users.permissions import IsSuperuser, AuthenticatedAsUrlUserId
+from common.permissions import IsSafeMethod, IsDeleteMethod
 
 from django.contrib.auth import get_user_model
 User = get_user_model()

@@ -1,12 +1,6 @@
 from users.models import CustomUser
 
-
-USERS = [
-    {"id": 1, "username": "bob", "password": "dog12345"},
-    {"id": 2, "username": "alice", "password": "cat12345"},
-    {"id": 3, "username": "ben", "password": "frog12345"},
-    {"id": 4, "username": "admin", "password": "qwerty123", "is_superuser": True}
-]
+from .data import USERS
 
 
 class SetupUsersMixin:
@@ -14,11 +8,9 @@ class SetupUsersMixin:
     Mixin with user data and methods for login/logout.
     """
     def set_up_users(self):
-        for user in USERS:
-            CustomUser.objects.create_user(**user)
+        for user_obj in USERS.values():
+            CustomUser.objects.create_user(**user_obj)
         self.users = USERS
-        self.user_by_name = {u["username"]: u for u in USERS}
-        self.user_by_id = {u["id"]: u for u in USERS}
 
     def login(self, username, password):
         """
@@ -42,4 +34,4 @@ class SetupUsersMixin:
 
     def login_as(self, username):
         self.logout()
-        return self.login(username, self.user_by_name[username]["password"])
+        return self.login(username, self.users[username]["password"])

@@ -54,7 +54,7 @@ class UserCommunitiesTest(SetupCommunityDataMixin, APITestCase):
         # bob's community list:
         self.url = reverse(
             'communities:user-communities',  
-            kwargs={'user_id': self.user_by_name["bob"]["id"]}
+            kwargs={'user_id': self.users["bob"]["id"]}
         )
 
     def test_normal(self):
@@ -88,7 +88,7 @@ class CreateCommunityTest(SetupCommunityDataMixin, APITestCase):
     def setUp(self):
         self.set_up_community_data()
         self.url = reverse('communities:create-community')
-        self.new_community = {"name": "Group 4"}
+        self.new_community = {"name": "group4"}
 
     def test_normal(self):
         """
@@ -125,7 +125,7 @@ class CreateCommunityTest(SetupCommunityDataMixin, APITestCase):
         """
         Community name must be unique.
         """
-        new_community = {"name": self.communities[0]["name"]}
+        new_community = {"name": "group1"}
 
         self.login_as("bob")
         
@@ -154,8 +154,8 @@ class JoinCommunityTest(SetupCommunityDataMixin, APITransactionTestCase):
         self.set_up_community_data()
         self.url = reverse('communities:join-community')
         self.join_data = {
-            "name": "A", 
-            "password": self.community_by_name["A"]["password"]
+            "name": "group1", 
+            "password": self.communities["group1"]["password"]
         }
 
     def test_authentication_required(self):
@@ -191,7 +191,7 @@ class JoinCommunityTest(SetupCommunityDataMixin, APITransactionTestCase):
             list(response.data["community"].keys()), 
             ["id", "name", "password", "approval_required", "max_members", "time_created"]
         )
-        self.assertEqual(response.data["user"], self.user_by_name[USER]["id"])
+        self.assertEqual(response.data["user"], self.users[USER]["id"])
         self.assertEqual(response.data["is_admin"], False)
         self.assertEqual(response.data["community"]["name"], self.join_data["name"])
         self.assertEqual(Membership.objects.count(), len(self.communities) + 1)
@@ -201,7 +201,7 @@ class JoinCommunityTest(SetupCommunityDataMixin, APITransactionTestCase):
         Can only join a group if max_members limit has not been reached.
         """
         Community.objects\
-            .filter(pk=self.community_by_name["A"]["id"])\
+            .filter(pk=self.communities["group1"]["id"])\
             .update(max_members=1)
         
         self.login_as("alice")
@@ -282,7 +282,7 @@ class JoinCommunityTest(SetupCommunityDataMixin, APITransactionTestCase):
 
 def alice_joins_the_community():
     """ Reusable helper method """
-    community = Community.objects.get(name="A")
+    community = Community.objects.get(name="group1")
     alice = CustomUser.objects.get(username="alice")
     community.join(alice)
 
@@ -294,7 +294,7 @@ class MembershipListTest(SetupCommunityDataMixin, APITestCase):
         self.set_up_community_data()
         self.url = reverse(
             'communities:community-members',  
-            kwargs={'community_id': self.community_by_name["A"]["id"]}
+            kwargs={'community_id': self.communities["group1"]["id"]}
         )
 
     def test_authentication_required(self):
@@ -341,9 +341,9 @@ class CommunityDetailTest(SetupCommunityDataMixin, APITestCase):
         self.set_up_community_data()
         self.url = reverse(
             'communities:community-detail',  
-            kwargs={'community_id': self.community_by_name["A"]["id"]}
+            kwargs={'community_id': self.communities["group1"]["id"]}
         )
-        self.new_data = self.community_by_name["A"].copy()
+        self.new_data = self.communities["group1"].copy()
         self.new_data["password"] = "new-password"
         self.expected_keys = [
             "id", "name", "password", "approval_required", "max_members", "time_created"
@@ -364,7 +364,7 @@ class CommunityDetailTest(SetupCommunityDataMixin, APITestCase):
             response = self.client.get(self.url, format="json")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(list(response.data.keys()), self.expected_keys)
-        self.assertEqual(response.data["name"], "A")
+        self.assertEqual(response.data["name"], "group1")
 
         # alice is group member, she sees the data:
         self.login_as("alice")
@@ -373,7 +373,7 @@ class CommunityDetailTest(SetupCommunityDataMixin, APITestCase):
             response = self.client.get(self.url, format="json")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(list(response.data.keys()), self.expected_keys)
-        self.assertEqual(response.data["name"], "A")
+        self.assertEqual(response.data["name"], "group1")
 
         # ben is not a group member, he sees nothing:
         self.login_as("ben")
@@ -392,13 +392,13 @@ class CommunityDetailTest(SetupCommunityDataMixin, APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(list(response.data.keys()), self.expected_keys)
         self.assertEqual(response.data["password"], self.new_data["password"])
-        self.assertEqual(Community.objects.get(name="A").password, self.new_data["password"])
+        self.assertEqual(Community.objects.get(name="group1").password, self.new_data["password"])
 
     def test_update_community_name_to_an_existing_one_fails(self):
         self.login_as("bob")
 
-        new_data = self.community_by_name["A"].copy()
-        new_data["name"] = "B"
+        new_data = self.communities["group1"].copy()
+        new_data["name"] = "group2"
 
         with self.assertNumQueries(5):
             response = self.client.put(self.url, new_data, format="json")
@@ -406,7 +406,7 @@ class CommunityDetailTest(SetupCommunityDataMixin, APITestCase):
             error="Bad data submitted.", 
             data={"name": ["community with this name already exists."]}
         )
-        self.assertEqual(Community.objects.filter(name="B").count(), 1)
+        self.assertEqual(Community.objects.filter(name="group2").count(), 1)
 
     def test_update_community_for_non_admins_should_fail(self):
         alice_joins_the_community()
@@ -430,18 +430,18 @@ class CommunityDetailTest(SetupCommunityDataMixin, APITestCase):
             response = self.client.put(self.url, self.new_data, format="json")
         test_utils.assert_403_not_authorized(self, response)
 
-        self.assertNotEqual(Community.objects.get(name="A").password, self.new_data["password"])
+        self.assertNotEqual(Community.objects.get(name="group1").password, self.new_data["password"])
 
 
     def test_delete_community_works_for_group_admins(self):
         # bob is group admin, he can delete the group:
         self.login_as("bob")
 
-        with self.assertNumQueries(6): # (5) del members (6) del com
+        with self.assertNumQueries(7): # (5) del members (6) del chat messages (7) del com
             response = self.client.delete(self.url, format="json")
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(response.data, None)
-        self.assertEqual(Community.objects.filter(name="A").count(), 0)
+        self.assertEqual(Community.objects.filter(name="group1").count(), 0)
 
     def test_delete_community_for_non_admins_should_fail(self):
         alice_joins_the_community()
@@ -463,15 +463,15 @@ class CommunityDetailTest(SetupCommunityDataMixin, APITestCase):
             response = self.client.delete(self.url, format="json")
         test_utils.assert_403_not_authorized(self, response)
 
-        self.assertEqual(Community.objects.filter(name="A").count(), 1)
+        self.assertEqual(Community.objects.filter(name="group1").count(), 1)
 
 
 
 class MembershipDetailTest(SetupCommunityDataMixin, APITestCase):
     def setUp(self):
         self.set_up_community_data()
-        self.COMMUNITY = self.community_by_name["A"]["id"]
-        self.USER = self.user_by_name["bob"]["id"]
+        self.COMMUNITY = self.communities["group1"]["id"]
+        self.USER = self.users["bob"]["id"]
         self.url = reverse(
             'communities:membership-detail',  
             kwargs={
@@ -539,13 +539,13 @@ class MembershipDetailTest(SetupCommunityDataMixin, APITestCase):
         self.login_as("bob")
 
         # let's try to change bob's membership to ben
-        new_data = {"user": self.user_by_name["ben"]["id"]}
+        new_data = {"user": self.users["ben"]["id"]}
         with self.assertNumQueries(6): # as normal
             response = self.client.put(self.url, new_data, format="json")
 
         # user name is a read-only field so it is simply ignored:
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["user"], self.user_by_name["bob"]["id"])
+        self.assertEqual(response.data["user"], self.users["bob"]["id"])
 
         # now, let's try to submit bad value:
         new_data = {"is_admin": "Of course!"}

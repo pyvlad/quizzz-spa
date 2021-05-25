@@ -2,11 +2,6 @@ from rest_framework import permissions
 from .models import Membership
 
 
-class AuthenticatedAsUrlUserId(permissions.BasePermission):
-    def has_permission(self, request, view):
-        return (request.user.is_authenticated
-            and (view.kwargs["user_id"] == request.user.id))
-
 
 class IsCommunityAdmin(permissions.BasePermission):
     def has_permission(self, request, view):
@@ -30,13 +25,3 @@ class IsCommunityMember(permissions.BasePermission):
             return True
         except Membership.DoesNotExist:
             return False
-
-
-class IsSafeMethod(permissions.BasePermission):
-    def has_permission(self, request, view):
-        return request.method in ('GET', 'HEAD', 'OPTIONS')
-
-
-class IsDeleteMethod(permissions.BasePermission):    
-    def has_permission(self, request, view):
-        return request.method == "DELETE"

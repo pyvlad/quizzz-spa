@@ -93,7 +93,7 @@ class LoginViewTest(SetupUsersMixin, APITestCase):
         """
         User with correct credentials is logged in.
         """
-        user = self.user_by_name["bob"]
+        user = self.users["bob"]
 
         with self.assertNumQueries(9):
             response = self.client.post(
@@ -114,7 +114,7 @@ class LoginViewTest(SetupUsersMixin, APITestCase):
         """
         Users with wrong password are not logged in.
         """
-        user = self.user_by_name["bob"]
+        user = self.users["bob"]
         bad_credentials = {"username": user["username"], "password": "wrooooong12345"}
 
         with self.assertNumQueries(1):
