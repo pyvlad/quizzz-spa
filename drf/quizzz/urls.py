@@ -19,7 +19,7 @@ from django.urls import path, include
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/', include('users.urls')),
-    path('api/', include('communities.urls')),
-    path('api/communities/<int:community_id>/chat/', include('chat.urls')),
+    path('api/', include('quizzz.users.urls')),
+    path('api/communities/', include('quizzz.communities.urls')),
+    path('api/communities/<int:community_id>/chat/', include('quizzz.chat.urls')),
 ]

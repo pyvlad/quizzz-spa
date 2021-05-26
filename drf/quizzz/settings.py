@@ -40,10 +40,10 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     # local
-    'common.apps.CommonConfig',
-    'users.apps.UsersConfig',
-    'communities.apps.CommunitiesConfig',
-    'chat.apps.ChatConfig',
+    'quizzz.common.apps.CommonConfig',
+    'quizzz.users.apps.UsersConfig',
+    'quizzz.communities.apps.CommunitiesConfig',
+    'quizzz.chat.apps.ChatConfig',
 
     # 3rd party
     'rest_framework',
@@ -140,7 +140,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # https://docs.djangoproject.com/en/3.1/topics/auth/customizing/#using-a-custom-user-model-when-starting-a-project
 # The model referenced by AUTH_USER_MODEL must be created in the first migration 
 # of its app (usually called 0001_initial); otherwise, you’ll have dependency issues.
-AUTH_USER_MODEL = 'users.CustomUser'
+AUTH_USER_MODEL = 'users.CustomUser' # (app_label, model_name)
 
         
 # By default, 'rest_framework.authentication.BasicAuthentication' is the first in the list.
@@ -149,7 +149,7 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.SessionAuthentication',
     ],
-    'EXCEPTION_HANDLER': 'common.exceptions.custom_exception_handler',
+    'EXCEPTION_HANDLER': 'quizzz.common.exceptions.custom_exception_handler',
     # Pagination is only performed automatically for generic views and viewsets:
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 100,
@@ -178,4 +178,4 @@ REST_FRAMEWORK = {
 #     }
 # }
 
-QUIZZZ_CHAT_PAGE_SIZE = 10
+QUIZZZ_CHAT_PAGE_SIZE = 2

@@ -24,7 +24,8 @@
     "eject": "react-scripts eject",
     "api": "cd api/ && FLASK_ENV='development' ${npm_config_api_venv}/flask run -h localhost -p 5000 --no-debugger",
     "drf": "cd drf/ && ${npm_config_drf_venv}/python manage.py runserver localhost:5000",
-    "drf-coverage": "cd drf/; ${npm_config_drf_venv}/coverage run --source='.' manage.py test; ${npm_config_drf_venv}/coverage report -m"
+    "drf-coverage": "cd drf/; ${npm_config_drf_venv}/coverage run --source='.' manage.py test; ${npm_config_drf_venv}/coverage report -m",
+    "drf-db": "cd drf/; DRF_VENV=${npm_config_drf_venv} bash dev-db.sh"  
   },
   "proxy": "http://localhost:5000",
   "eslintConfig": {
