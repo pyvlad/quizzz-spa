@@ -16,3 +16,8 @@ export {
   fetchDeleteMembership,
   fetchDeleteCommunity,
 } from './communities';
+
+export {
+  fetchCommunityChatMessages,
+  fetchPostChatMessage,
+} from './chat';

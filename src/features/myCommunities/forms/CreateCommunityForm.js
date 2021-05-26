@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useHistory } from 'react-router-dom';
 
-import FormFieldErrors from './FormFieldErrors';
+import FormFieldErrors from 'features/common/FormFieldErrors';
 import { fetchCreateCommunity, fetchEditCommunity, fetchDeleteCommunity } from 'api';
 import { 
   addMembership, 

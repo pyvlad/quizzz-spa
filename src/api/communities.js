@@ -6,7 +6,7 @@ export async function fetchUserMemberships(userId) {
     Fetch communities the user is a member of.
     A list of membership objects with nested community objects is expected.
   */
-  return await apiClient.get(`/api/users/${userId}/communities/`);
+  return await apiClient.get(`/api/communities/user-memberships/${userId}/`);
 }
 
 export async function fetchJoinCommunity(payload) {
@@ -15,7 +15,7 @@ export async function fetchJoinCommunity(payload) {
     New membership object with nested community object is expected.
   */
   const { name, password } = payload;
-  return await apiClient.post("/api/join-community/", { name, password });
+  return await apiClient.post("/api/communities/join/", { name, password });
 }
 
 export async function fetchCreateCommunity(payload) {
@@ -25,7 +25,7 @@ export async function fetchCreateCommunity(payload) {
   */
   const { name, password, approval_required } = payload;
   return await apiClient.post(
-    "/api/create-community/", 
+    "/api/communities/create/", 
     { name, password, approval_required }
   )
 }
