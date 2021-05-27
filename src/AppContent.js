@@ -6,6 +6,7 @@ import MyCommunitiesPage from 'features/myCommunities/MyCommunitiesPage/MyCommun
 import JoinCommunityPage from 'features/myCommunities/JoinCommunityPage';
 import CreateOrEditCommunityPage from 'features/myCommunities/CreateOrEditCommunityPage';
 import CommunityPage from 'features/community/CommunityPage';
+import MembersPage from 'features/community/MembersPage';
 
 
 const AppContent = () => (
@@ -14,22 +15,15 @@ const AppContent = () => (
       <Route exact path="/" component={ MyCommunitiesPage } />
       <Route exact path="/join-community/" component={ JoinCommunityPage } />
       <Route exact path="/create-community/" component={ CreateOrEditCommunityPage } />
-      <Route exact path='/edit-community/:id/' 
-        render={
-          props => {
-            const id = parseInt(props.match.params.id);
-            return <CreateOrEditCommunityPage communityId={ id } />
-          }
-        }
-      />
-      <Route exact path="/community/:id/" 
-        render={ 
-          props => {
-            const id = parseInt(props.match.params.id);
-            return <CommunityPage communityId={ id } />
-          }
-        }
-      />
+      <Route exact path='/edit-community/:id/' render={
+        ({match}) => <CreateOrEditCommunityPage communityId={ parseInt(match.params.id) } />
+      }/>
+      <Route exact path="/community/:id/" render={ 
+        props => <CommunityPage communityId={ parseInt(props.match.params.id) } />
+      }/>
+      <Route exact path="/community/:id/members/" render={ 
+        props => <MembersPage communityId={ parseInt(props.match.params.id) } />
+      }/>
       <Redirect to="/" />
     </Switch>
   </MyCommunitiesLoader>

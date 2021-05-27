@@ -58,3 +58,31 @@ export async function fetchDeleteCommunity(communityId) {
   */
   return await apiClient.delete(`/api/communities/${communityId}/`);
 }
+
+export async function fetchMembershipList(communityId) {
+  /*
+    Fetch all members of a given community.
+    Returns array of membership objects with related user objects.
+  */
+  return await apiClient.get(`/api/communities/${communityId}/members/`);
+}
+
+export async function fetchMembership(communityId, userId) {
+  /*
+    Fetch membership object of a given user in a given community.
+    Returns membership object with embedded community object.
+  */
+  return await apiClient.get(`/api/communities/${communityId}/members/${userId}/`);
+}
+
+export async function fetchUpdateMembership(communityId, userId, payload) {
+  /*
+    Send updated parameters of an existing membership. Need to be group admin.
+    Updated membership object is expected.
+  */
+  const { is_admin, is_approved } = payload;
+  return await apiClient.put(
+    `/api/communities/${communityId}/members/${userId}/`, 
+    { is_admin, is_approved }
+  ); 
+}

@@ -500,7 +500,7 @@ class MembershipDetailTest(SetupCommunityDataMixin, APITestCase):
             response = self.client.get(self.url, format="json")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(list(response.data.keys()), self.expected_keys)
-        self.assertEqual(response.data["user"], self.USER)
+        self.assertEqual(response.data["user"]["id"], self.USER)
 
         # alice is group member, she sees the data:
         self.login_as("alice")
@@ -508,7 +508,7 @@ class MembershipDetailTest(SetupCommunityDataMixin, APITestCase):
             response = self.client.get(self.url, format="json")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(list(response.data.keys()), self.expected_keys)
-        self.assertEqual(response.data["user"], self.USER)
+        self.assertEqual(response.data["user"]["id"], self.USER)
 
         # ben is not a group member, he sees nothing:
         self.login_as("ben")
@@ -540,13 +540,20 @@ class MembershipDetailTest(SetupCommunityDataMixin, APITestCase):
         self.login_as("bob")
 
         # let's try to change bob's membership to ben
-        new_data = {"user": self.users["ben"]["id"]}
+        # user is a read-only field so it is simply ignored:
+        new_data = {"user": {"id": self.users["ben"]["id"]}}
         with self.assertNumQueries(6): # as normal
             response = self.client.put(self.url, new_data, format="json")
-
-        # user name is a read-only field so it is simply ignored:
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["user"], self.users["bob"]["id"])
+        self.assertEqual(response.data["user"]["id"], self.users["bob"]["id"])
+
+        # now, let's try to move bob's membership to another community
+        # community is a read-only field so it is also ignored:
+        new_data = {"community": 2}
+        with self.assertNumQueries(6): # as normal
+            response = self.client.put(self.url, new_data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["community"], self.COMMUNITY)
 
         # now, let's try to submit bad value:
         new_data = {"is_admin": "Of course!"}

@@ -17,6 +17,8 @@ const urlFor = (label, params) => {
       return `/edit-community/${params.communityId}/`
     case 'COMMUNITY_HOME':
       return `/community/${params.communityId}/`
+    case 'COMMUNITY_MEMBERS':
+      return `/community/${params.communityId}/members/`
 
     // default
     default:

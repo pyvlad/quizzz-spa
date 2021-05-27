@@ -79,7 +79,7 @@ class MembershipSerializer(serializers.ModelSerializer):
             'is_approved',
             'time_created',
         ]
-        read_only_fields = ['user', 'time_created']
+        read_only_fields = ['user', 'community', 'time_created']
 
 
 
@@ -96,7 +96,7 @@ class UserForMembershipListSerializer(serializers.ModelSerializer):
 
 
 class MembershipForMemberListSerializer(serializers.ModelSerializer):
-    user = UserForMembershipListSerializer()
+    user = UserForMembershipListSerializer(read_only=True)
 
     class Meta:
         model = Membership
@@ -107,3 +107,4 @@ class MembershipForMemberListSerializer(serializers.ModelSerializer):
             'is_approved',
             'time_created',
         ]
+        read_only_fields = ['user', 'community', 'time_created']

@@ -15,6 +15,9 @@ export {
   fetchEditCommunity,
   fetchDeleteMembership,
   fetchDeleteCommunity,
+  fetchMembershipList,
+  fetchMembership,
+  fetchUpdateMembership,
 } from './communities';
 
 export {

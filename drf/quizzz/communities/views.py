@@ -178,12 +178,12 @@ class MembershipDetail(APIView):
 
     def get(self, request, user_id, community_id):
         membership = self.get_object()
-        serializer = MembershipSerializer(membership)
+        serializer = MembershipForMemberListSerializer(membership)
         return Response(serializer.data)
 
     def put(self, request, user_id, community_id):
         membership = self.get_object()
-        serializer = MembershipSerializer(membership, data=request.data)
+        serializer = MembershipForMemberListSerializer(membership, data=request.data)
         if serializer.is_valid(raise_exception=True):
             serializer.save()
             return Response(serializer.data)
