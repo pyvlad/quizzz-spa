@@ -1,6 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
+import urlFor from 'urls';
+
 import 'styles/form.scss';
 import 'styles/btn.scss';
 
@@ -16,7 +18,9 @@ const JoinCommunityLink = () => (
       </div>
     </div>
     <div className="form__item">
-      <Link className="btn btn--primary btn--block" to='/join/'>
+      <Link to={ urlFor("JOIN_COMMUNITY") }
+        className="btn btn--primary btn--block"
+      >
         Join
       </Link>
     </div>

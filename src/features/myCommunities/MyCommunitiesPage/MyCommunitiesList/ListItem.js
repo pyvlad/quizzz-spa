@@ -3,10 +3,12 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
 
 import { selectCurrentUser } from 'features/auth/authSlice';
-import { deleteMembership } from '../slice';
 import { fetchDeleteMembership } from 'api';
+
+import { deleteMembership } from '../../slice';
 import 'styles/btn.scss';
 import './styles.scss';
+import urlFor from 'urls';
 
 
 const MyCommunitiesListItem = ({ membership }) => {
@@ -48,13 +50,17 @@ const MyCommunitiesListItem = ({ membership }) => {
 
   return (
     <li className="groups__li">
-      <Link to={`${id}/`} className="groups__li-link groups__li-link--with-actions" >
+      <Link to={ urlFor("COMMUNITY_HOME", {communityId: id}) } 
+        className="groups__li-link groups__li-link--with-actions" 
+      >
         { name }
       </Link>
       <div className="groups__li-actions">
         {
           isGroupAdmin
-          ? <Link to={`edit/${id}/`} className="btn btn--grey btn--rounded" >
+          ? <Link to={ urlFor("EDIT_COMMUNITY", {communityId: id}) } 
+              className="btn btn--grey btn--rounded" 
+            >
               Edit
             </Link>
           : <button onClick={ handleLeaveCommunity } className="btn btn--red btn--rounded">

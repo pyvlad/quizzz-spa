@@ -1,19 +1,19 @@
 import React from 'react';
 import { useSelector } from 'react-redux';
 
-import { selectMyCommunityById } from './slice';
+import { selectMyCommunityById } from 'features/myCommunities/slice';
 import ChatBox from 'features/chat/ChatBox';
 
 
-const SingleCommunity = ({ communityId }) => {
+const CommunityPage = ({ communityId }) => {
   const community = useSelector(state => selectMyCommunityById(state, communityId));
 
   return (
     <div>
-      This is {community.name}.
+      This is { community.name }.
       <ChatBox communityId={ communityId } />
     </div>
   )
 }
 
-export default SingleCommunity;
+export default CommunityPage;

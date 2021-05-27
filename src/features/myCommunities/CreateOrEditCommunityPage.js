@@ -4,19 +4,25 @@ import { useHistory } from 'react-router-dom';
 
 import FormFieldErrors from 'features/common/FormFieldErrors';
 import { fetchCreateCommunity, fetchEditCommunity, fetchDeleteCommunity } from 'api';
+import urlFor from 'urls';
+
 import { 
   addMembership, 
   deleteMembership, 
   updateCommunity, 
   selectMyMembershipByCommunityId, 
-} from '../slice';
+} from './slice';
 import 'styles/form.scss';
 import 'styles/btn.scss';
 import 'styles/text.scss';
+import 'styles/grid.scss';
+import 'styles/paper.scss';
+import 'styles/bg.scss';
+import 'styles/spacing.scss';
 
 
 
-const CreateCommunityForm = ({ communityId }) => {
+const CreateOrEditCommunityForm = ({ communityId }) => {
   const dispatch = useDispatch();
   const history = useHistory();
 
@@ -60,7 +66,7 @@ const CreateCommunityForm = ({ communityId }) => {
 
       setIsLoading(false);
       if (success) {
-        history.push('/');
+        history.push(urlFor('MY_COMMUNITIES'));
       }
     }
   }
@@ -175,4 +181,17 @@ const CreateCommunityForm = ({ communityId }) => {
 }
 
 
-export default CreateCommunityForm;
+const CreateOrEditCommunityPage = ({ communityId }) => (
+  <div className="container">
+    <div className="row">
+      <div className="col-12 col-sm-6 col-sm-offset-3 col-md-4 col-md-offset-4">
+        <div className="paper-sm bg-grey p-2 p-md-4 my-2">
+          <CreateOrEditCommunityForm communityId={communityId} />
+        </div>
+      </div>
+    </div>
+  </div>
+)
+
+
+export default CreateOrEditCommunityPage;

@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 
 import './Menu.scss';
 import { selectCurrentUser, fetchLogout } from 'features/auth/authSlice';
+import urlFor from 'urls';
 
 
 const Menu = () => {
@@ -26,7 +27,9 @@ const Menu = () => {
           ? <form onSubmit={ handleLogout }>
               <input type="submit" value="Logout" className="menu__item menu__item--link" />
             </form>
-          : <Link to={'/login/'} className="menu__item menu__item--link">Login</Link>
+          : <Link to={ urlFor('LOGIN') } className="menu__item menu__item--link">
+              Login
+            </Link>
         }
       </div>
     </nav>

@@ -1,11 +1,13 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
+import urlFor from 'urls';
+
 import 'styles/form.scss';
 import 'styles/btn.scss';
 
 
-const CreateCommunityLink = ({ onClick }) => (
+const CreateCommunityLink = () => (
   <div className="form">
     <div className="form__header">
       Create
@@ -16,7 +18,9 @@ const CreateCommunityLink = ({ onClick }) => (
       </div>
     </div>
     <div className="form__item">
-      <Link className="btn btn--primary btn--block" to="/create/">
+      <Link to={ urlFor("CREATE_COMMUNITY") }
+        className="btn btn--primary btn--block"
+      >
         Create
       </Link>
     </div>

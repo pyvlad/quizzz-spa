@@ -64,7 +64,7 @@ const LoginForm = () => {
         </div>
       </form>
       <p>
-        Forgot Your Password? <a href="/">Click to Reset It</a>
+        Forgot Your Password? <a href="">Click to Reset It</a>
       </p>
     </React.Fragment>
   );

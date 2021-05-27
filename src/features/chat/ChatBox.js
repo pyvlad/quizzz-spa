@@ -33,7 +33,7 @@ const Chatbox = ({ communityId }) => {
       </h2>
       <div className="container">
         <div className="row">
-          <div className="col-12 col-lg-8">
+          <div className="col-12 col-lg-8 col-lg-offset-2">
             { showContent(view) }
           </div>
         </div>

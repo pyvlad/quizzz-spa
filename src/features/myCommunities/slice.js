@@ -19,9 +19,17 @@ export const fetchMyMemberships = createAsyncThunk(
 
 
 /* *** SLICE *** */
-const onRequestStart = state => ({...state, status: 'loading', error: ''});
+const onRequestStart = state => ({
+  ...state, 
+  status: 'loading', 
+  error: '',
+});
 const onRequestFail = (state, action) => {
-  return {...state, status: 'failed', error: action.payload.message };
+  return {
+    ...state, 
+    status: 'failed', 
+    error: action.payload.message,
+  };
 };
 
 const initialState = {

@@ -2,7 +2,8 @@ import React from 'react';
 import { useSelector } from 'react-redux';
 
 import MyCommunitiesListItem from './ListItem';
-import { selectMyMemberships, selectMyCommunitiesLoading } from '../slice';
+import { selectMyMemberships, selectMyCommunitiesLoading } from '../../slice';
+
 import 'styles/headings.scss';
 import 'styles/paper.scss';
 import 'styles/spacing.scss';

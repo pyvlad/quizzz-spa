@@ -6,16 +6,18 @@ import LoginForm from './LoginForm';
 import LoginFormWrapper from './LoginFormWrapper';
 import { selectCurrentUser, selectAuthLoading } from './authSlice';
 
+import urlFor from 'urls';
 
-const Login = () => {
+
+const LoginPage = () => {
   const user = useSelector(selectCurrentUser);
   const loading = useSelector(selectAuthLoading);
 
   return (user && !loading) 
-    ? <Redirect to='/' />
+    ? <Redirect to={ urlFor('HOME') } />
     : <LoginFormWrapper>
         <LoginForm />
       </LoginFormWrapper>
 }
 
-export default Login;
+export default LoginPage;

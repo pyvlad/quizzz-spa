@@ -6,6 +6,7 @@ import Pagination from './Pagination';
 import 'styles/grid.scss';
 import 'styles/headings.scss';
 import 'styles/btn.scss';
+import 'styles/spacing.scss';
 
 import { fetchCommunityChatMessages } from 'api';
 
@@ -37,7 +38,11 @@ const Chat = ({ communityId, showNewMessageForm }) => {
         New Message
       </button>
       <div>
-        { messages.map(m => <Message key={ m.id } msg={ m } />) }
+        {
+          messages.length
+          ? messages.map(m => <Message key={ m.id } msg={ m } />)
+          : <p className="heading--3 my-4">No messages here yet. Be the first to say something!</p>
+        }
       </div>
       <Pagination 
         page={ page } 

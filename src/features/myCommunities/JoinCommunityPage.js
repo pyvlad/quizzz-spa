@@ -3,8 +3,10 @@ import { useDispatch } from 'react-redux';
 import { useHistory } from 'react-router-dom';
 
 import FormFieldErrors from 'features/common/FormFieldErrors';
-import { addMembership } from '../slice';
 import { fetchJoinCommunity } from 'api';
+import urlFor from 'urls';
+
+import { addMembership } from './slice';
 import 'styles/form.scss';
 import 'styles/btn.scss';
 import 'styles/text.scss';
@@ -39,7 +41,7 @@ const JoinCommunityForm = () => {
 
       setIsLoading(false);
       if (success) {
-        history.push('/');
+        history.push(urlFor('MY_COMMUNITIES'));
       }
     }
   }
@@ -101,4 +103,17 @@ const JoinCommunityForm = () => {
 }
 
 
-export default JoinCommunityForm;
+const JoinCommunityPage = () => (
+  <div className="container">
+    <div className="row">
+      <div className="col-12 col-sm-6 col-sm-offset-3 col-md-4 col-md-offset-4">
+        <div className="paper-sm bg-grey p-2 p-md-4 my-2">
+          <JoinCommunityForm />
+        </div>
+      </div>
+    </div>
+  </div>
+)
+
+
+export default JoinCommunityPage;
