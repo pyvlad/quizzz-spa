@@ -7,6 +7,7 @@ import JoinCommunityPage from 'features/myCommunities/JoinCommunityPage';
 import CreateOrEditCommunityPage from 'features/myCommunities/CreateOrEditCommunityPage';
 import CommunityPage from 'features/community/CommunityPage';
 import MembersPage from 'features/community/MembersPage';
+import MyQuizzesPage from 'features/community/MyQuizzesPage';
 
 
 const AppContent = () => (
@@ -18,11 +19,15 @@ const AppContent = () => (
       <Route exact path='/edit-community/:id/' render={
         ({match}) => <CreateOrEditCommunityPage communityId={ parseInt(match.params.id) } />
       }/>
+      
       <Route exact path="/community/:id/" render={ 
         props => <CommunityPage communityId={ parseInt(props.match.params.id) } />
       }/>
       <Route exact path="/community/:id/members/" render={ 
         props => <MembersPage communityId={ parseInt(props.match.params.id) } />
+      }/>
+      <Route exact path="/community/:id/my-quizzes/" render={
+        props => <MyQuizzesPage communityId={ parseInt(props.match.params.id) } />
       }/>
       <Redirect to="/" />
     </Switch>

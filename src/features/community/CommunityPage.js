@@ -12,10 +12,19 @@ const CommunityPage = ({ communityId }) => {
 
   return (
     <div>
-      This is { community.name }.
-      <Link to={ urlFor("COMMUNITY_MEMBERS", {communityId: communityId })}>
-        Group Members
-      </Link>
+      <div>
+        This is { community.name }.
+      </div>
+      <div>
+        <Link to={ urlFor("COMMUNITY_MEMBERS", {communityId: communityId })}>
+          Group Members
+        </Link>
+      </div>
+      <div>
+        <Link to={ urlFor("COMMUNITY_MY_QUIZZES", {communityId: communityId })}>
+          My Quizzes
+        </Link>
+      </div>
       <ChatBox communityId={ communityId } />
     </div>
   )

@@ -19,7 +19,8 @@ const urlFor = (label, params) => {
       return `/community/${params.communityId}/`
     case 'COMMUNITY_MEMBERS':
       return `/community/${params.communityId}/members/`
-
+    case 'COMMUNITY_MY_QUIZZES':
+      return `/community/${params.communityId}/my-quizzes/`
     // default
     default:
       throw new Error("No such route")
