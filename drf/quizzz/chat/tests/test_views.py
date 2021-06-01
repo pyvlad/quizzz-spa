@@ -32,20 +32,20 @@ class ChatMessageListTest(SetupChatDataMixin, APITestCase):
         """
         # anonymous users cannot access
         with self.assertNumQueries(0):
-            response = self.client.get(self.url, format="json")
+            response = self.client.get(self.url)
         test_utils.assert_403_not_authenticated(self, response)
 
         # non-group members cannot access
         self.login_as("ben")
         with self.assertNumQueries(3):
-            response = self.client.get(self.url, format="json")
+            response = self.client.get(self.url)
         test_utils.assert_403_not_authorized(self, response)
 
         # group-members can access
         self.login_as("alice")
         with self.assertNumQueries(5):  
             # (1-2) request.user (3) member check (4) count(*) for pagination (5) select page 1
-            response = self.client.get(self.url, format="json")
+            response = self.client.get(self.url)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["count"], len(self.community_messages))
@@ -90,13 +90,13 @@ class ChatMessageListTest(SetupChatDataMixin, APITestCase):
         """
         # Anonymous users cannot post messages:
         with self.assertNumQueries(0):
-            response = self.client.post(self.url, self.new_message, format="json")
+            response = self.client.post(self.url, self.new_message)
         test_utils.assert_403_not_authenticated(self, response)
 
         # Non-group members cannot leave messages:
         self.login_as("ben")
         with self.assertNumQueries(3):  # (1-2) request.user (3) membership check
-            response = self.client.post(self.url, self.new_message, format="json")
+            response = self.client.post(self.url, self.new_message)
         test_utils.assert_403_not_authorized(self, response)
 
         # make sure no messages have been inserted into DB:
@@ -105,7 +105,7 @@ class ChatMessageListTest(SetupChatDataMixin, APITestCase):
         # Group members can leave new messages:
         self.login_as("bob")
         with self.assertNumQueries(4):  # (1-2) request.user (3) membership check (4) insert
-            response = self.client.post(self.url, self.new_message, format="json")
+            response = self.client.post(self.url, self.new_message)
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertListEqual(list(response.data.keys()), self.expected_keys)
@@ -121,21 +121,21 @@ class ChatMessageListTest(SetupChatDataMixin, APITestCase):
 
         # anonymous users cannot delete messages
         with self.assertNumQueries(0):
-            response = self.client.delete(get_message_url(1), format="json")
+            response = self.client.delete(get_message_url(1))
         test_utils.assert_403_not_authenticated(self, response)
 
         # alice a regular group1 member, she cannot delete neither her nor bob's message:
         self.login_as("alice")
         for pk in [1,2]:
             with self.assertNumQueries(3):
-                response = self.client.delete(get_message_url(pk), format="json")
+                response = self.client.delete(get_message_url(pk))
             test_utils.assert_403_not_authorized(self, response)
 
         # ben is not a group member at all, he cannot delete the data either:
         self.login_as("ben")
         for pk in [1,2]:
             with self.assertNumQueries(3):
-                response = self.client.delete(get_message_url(pk), format="json")
+                response = self.client.delete(get_message_url(pk))
             test_utils.assert_403_not_authorized(self, response)
 
         # make sure no messages have been deleted from the DB:
@@ -146,7 +146,7 @@ class ChatMessageListTest(SetupChatDataMixin, APITestCase):
 
         for pk in [1,2]:
             with self.assertNumQueries(5):
-                response = self.client.delete(get_message_url(pk), format="json")
+                response = self.client.delete(get_message_url(pk))
             self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
             self.assertEqual(response.data, None)
 

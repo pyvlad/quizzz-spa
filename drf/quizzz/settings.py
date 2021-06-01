@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'quizzz.users.apps.UsersConfig',
     'quizzz.communities.apps.CommunitiesConfig',
     'quizzz.chat.apps.ChatConfig',
+    'quizzz.quizzes.apps.QuizzesConfig',
 
     # 3rd party
     'rest_framework',
@@ -153,6 +154,8 @@ REST_FRAMEWORK = {
     # Pagination is only performed automatically for generic views and viewsets:
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 100,
+    # miltipart (default) uploads don't support nesting:
+    'TEST_REQUEST_DEFAULT_FORMAT': 'json',
 }
 
 

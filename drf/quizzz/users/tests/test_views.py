@@ -98,8 +98,7 @@ class LoginViewTest(SetupUsersMixin, APITestCase):
         with self.assertNumQueries(9):
             response = self.client.post(
                 self.url, 
-                {"username": user["username"], "password": user["password"]}, 
-                format="json"
+                {"username": user["username"], "password": user["password"]}
             )
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -118,11 +117,8 @@ class LoginViewTest(SetupUsersMixin, APITestCase):
         bad_credentials = {"username": user["username"], "password": "wrooooong12345"}
 
         with self.assertNumQueries(1):
-            response = self.client.post(
-                self.url, 
-                bad_credentials, 
-                format="json"
-            )
+            response = self.client.post(self.url, bad_credentials)
+            
         test_utils.assert_400_validation_failed(self, response, 
             error="Bad data submitted.",
             data={"non_field_errors": ["Wrong credentials."]})
@@ -145,7 +141,7 @@ class LogoutViewTest(SetupUsersMixin, APITestCase):
         """
         self.login_as("bob")
         with self.assertNumQueries(4): # (1-2) - request.user, (3-4) - load session & delete  
-            response = self.client.post(self.url, format="json")
+            response = self.client.post(self.url)
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, None)
@@ -158,7 +154,7 @@ class LogoutViewTest(SetupUsersMixin, APITestCase):
         """
         # 200 is returned, but since there is no cookie - it is not unset:
         with self.assertNumQueries(0):
-            response = self.client.post(self.url, format="json")
+            response = self.client.post(self.url)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTrue("sessionid" not in response.cookies)
@@ -166,8 +162,8 @@ class LogoutViewTest(SetupUsersMixin, APITestCase):
         # but sending expired empty cookies does unset the cookie again:
         self.login_as("bob")
 
-        response = self.client.post(self.url, format="json")
-        response = self.client.post(self.url, format="json")
+        response = self.client.post(self.url)
+        response = self.client.post(self.url)
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTrue("sessionid" in response.cookies)
@@ -184,19 +180,19 @@ class UserListViewTest(SetupUsersMixin, APITestCase):
     def test_normal(self):
         # view is not shown to anonymous users
         with self.assertNumQueries(0):
-            response = self.client.get(self.url, format="json")
+            response = self.client.get(self.url)
         test_utils.assert_403_not_authenticated(self, response)
 
         # view is not shown to non super users
         self.login_as("bob")
         with self.assertNumQueries(2):
-            response = self.client.get(self.url, format="json")
+            response = self.client.get(self.url)
         test_utils.assert_403_not_authorized(self, response)
 
         # view is shown to superuser
         self.login_as("admin")
         with self.assertNumQueries(3):
-            response = self.client.get(self.url, format="json")
+            response = self.client.get(self.url)
         self.assertEqual(len(response.data), len(self.users))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
@@ -213,15 +209,15 @@ class TimeViewTest(SetupUsersMixin, APITestCase):
         url = reverse('users:time')
 
         # view is not shown to anonymous users
-        response = self.client.get(url, format="json")
+        response = self.client.get(url)
         test_utils.assert_403_not_authenticated(self, response)
 
         # view is shown to authenticated users
         self.login_as("bob")
-        response = self.client.get(url, format="json")
+        response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         # test after logout
         self.logout()
-        response = self.client.get(url, format="json")
+        response = self.client.get(url)
         test_utils.assert_403_not_authenticated(self, response)

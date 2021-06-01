@@ -16,3 +16,15 @@ class SetupCommunityDataMixin(SetupUsersMixin):
 
         self.communities = COMMUNITIES
         self.admin_ids = ADMIN_IDS
+
+    def alice_joins_group1(self):
+        """ Reusable helper method """
+        community = Community.objects.get(name="group1")
+        alice = CustomUser.objects.get(username="alice")
+        community.join(alice)
+
+    def bob_joins_group2(self):
+        """ Reusable helper method """
+        community = Community.objects.get(name="group2")
+        bob = CustomUser.objects.get(username="bob")
+        community.join(bob)

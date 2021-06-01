@@ -22,4 +22,5 @@ urlpatterns = [
     path('api/', include('quizzz.users.urls')),
     path('api/communities/', include('quizzz.communities.urls')),
     path('api/communities/<int:community_id>/chat/', include('quizzz.chat.urls')),
+    path('api/communities/<int:community_id>/quizzes/', include('quizzz.quizzes.urls')),
 ]
