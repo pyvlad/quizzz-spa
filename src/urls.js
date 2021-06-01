@@ -15,12 +15,17 @@ const urlFor = (label, params) => {
       return "/create-community/"
     case 'EDIT_COMMUNITY':
       return `/edit-community/${params.communityId}/`
+
+    // single community
     case 'COMMUNITY_HOME':
       return `/community/${params.communityId}/`
+    case 'COMMUNITY_CHAT':
+      return `/community/${params.communityId}/chat/`
     case 'COMMUNITY_MEMBERS':
       return `/community/${params.communityId}/members/`
     case 'COMMUNITY_MY_QUIZZES':
       return `/community/${params.communityId}/my-quizzes/`
+      
     // default
     default:
       throw new Error("No such route")
