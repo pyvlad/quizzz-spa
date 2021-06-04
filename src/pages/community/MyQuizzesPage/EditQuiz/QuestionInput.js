@@ -10,13 +10,15 @@ import QuizContext from './questionsReducer/QuizContext';
 import 'styles/form.scss';
 
 
-const QuestionInput = ({ questionId, questionIndex, readOnly, dispatch }) => {
+const QuestionInput = ({ questionId, questionIndex, readOnly, errors={}, dispatch }) => {
 
   const onTextChange = (e) => dispatch(setQuestionText(questionId, e.target.value)); 
   const quizState = React.useContext(QuizContext);
   const question = selectQuestionById(quizState, questionId);
   const { text, options: optionIds } = question;
-  const textErrors = null;
+  const nonFieldErrors = errors.non_field_errors ? errors.non_field_errors : [];
+  const textErrors = errors.text ? errors.text : [];
+  const optionsErrors = errors.options ? errors.options : [];
 
   return (
     <div className="form__item">
@@ -24,10 +26,13 @@ const QuestionInput = ({ questionId, questionIndex, readOnly, dispatch }) => {
         Question { questionIndex + 1 }
       </div>
 
+      <FormFieldErrors errors={ nonFieldErrors } />
+
       <textarea 
         className="form__textarea" 
         onChange={ onTextChange }
         value={ text }
+        disabled={ readOnly }
       />
       <FormFieldErrors errors={ textErrors } />
 
@@ -38,11 +43,11 @@ const QuestionInput = ({ questionId, questionIndex, readOnly, dispatch }) => {
               key={ i }
               optionId={ optionId }
               questionId={ questionId }
+              errors={ optionsErrors.length > i ? optionsErrors[i] : {} }
               dispatch={ dispatch }
             />
           ))
         }
-        <FormFieldErrors errors={ textErrors } />
       </fieldset>
     </div>
   )

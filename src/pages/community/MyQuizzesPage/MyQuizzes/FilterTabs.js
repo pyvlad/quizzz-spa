@@ -21,11 +21,11 @@ const FilterTabs = ({ filters, activeFilter, onSelectFilter }) => (
 
 const FilterLink = ({ name, isActive, onClick }) => {
   return (
-    <a className={`tabs__button ${isActive ? "tabs__button--active" : ""}`}
+    <button className={`tabs__button ${isActive ? "tabs__button--active" : ""}`}
       onClick={ onClick }
     >
       { name[0].toUpperCase() + name.slice(1) }
-    </a>
+    </button>
   )
 }
 

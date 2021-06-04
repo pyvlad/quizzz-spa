@@ -1,12 +1,14 @@
 import React from 'react';
 import { useSelector } from 'react-redux';
+import { selectActiveCommunityId } from 'state/communitySlice';
 import { Link } from 'react-router-dom';
 
 import { selectMyCommunityById } from 'state/myCommunitiesSlice';
 import urlFor from 'urls';
 
 
-const CommunityPage = ({ communityId }) => {
+const CommunityPage = () => {
+  const communityId = useSelector(selectActiveCommunityId);
   const { name } = useSelector(state => selectMyCommunityById(state, communityId));
 
   return (

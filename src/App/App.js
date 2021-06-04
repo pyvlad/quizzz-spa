@@ -14,6 +14,7 @@ import 'styles/_reset.scss';
 
 
 const App = () => {
+  
   const user = useSelector(selectCurrentUser);
 
   return (

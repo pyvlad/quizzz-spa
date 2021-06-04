@@ -9,11 +9,7 @@ import QuizContext from './questionsReducer/QuizContext';
 import 'styles/form.scss';
 
 
-const OptionInput = ({ optionId, questionId, dispatch }) => {
-  // const radioId = `questions-${questionNumber}-answer-${optionNumber}`;
-  // const radioName = `questions-${questionNumber}-answer`;
-  // const inputId = `questions-${questionNumber}-option-${optionNumber}`;
-  // const inputName = `questions-${questionNumber}-option-${optionNumber}-text`;
+const OptionInput = ({ optionId, questionId, errors, dispatch }) => {
 
   const onTextChange = (e) => dispatch(setOptionText(optionId, e.target.value));
   const onSelectOption = () => dispatch(setCorrectOption(optionId, questionId));
@@ -21,7 +17,7 @@ const OptionInput = ({ optionId, questionId, dispatch }) => {
   const quizState = React.useContext(QuizContext);
   const option = selectOptionById(quizState, optionId);
   const { text, isCorrect } = option;
-  const optionErrors = null;
+  const textErrors = errors.text ? errors.text : [];
 
   return (
     <div className="form__fieldset-item">
@@ -39,7 +35,7 @@ const OptionInput = ({ optionId, questionId, dispatch }) => {
           onChange={ onTextChange }
         />
       </label>
-      <FormFieldErrors errors={ optionErrors } />
+      <FormFieldErrors errors={ textErrors } />
     </div>
   )
 }

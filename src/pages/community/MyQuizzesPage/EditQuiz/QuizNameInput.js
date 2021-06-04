@@ -5,19 +5,19 @@ import FormFieldErrors from 'common/FormFieldErrors';
 import 'styles/form.scss';
 
 
-const QuizTopicInput = ({ topic, setTopic, errors, readOnly }) => {
+const QuizNameInput = ({ name, setName, errors, readOnly }) => {
   return (
     <div className="form__item">
       <label className="form__label" htmlFor="quizTopicInput">
-        Quiz Topic:
+        Quiz Name:
       </label>
       <input 
         type="text" 
-        value={ topic } 
+        value={ name } 
         disabled={ readOnly }
         onChange={ 
           (e) => { 
-            if (!readOnly) setTopic(e.target.value) 
+            if (!readOnly) setName(e.target.value) 
           } 
         }
         className="form__input"
@@ -28,4 +28,4 @@ const QuizTopicInput = ({ topic, setTopic, errors, readOnly }) => {
   )
 }
 
-export default QuizTopicInput;
+export default QuizNameInput;

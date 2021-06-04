@@ -1,5 +1,6 @@
 import React from 'react';
 import { useSelector } from 'react-redux';
+import { selectActiveCommunityId } from 'state/communitySlice';
 
 import { fetchMembershipList } from 'api';
 import { selectMyMembershipByCommunityId } from 'state/myCommunitiesSlice';
@@ -11,12 +12,13 @@ import 'styles/headings.scss';
 import 'styles/btn.scss';
 
 
-const MembersPage = ({ communityId }) => {
-  const {
-    is_admin: loggedAsGroupAdmin 
-  } = useSelector(state => selectMyMembershipByCommunityId(state, communityId));
+const MembersPage = () => {
+  const communityId = useSelector(selectActiveCommunityId);
+  const membership = useSelector(state => selectMyMembershipByCommunityId(state, communityId));
   const [members, setMembers] = React.useState([]);
   const [editedUserId, setEditedUserId] = React.useState(null);
+
+  const { is_admin: loggedAsGroupAdmin } = membership;
 
   React.useEffect(() => {
     async function fetchData() {

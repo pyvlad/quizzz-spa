@@ -24,3 +24,11 @@ export {
   fetchCommunityChatMessages,
   fetchPostChatMessage,
 } from './chat';
+
+export {
+  fetchMyQuizzes,
+  fetchCreateQuiz,
+  fetchQuiz,
+  fetchUpdateQuiz,
+  fetchDeleteQuiz,
+} from './quizzes';

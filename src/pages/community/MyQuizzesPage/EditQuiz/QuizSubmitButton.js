@@ -4,7 +4,7 @@ import 'styles/form.scss';
 import 'styles/btn.scss';
 
 
-const QuizSubmitButton = () => {
+const QuizSubmitButton = ({ onClick }) => {
   return (
     <div className='form__item bg-grey'>
       <input 
@@ -12,6 +12,7 @@ const QuizSubmitButton = () => {
         type="submit" 
         name="finalize_me" 
         value="Submit"
+        onClick={onClick}
       />
       <div className='form__help'>
         Submit the quiz to the group's quiz pool if the quiz is ready.

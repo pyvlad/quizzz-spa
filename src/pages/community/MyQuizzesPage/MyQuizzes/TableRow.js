@@ -9,12 +9,12 @@ import 'styles/links.scss';
 
 const MyQuizzesTableRow = ({ quiz, num, onEdit }) => {
   const {
-    topic,
-    is_submitted: isSubmitted,
+    name,
+    is_finalized: isSubmitted,
     time_updated: timeUpdated,
   } = quiz;
 
-  const [formatToggled, setFormatToggled] = React.useState(false);
+  const [formatToggled, setFormatToggled] = React.useState(true);
 
   return (
     <tr className={`table__tr ${(num % 2) ? "table__tr--odd" : "table__tr--even"}`}>
@@ -22,9 +22,9 @@ const MyQuizzesTableRow = ({ quiz, num, onEdit }) => {
         { num }
       </td>
       <td className="table__td">
-        <a className="link link--decorated" onClick={ onEdit }>
-          { topic }
-        </a>
+        <span className="link link--decorated" onClick={ onEdit }>
+          { name }
+        </span>
       </td>
       <td className="table__td table__td--centered">
         { isSubmitted ? "yes" : "no" }

@@ -1,12 +1,14 @@
 import { configureStore } from '@reduxjs/toolkit';
 import authReducer from './authSlice';
 import myCommunitiesReducer from './myCommunitiesSlice';
+import communityReducer from './communitySlice';
 
 
 export default configureStore({
   reducer: {
     auth: authReducer,
     myCommunities: myCommunitiesReducer,
+    community: communityReducer,
   }
 })
 // https://redux-toolkit.js.org/api/configureStore

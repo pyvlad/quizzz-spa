@@ -2,15 +2,14 @@ import React from 'react';
 
 import MyQuizzes from './MyQuizzes/MyQuizzes';
 import EditQuiz from './EditQuiz';
+import CreateQuizButton from './CreateQuizButton';
 
 
-const quizzes = [];
-
-
-const MyQuizzesPage = ({ communityId }) => {
-  const [editingQuiz, setEditingQuiz] = React.useState(false);
+const MyQuizzesPage = () => {
   const [editedQuizId, setEditedQuizId] = React.useState(null);
   
+  const handleEditQuiz = quizId => setEditedQuizId(quizId);
+  const handleFinishEditingQuiz = () => setEditedQuizId(null);
 
   return (
     <div>
@@ -18,16 +17,17 @@ const MyQuizzesPage = ({ communityId }) => {
         Your Quizzes
       </h2>
       {
-        (!editingQuiz) 
+        (!editedQuizId) 
         ? <div>
-            <a className="btn btn--primary" onClick={() => setEditingQuiz(true)}>
-              Create Quiz
-            </a>
+            <CreateQuizButton handleEditQuiz={ handleEditQuiz } />
             <div className="my-3">
-              <MyQuizzes />
+              <MyQuizzes onEditQuiz={ handleEditQuiz } />
             </div>
           </div>
-        : <EditQuiz />
+        : <EditQuiz 
+            quizId={ editedQuizId } 
+            handleDone={ handleFinishEditingQuiz } 
+          />
       }
     </div>
   )

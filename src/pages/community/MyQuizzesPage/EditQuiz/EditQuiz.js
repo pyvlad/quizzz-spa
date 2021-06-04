@@ -1,70 +1,42 @@
 import React from 'react';
 
-import initQuestionsReducer from './questionsReducer/init';
-import questionsReducer from './questionsReducer/reducer';
-import QuizContext from './questionsReducer/QuizContext';
+import { useSelector } from 'react-redux';
+import { selectActiveCommunityId } from 'state/communitySlice';
 
-import FormFieldErrors from 'common/FormFieldErrors';
-import FormHeader from './FormHeader';
-import FormHelp from './FormHelp';
-import QuizTopicInput from './QuizTopicInput';
-import QuestionInput from './QuestionInput';
-import SaveDraftButton from './SaveDraftButton';
-import QuizSubmitButton from './QuizSubmitButton';
-import QuizDeleteButton from './QuizDeleteButton';
+import EditQuizForm from './EditQuizForm';
+import { fetchQuiz } from 'api';
 
 
-import 'styles/form.scss';
+const EditQuiz = ({ quizId, handleDone }) => {
 
+  const communityId = useSelector(selectActiveCommunityId);
+  const [editedQuiz, setEditedQuiz] = React.useState(null);
 
-const EditQuiz = ({ quiz={}, readOnly=false }) => {
+  React.useEffect(() => {
+    async function fetchData() {
+      try {
+        const data = await fetchQuiz(communityId, quizId);
+        setEditedQuiz(data);
+      } catch(e) {
+        console.log(e);
+      }
+    }
+    if (quizId) fetchData();
+  }, [communityId, quizId])
 
-  const [topic, setTopic] = React.useState(quiz.topic ? quiz.topic : "");
-  const [state, dispatch] = React.useReducer(
-    questionsReducer, 
-    { numQuestions: 2, numOptions: 3},
-    initQuestionsReducer,
-  );
-
-  const [isLoading, setIsLoading] = React.useState(false);
-  const [errors, setErrors] = React.useState({});
-
-  const {
-    non_field_errors: nonFieldErrors,
-    topic: topicErrors,
-  } = errors;
-
-  const { questions } = state;
-
-  return (
-    <QuizContext.Provider value={state} >
-      <div className="form">
-        <FormFieldErrors errors={ nonFieldErrors } />
-        <FormHeader />
-        <FormHelp />
-        <QuizTopicInput 
-          topic={ topic } 
-          setTopic={ setTopic } 
-          errors={ topicErrors } 
-          readOnly={ readOnly }
+  return (quizId && !editedQuiz) 
+    ? <div>Loading...</div>
+    : <div>
+        <button className="btn btn--primary" onClick={ handleDone }>
+          Back
+        </button>
+        <EditQuizForm 
+          quiz={ editedQuiz } 
+          quizId={ quizId }
+          communityId={ communityId} 
+          handleDone={ handleDone } 
         />
-        {
-          questions.allIds.map((questionId, i) => (
-            <QuestionInput
-              key={ i }
-              questionId={ questionId }
-              questionIndex= { i }
-              readOnly={ readOnly }
-              dispatch={ dispatch }
-            />
-          ))
-        }
-        { readOnly ? null : <SaveDraftButton /> }
-        { readOnly ? null : <QuizSubmitButton /> }
-        { (readOnly || !quiz) ? null : <QuizDeleteButton />}
       </div>
-    </QuizContext.Provider>
-  )
 }
 
 export default EditQuiz;

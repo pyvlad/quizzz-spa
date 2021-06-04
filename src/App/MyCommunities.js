@@ -5,7 +5,7 @@ import MyCommunitiesLoader from 'pages/myCommunities/MyCommunitiesLoader';
 import MyCommunitiesPage from 'pages/myCommunities/MyCommunitiesPage/MyCommunitiesPage';
 import JoinCommunityPage from 'pages/myCommunities/JoinCommunityPage';
 import CreateOrEditCommunityPage from 'pages/myCommunities/CreateOrEditCommunityPage';
-import Community from './Community';
+import Community, { ActiveCommunity } from './Community';
 
 
 const MyCommunities = () => (
@@ -19,7 +19,11 @@ const MyCommunities = () => (
       }/>
       
       <Route path="/community/:id" render={
-        ({match}) => <Community id={ parseInt(match.params.id) } />
+        ({match}) => (
+          <ActiveCommunity id={ parseInt(match.params.id) }>
+            <Community /> 
+          </ActiveCommunity>
+        )
       }/>
 
       <Redirect to="/" />

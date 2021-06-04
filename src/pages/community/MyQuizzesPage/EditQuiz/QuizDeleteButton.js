@@ -4,11 +4,10 @@ import 'styles/form.scss';
 import 'styles/btn.scss';
 
 
-const QuizDeleteButton = ({ }) => {
+const QuizDeleteButton = ({ onClick }) => {
   return (   
     <div className='form__item bg-grey'>
-      <button className="btn btn--red btn--mw150"
-              onClick={ () => window.confirm('Are you sure?') }>
+      <button className="btn btn--red btn--mw150" onClick={ onClick }>
         Delete
       </button>
       <div className='form__help'>
