@@ -1,10 +1,7 @@
 import React from 'react';
 import { useDispatch } from 'react-redux';
 
-import { fetchLogin } from 'state/authSlice';
-import 'styles/form.scss';
-import 'styles/btn.scss';
-import 'styles/text.scss';
+import { fetchLogin } from 'state';
 
 
 const LoginForm = () => {

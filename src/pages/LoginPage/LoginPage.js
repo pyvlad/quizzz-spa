@@ -4,7 +4,7 @@ import { Redirect } from 'react-router-dom';
 
 import LoginForm from './LoginForm';
 import LoginFormWrapper from './LoginFormWrapper';
-import { selectCurrentUser, selectAuthLoading } from 'state/authSlice';
+import { selectCurrentUser, selectAuthLoading } from 'state';
 
 import urlFor from 'urls';
 

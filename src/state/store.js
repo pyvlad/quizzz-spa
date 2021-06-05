@@ -1,14 +1,14 @@
 import { configureStore } from '@reduxjs/toolkit';
-import authReducer from './authSlice';
-import myCommunitiesReducer from './myCommunitiesSlice';
-import communityReducer from './communitySlice';
+import authReducer from './slices/authSlice';
+import myGroupsReducer from './slices/myGroupsSlice';
+import activeGroupReducer from './slices/activeGroupSlice';
 
 
 export default configureStore({
   reducer: {
     auth: authReducer,
-    myCommunities: myCommunitiesReducer,
-    community: communityReducer,
+    myGroups: myGroupsReducer,
+    activeGroup: activeGroupReducer,
   }
 })
 // https://redux-toolkit.js.org/api/configureStore

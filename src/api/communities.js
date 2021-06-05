@@ -1,7 +1,7 @@
 import { client as apiClient } from './client';
 
 
-export async function fetchUserMemberships(userId) {
+export async function getUserMemberships(userId) {
   /*
     Fetch communities the user is a member of.
     A list of membership objects with nested community objects is expected.
@@ -9,7 +9,7 @@ export async function fetchUserMemberships(userId) {
   return await apiClient.get(`/api/communities/user-memberships/${userId}/`);
 }
 
-export async function fetchJoinCommunity(payload) {
+export async function joinCommunity(payload) {
   /* 
     Send group credentials.
     New membership object with nested community object is expected.
@@ -18,7 +18,7 @@ export async function fetchJoinCommunity(payload) {
   return await apiClient.post("/api/communities/join/", { name, password });
 }
 
-export async function fetchCreateCommunity(payload) {
+export async function createCommunity(payload) {
   /*
     Send desired parameters of the new community.
     New membership object with nested community object is expected
@@ -30,7 +30,7 @@ export async function fetchCreateCommunity(payload) {
   )
 }
 
-export async function fetchEditCommunity(communityId, payload) {
+export async function updateCommunity(communityId, payload) {
   /*
     Send updated parameters of an existing community.
     Updated community object is expected.
@@ -42,7 +42,7 @@ export async function fetchEditCommunity(communityId, payload) {
   )
 }
 
-export async function fetchDeleteMembership(communityId, userId) {
+export async function deleteMembership(communityId, userId) {
   /*  
     Send request to delete an existing membership.
     204 code with None as data is expected.
@@ -50,7 +50,7 @@ export async function fetchDeleteMembership(communityId, userId) {
   return await apiClient.delete(`/api/communities/${communityId}/members/${userId}/`);
 }
 
-export async function fetchDeleteCommunity(communityId) {
+export async function deleteCommunity(communityId) {
   /*
     Send request to delete an existing community.
     204 code with None as data is expected. 
@@ -59,7 +59,7 @@ export async function fetchDeleteCommunity(communityId) {
   return await apiClient.delete(`/api/communities/${communityId}/`);
 }
 
-export async function fetchMembershipList(communityId) {
+export async function getCommunityMembers(communityId) {
   /*
     Fetch all members of a given community.
     Returns array of membership objects with related user objects.
@@ -67,7 +67,7 @@ export async function fetchMembershipList(communityId) {
   return await apiClient.get(`/api/communities/${communityId}/members/`);
 }
 
-export async function fetchMembership(communityId, userId) {
+export async function getMembership(communityId, userId) {
   /*
     Fetch membership object of a given user in a given community.
     Returns membership object with embedded community object.
@@ -75,7 +75,7 @@ export async function fetchMembership(communityId, userId) {
   return await apiClient.get(`/api/communities/${communityId}/members/${userId}/`);
 }
 
-export async function fetchUpdateMembership(communityId, userId, payload) {
+export async function updateMembership(communityId, userId, payload) {
   /*
     Send updated parameters of an existing membership. Need to be group admin.
     Updated membership object is expected.

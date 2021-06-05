@@ -1,10 +1,10 @@
 import { client as apiClient } from './client';
 
 
-export async function fetchCommunityChatMessages(communityId, page) {
+export async function getCommunityChatMessages(communityId, page) {
   /*
-    Fetch communities the user is a member of.
-    A list of membership objects with nested community objects is expected.
+    Get paginated chat messages for a community.
+    A list of chat message objects is expected.
   */
   let url = `/api/communities/${communityId}/chat/`;
   if (page) {
@@ -13,7 +13,7 @@ export async function fetchCommunityChatMessages(communityId, page) {
   return await apiClient.get(url);
 }
 
-export async function fetchPostChatMessage(communityId, payload) {
+export async function postChatMessage(communityId, payload) {
   /*
     Send message to community chat.
     New chat message object is expected.

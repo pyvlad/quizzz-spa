@@ -4,7 +4,6 @@ import urlFor from 'urls';
 
 import logo from 'media/logo.svg';
 import './Logo.scss';
-import 'styles/spacing.scss';
 
 
 const Logo = () => (

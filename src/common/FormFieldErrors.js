@@ -1,7 +1,5 @@
 import React from 'react';
 
-import 'styles/form.scss';
-
 
 const FormFieldErrors = ({ errors }) => (
   errors 

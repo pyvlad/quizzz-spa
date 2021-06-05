@@ -1,9 +1,5 @@
 import React from 'react';
 
-import 'styles/grid.scss';
-import 'styles/paper.scss';
-import 'styles/bg.scss';
-
 
 const LoginFormWrapper = ({ children }) => (
   <div className="container">

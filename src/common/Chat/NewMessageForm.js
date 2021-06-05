@@ -1,10 +1,10 @@
 import React from 'react';
-import { fetchPostChatMessage } from 'api';
+import * as api from 'api';
 
 import FormFieldErrors from 'common/FormFieldErrors';
 
 
-const NewMessageForm = ({ communityId, onSubmit }) => {
+const NewMessageForm = ({ groupId, onSubmit }) => {
   const [text, setText] = React.useState('');
   const [isLoading, setIsLoading] = React.useState(false);
   const [errors, setErrors] = React.useState({});
@@ -18,7 +18,7 @@ const NewMessageForm = ({ communityId, onSubmit }) => {
       let success = false;
 
       try {
-        await fetchPostChatMessage(communityId, { text });
+        await api.postChatMessage(groupId, { text });
         success = true;
       } catch(err) {
         setErrors(err.body ? err.body : {non_field_errors: [err.message]});

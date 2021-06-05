@@ -1,7 +1,5 @@
 import React from 'react';
 
-import 'styles/pagination.scss';
-
 
 const Pagination = ({ page, lastPage, handlePageChange }) => {
   const goPrev = () => {

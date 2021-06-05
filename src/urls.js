@@ -1,30 +1,30 @@
 const urlFor = (label, params) => {
   switch (label) {
-    // home/authentication
+    // home / authentication
     case 'HOME':
       return "/"
     case 'LOGIN':
       return "/login/"
 
-    // communities
-    case 'MY_COMMUNITIES':
+    // user groups
+    case 'MY_GROUPS':
       return "/"
-    case 'JOIN_COMMUNITY':
-      return "/join-community/"
-    case 'CREATE_COMMUNITY':
-      return "/create-community/"
-    case 'EDIT_COMMUNITY':
-      return `/edit-community/${params.communityId}/`
+    case 'JOIN_GROUP':
+      return "/join-group/"
+    case 'CREATE_GROUP':
+      return "/create-group/"
+    case 'EDIT_GROUP':
+      return `/edit-group/${params.groupId}/`
 
-    // single community
-    case 'COMMUNITY_HOME':
-      return `/community/${params.communityId}/`
-    case 'COMMUNITY_CHAT':
-      return `/community/${params.communityId}/chat/`
-    case 'COMMUNITY_MEMBERS':
-      return `/community/${params.communityId}/members/`
-    case 'COMMUNITY_MY_QUIZZES':
-      return `/community/${params.communityId}/my-quizzes/`
+    // selected group
+    case 'GROUP_HOME':
+      return `/group/${params.groupId}/`
+    case 'GROUP_CHAT':
+      return `/group/${params.groupId}/chat/`
+    case 'GROUP_MEMBERS':
+      return `/group/${params.groupId}/members/`
+    case 'GROUP_MY_QUIZZES':
+      return `/group/${params.groupId}/my-quizzes/`
       
     // default
     default:

@@ -5,9 +5,6 @@ import Message from './Message/Message';
 
 import './BasePage.scss';
 
-import 'styles/grid.scss';
-import 'styles/spacing.scss';
-
 
 const BasePage = ({ children }) => (
   <div className="page">

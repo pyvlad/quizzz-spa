@@ -3,9 +3,6 @@ import moment from 'moment';
 
 import MomentDateTime from 'common/MomentDateTime';
 
-import 'styles/message.scss';
-import 'styles/btn.scss';
-
 
 const Message = ({ msg }) => {
   const { 

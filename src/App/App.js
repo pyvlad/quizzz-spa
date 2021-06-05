@@ -1,33 +1,31 @@
 import React from 'react';
-import { useSelector } from 'react-redux';
 import { Switch, Route } from 'react-router-dom';
+
+import Authentication from './containers/Authentication';
 
 import BasePage from 'pages/BasePage';
 import LoginPage from 'pages/LoginPage';
 import HomePage from 'pages/HomePage';
-import MyCommunities from './MyCommunities';
 
-import { selectCurrentUser } from 'state/authSlice';
+import MyGroups from './MyGroups';
+
 import urlFor from 'urls';
 
-import 'styles/_reset.scss';
+import './Styles.js';
 
 
-const App = () => {
-  
-  const user = useSelector(selectCurrentUser);
-
-  return (
-    <BasePage>
-      <Switch>
-        <Route exact path={ urlFor('LOGIN') } component={ LoginPage } />
-        <Route path="/" render={
-            () => user ? <MyCommunities /> : <HomePage />
-          } 
+const App = () => (
+  <BasePage>
+    <Switch>
+      <Route exact path={ urlFor('LOGIN') } component={ LoginPage } />
+      <Route path="/" render={ 
+        () => <Authentication 
+          componentIfAuthenticated={ <MyGroups /> }
+          componentIfAnonymous={ <HomePage /> }
         />
-      </Switch>
-    </BasePage>
-  )
-}
+      }/>
+    </Switch>
+  </BasePage>
+)
 
 export default App;

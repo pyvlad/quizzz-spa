@@ -1,7 +1,5 @@
 import React from 'react';
 
-import 'styles/grid.scss';
-import 'styles/headings.scss';
 import './home-logo.scss';
 import logo from 'media/logo.svg';
 

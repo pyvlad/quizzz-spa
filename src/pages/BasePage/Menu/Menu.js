@@ -2,9 +2,10 @@ import React from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { Link } from 'react-router-dom';
 
-import './Menu.scss';
-import { selectCurrentUser, fetchLogout } from 'state/authSlice';
+import { selectCurrentUser, fetchLogout } from 'state';
 import urlFor from 'urls';
+
+import './Menu.scss';
 
 
 const Menu = () => {
@@ -24,10 +25,16 @@ const Menu = () => {
       <div>
         {
           user
-          ? <form onSubmit={ handleLogout }>
-              <input type="submit" value="Logout" className="menu__item menu__item--link" />
-            </form>
-          : <Link to={ urlFor('LOGIN') } className="menu__item menu__item--link">
+          ? <button 
+              onClick={ handleLogout }
+              className="menu__item menu__item--link" 
+            >
+              Logout
+            </button>
+          : <Link 
+              to={ urlFor('LOGIN') } 
+              className="menu__item menu__item--link"
+            >
               Login
             </Link>
         }

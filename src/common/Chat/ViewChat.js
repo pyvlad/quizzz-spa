@@ -3,17 +3,12 @@ import React from 'react';
 import Message from './Message';
 import Pagination from './Pagination';
 
-import 'styles/grid.scss';
-import 'styles/headings.scss';
-import 'styles/btn.scss';
-import 'styles/spacing.scss';
-
-import { fetchCommunityChatMessages } from 'api';
+import * as api from 'api';
 
 const PAGE_SIZE = 2;
 
 
-const ViewChat = ({ communityId }) => {
+const ViewChat = ({ groupId }) => {
   const [page, setPage] = React.useState(1);
   const [messages, setMessages] = React.useState([]);
   const [lastPage, setLastPage] = React.useState({});
@@ -21,7 +16,7 @@ const ViewChat = ({ communityId }) => {
   React.useEffect(() => {
     async function fetchData() {
       try {
-        const data = await fetchCommunityChatMessages(communityId, page);
+        const data = await api.getCommunityChatMessages(groupId, page);
         const lastPage = Math.max(1, Math.ceil(data["count"] / PAGE_SIZE));
         setLastPage(lastPage);
         setMessages(data["results"]);
@@ -30,7 +25,7 @@ const ViewChat = ({ communityId }) => {
       }
     }
     fetchData();
-  }, [communityId, page, setMessages, setLastPage])
+  }, [groupId, page, setMessages, setLastPage])
 
   return (
     <React.Fragment>

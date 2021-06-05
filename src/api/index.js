@@ -9,26 +9,26 @@ export {
 } from './auth';
 
 export {
-  fetchUserMemberships,
-  fetchJoinCommunity,
-  fetchCreateCommunity,
-  fetchEditCommunity,
-  fetchDeleteMembership,
-  fetchDeleteCommunity,
-  fetchMembershipList,
-  fetchMembership,
-  fetchUpdateMembership,
+  getUserMemberships,
+  joinCommunity,
+  createCommunity,
+  updateCommunity,
+  deleteMembership,
+  deleteCommunity,
+  getCommunityMembers,
+  getMembership,
+  updateMembership,
 } from './communities';
 
 export {
-  fetchCommunityChatMessages,
-  fetchPostChatMessage,
+  getCommunityChatMessages,
+  postChatMessage,
 } from './chat';
 
 export {
-  fetchMyQuizzes,
-  fetchCreateQuiz,
-  fetchQuiz,
-  fetchUpdateQuiz,
-  fetchDeleteQuiz,
+  getMyQuizzes,
+  createQuiz,
+  getQuiz,
+  updateQuiz,
+  deleteQuiz,
 } from './quizzes';
