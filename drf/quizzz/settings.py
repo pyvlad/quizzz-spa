@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'quizzz.communities.apps.CommunitiesConfig',
     'quizzz.chat.apps.ChatConfig',
     'quizzz.quizzes.apps.QuizzesConfig',
+    'quizzz.tournaments.apps.TournamentsConfig',
 
     # 3rd party
     'rest_framework',

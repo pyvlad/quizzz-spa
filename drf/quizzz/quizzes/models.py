@@ -18,7 +18,7 @@ class Quiz(TimeStampedModel):
     community = models.ForeignKey(Community, on_delete=models.CASCADE)
 
     def __str__(self):
-        return "<Quiz: %r [%r]>" % (self.topic[:20], self.id)
+        return "<Quiz: %r [%r]>" % (self.name[:20], self.id)
 
     class Meta:
         db_table = "quizzes"

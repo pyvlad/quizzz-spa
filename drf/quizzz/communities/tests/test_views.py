@@ -407,8 +407,8 @@ class CommunityDetailTest(SetupCommunityDataMixin, APITestCase):
         # bob is group admin, he can delete the group:
         self.login_as("bob")
 
-        with self.assertNumQueries(8):
-            # (5) select quizzes (6) del members (7) del chat (8) del com
+        with self.assertNumQueries(9):
+            # (5) select quizzes (6) del members (7) del chat (8) del tournaments (9) del com 
             response = self.client.delete(self.url)
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(response.data, None)
