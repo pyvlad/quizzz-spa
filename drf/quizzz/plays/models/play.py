@@ -1,9 +1,7 @@
-from datetime import datetime
-
 from django.db import models
 from django.conf import settings
 
-from . import Round
+from quizzz.tournaments.models import Round
 
 
 class Play(models.Model):
@@ -13,19 +11,20 @@ class Play(models.Model):
     round = models.ForeignKey(Round, related_name="plays", on_delete=models.CASCADE)
 
     is_submitted = models.BooleanField(default=False)
-    result = models.IntegerField()
+    result = models.IntegerField(null=True, blank=True)
 
     start_time = models.DateTimeField(auto_now_add=True)
-    finish_time = models.DateTimeField()
+    finish_time = models.DateTimeField(null=True, blank=True)
 
-    client_start_time = models.DateTimeField()
-    client_finish_time = models.DateTimeField()
+    client_start_time = models.DateTimeField(null=True, blank=True)
+    client_finish_time = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
         return "<Play of %r by %r [%r]>" % (self.round_id, self.user.username, self.user_id)
 
     class Meta:
         db_table = "plays"
+        unique_together = ('user', 'round',)
 
     # alternative 1 (sqlite only):
     # server_started = sa.Column(sa.DateTime, server_default=text("(STRFTIME('%Y-%m-%d %H:%M:%f000', 'NOW'))"))

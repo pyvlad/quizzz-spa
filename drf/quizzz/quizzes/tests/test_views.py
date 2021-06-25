@@ -375,8 +375,9 @@ class QuizDetailTest(SetupQuizDataMixin, APITestCase):
 
         # Owner can delete the quiz:
         self.login_as("bob")
-        with self.assertNumQueries(9):
-            # (4) select quiz (5) select quiz questions (6-9) del quiz, questions, options, rounds
+        with self.assertNumQueries(12):
+            # (4) select quiz (5) select quiz questions (6) select options (7) select round
+            # (8-12) del quiz, questions, options, answers[2]
             response = self.client.delete(self.url)
 
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)

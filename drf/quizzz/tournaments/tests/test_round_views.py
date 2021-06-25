@@ -11,6 +11,7 @@ from .setup_mixin import SetupTournamentDataMixin
 from quizzz.quizzes.tests.data import QUIZZES
 
 
+
 class CreateRoundTest(SetupTournamentDataMixin, APITestCase):
     def setUp(self):
         self.set_up_tournament_data()
@@ -225,8 +226,8 @@ class RoundDetailTest(SetupTournamentDataMixin, APITestCase):
 
         # bob is group admin, he can delete the round:
         self.login_as("bob")
-        with self.assertNumQueries(5):
-            # (4) select round (5) del round
+        with self.assertNumQueries(6):
+            # (4) select round (5) del round (6) del plays
             response = self.client.delete(self.url)
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(response.data, None)

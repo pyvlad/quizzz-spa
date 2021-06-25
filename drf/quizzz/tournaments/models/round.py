@@ -1,5 +1,5 @@
 from datetime import datetime
-
+from django.utils import timezone
 from django.db import models
 
 from quizzz.quizzes.models import Quiz
@@ -30,7 +30,7 @@ class Round(models.Model):
 
     @property
     def time_left(self):
-        seconds_left = (self.finish_time - datetime.utcnow()).total_seconds()
+        seconds_left = (self.finish_time - timezone.now()).total_seconds()
         return {
             "days": int(seconds_left // (60 * 60 * 24)),
             "hours": int((seconds_left % (60 * 60 * 24)) // (60 * 60)),
@@ -39,7 +39,7 @@ class Round(models.Model):
 
     def get_status(self, now=None):
         if now is None:
-            now = datetime.utcnow()
+            now = timezone.now()
         if now < self.start_time:
             return "coming"
         elif now > self.finish_time:
