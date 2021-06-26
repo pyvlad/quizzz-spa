@@ -25,6 +25,8 @@ const urlFor = (label, params) => {
       return `/group/${params.groupId}/members/`
     case 'GROUP_MY_QUIZZES':
       return `/group/${params.groupId}/my-quizzes/`
+    case 'GROUP_TOURNAMENTS':
+      return `/group/${params.groupId}/tournaments/`
       
     // default
     default:

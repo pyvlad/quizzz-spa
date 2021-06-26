@@ -16,8 +16,9 @@ class TournamentSerializer(serializers.ModelSerializer):
             'name',
             'is_active',
             'community',
+            'time_created',
         ]
-        read_only_fields=["id", "community"]
+        read_only_fields=["id", "community", 'time_created']
 
     def create(self, validated_data):
         """

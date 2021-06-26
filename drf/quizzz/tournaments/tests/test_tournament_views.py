@@ -52,7 +52,7 @@ class CreateTournamentTest(SetupCommunityDataMixin, APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertListEqual(
             list(response.data.keys()), 
-            ['id', 'name', 'is_active', 'community']
+            ['id', 'name', 'is_active', 'community', 'time_created']
         )
 
         self.assertEqual(Tournament.objects.count(), 1)
@@ -93,7 +93,7 @@ class TournamentListTest(SetupTournamentDataMixin, APITestCase):
         self.assertEqual(len(response.data), 1)
         self.assertListEqual(
             list(response.data[0].keys()), 
-            ['id', 'name', 'is_active', 'community'],
+            ['id', 'name', 'is_active', 'community', 'time_created'],
         )
 
 
@@ -114,7 +114,7 @@ class TournamentDetailTest(SetupTournamentDataMixin, APITestCase):
         self.new_data = self.tournament.copy()
         self.new_data["name"] = "New"
         self.new_data["is_active"] = False
-        self.expected_keys = ["id", "name", "is_active", "community"]
+        self.expected_keys = ["id", "name", "is_active", "community", 'time_created']
 
     def test_get_tournament(self):
         # anonymous users have no access:

@@ -32,3 +32,10 @@ export {
   updateQuiz,
   deleteQuiz,
 } from './quizzes';
+
+export {
+  getCommunityTournaments,
+  createTournament,
+  updateTournament,
+  deleteTournament,
+} from './tournaments';

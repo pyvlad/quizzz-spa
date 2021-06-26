@@ -17,6 +17,11 @@ const GroupPage = () => {
         This is { name }.
       </div>
       <div>
+        <Link to={ urlFor("GROUP_TOURNAMENTS", { groupId })}>
+          Tournaments
+        </Link>
+      </div>
+      <div>
         <Link to={ urlFor("GROUP_MEMBERS", { groupId })}>
           Group Members (max={ max_members })
         </Link>
