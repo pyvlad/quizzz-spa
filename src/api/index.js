@@ -38,4 +38,9 @@ export {
   createTournament,
   updateTournament,
   deleteTournament,
+  getTournamentRounds,
+  createRound,
+  updateRound,
+  deleteRound,
+  getQuizPool,
 } from './tournaments';

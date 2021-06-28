@@ -28,6 +28,10 @@ const urlFor = (label, params) => {
     case 'GROUP_TOURNAMENTS':
       return `/group/${params.groupId}/tournaments/`
       
+    // selected tournament
+    case 'TOURNAMENT_ROUNDS':
+      return `/group/${params.groupId}/tournaments/${params.tournamentId}/rounds/`
+
     // default
     default:
       throw new Error("No such route")

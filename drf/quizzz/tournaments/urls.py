@@ -25,4 +25,5 @@ urlpatterns = [
         views.RoundDetail.as_view(), 
         name="round-detail"
     ),
+    path('quiz-pool/', views.QuizPool.as_view(), name="quiz-pool")
 ]

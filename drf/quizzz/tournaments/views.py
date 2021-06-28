@@ -1,3 +1,4 @@
+from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import permissions, status, generics
@@ -6,8 +7,13 @@ from quizzz.communities.permissions import IsCommunityMember, IsCommunityAdmin
 from quizzz.common.permissions import IsSafeMethod
 
 from .models import Tournament, Round
-from .serializers import TournamentSerializer, ListedRoundSerializer, EditableRoundSerializer
-
+from .serializers import (
+    TournamentSerializer, 
+    ListedRoundSerializer,
+    ListedQuizSerializer, 
+    EditableRoundSerializer,
+)
+from quizzz.quizzes.models import Quiz
 
 
 class TournamentListOrCreate(APIView):
@@ -63,12 +69,13 @@ class RoundListOrCreate(APIView):
     def post(self, request, community_id, tournament_id):
         serializer = EditableRoundSerializer(data=request.data)
         if serializer.is_valid(raise_exception=True):
-            serializer.save(tournament_id=tournament_id)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            round_obj = serializer.save(tournament_id=tournament_id)
+            detailed_serializer = ListedRoundSerializer(round_obj)
+            return Response(detailed_serializer.data, status=status.HTTP_201_CREATED)
 
 
 
-class RoundDetail(generics.RetrieveUpdateDestroyAPIView):
+class RoundDetail(generics.RetrieveDestroyAPIView):
     """
     Retrieve/update/delete existing round.
     """
@@ -83,3 +90,34 @@ class RoundDetail(generics.RetrieveUpdateDestroyAPIView):
         if self.request.method == 'GET':
             return ListedRoundSerializer
         return EditableRoundSerializer
+
+    def put(self, request, community_id, round_id):
+        obj = get_object_or_404(Round.objects.filter(pk=round_id))
+        self.check_object_permissions(self.request, obj)
+
+        serializer = EditableRoundSerializer(obj, data=request.data)
+        if serializer.is_valid(raise_exception=True):
+            round_obj = serializer.save(tournament_id=obj.tournament_id)
+            detailed_serializer = ListedRoundSerializer(round_obj)
+            return Response(detailed_serializer.data)
+
+
+
+class QuizPool(APIView):
+    """
+    List group's available quizzes.
+    """
+    permission_classes = [
+        permissions.IsAuthenticated,
+        IsCommunityAdmin,
+    ]
+
+    def get(self, request, community_id):
+        quizzes = Quiz.objects\
+            .filter(community_id=community_id)\
+            .filter(is_finalized=True)\
+            .filter(round__id=None)\
+            .order_by('-time_created')\
+            .all()
+        serializer = ListedQuizSerializer(quizzes, many=True)
+        return Response(serializer.data)

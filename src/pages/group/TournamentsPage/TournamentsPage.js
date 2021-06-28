@@ -5,63 +5,34 @@ import { selectActiveGroupId } from 'state';
 import { selectMyMembershipByGroupId } from 'state';
 import * as api from 'api';
 
+import useListUpdateDeleteViews from 'common/useListUpdateDeleteViews';
 import TournamentsTable from './Table';
 import FormWrapper from './FormWrapper';
 import EditTournamentForm from './EditTournamentForm';
 import DeleteTournamentButton from './DeleteTournamentButton';
-import FilterTabs from './FilterTabs';
+import FilterTabs from 'common/FilterTabs';
 
 
 const TournamentsPage = () => {
 
+  // page parameters
   const groupId = useSelector(selectActiveGroupId);
-
   const membership = useSelector(state => selectMyMembershipByGroupId(state, groupId));
   const { is_admin: loggedAsGroupAdmin } = membership;
 
-  const [tournaments, setTournaments] = React.useState([]);
-  const [editedTournamentId, setEditedTournamentId] = React.useState(null);
+  // page data, views and handlers
+  const fetchFunc = React.useCallback(
+    async () => await api.getCommunityTournaments(groupId), 
+    [groupId]
+  )
+  const {
+    items: tournaments,
+    editedItemId: editedTournamentId,
+    setEditedItemId: setEditedTournamentId,
+    handleItemUpdated: handleTournamentUpdated,
+    handleItemDeleted: handleTournamentDeleted,
+  } = useListUpdateDeleteViews(fetchFunc);
 
-  // On mount, fetch list of group tournaments
-  React.useEffect(() => {
-    async function fetchData() {
-      try {
-        const data = await api.getCommunityTournaments(groupId);
-        setTournaments(data);
-      } catch(e) {
-        console.log(e);
-      }
-    }
-    fetchData();
-  }, [groupId, setTournaments])
-
-  // HANDLERS
-  const handleTournamentUpdated = (updatedTournament) => {
-    const tournamentIndex = tournaments.findIndex(t => t.id === updatedTournament.id);
-    let newTournaments = [];
-    if (tournamentIndex >= 0) {
-      newTournaments = [
-        ...tournaments.slice(0, tournamentIndex), 
-        updatedTournament,
-        ...tournaments.slice(tournamentIndex + 1)
-      ]
-    } else {
-      newTournaments = [
-        updatedTournament,
-        ...tournaments,
-      ]
-    }
-    setEditedTournamentId(null);
-    setTournaments(newTournaments);
-  }
-
-  const handleTournamentDeleted = (tournamentId) => {
-    const tournamentIndex = tournaments.findIndex(t => t.id === tournamentId);
-    let newTournaments = tournaments.slice();
-    newTournaments.splice(tournamentIndex, 1);
-    setEditedTournamentId(null);
-    setTournaments(newTournaments);
-  }
 
   // FILTERS
   // define filters
@@ -81,21 +52,6 @@ const TournamentsPage = () => {
       <h2 className="heading heading--1">
         Group Tournaments
       </h2>
-      {
-        loggedAsGroupAdmin 
-        ? <button 
-            className="btn btn--primary mb-3"
-            onClick={ () => setEditedTournamentId(0) }
-          >
-            Create Tournament
-          </button>
-        : null
-      }
-      <FilterTabs 
-        filters={ filters } 
-        activeFilter={ activeFilter } 
-        onSelectFilter={ setActiveFilter } 
-      />
       {
         (editedTournamentId !== null)
         ? <div>
@@ -117,9 +73,24 @@ const TournamentsPage = () => {
             </FormWrapper>
           </div>
         : <div>
+            {
+              loggedAsGroupAdmin 
+              ? <button 
+                  className="btn btn--primary mb-3"
+                  onClick={ () => setEditedTournamentId(0) }
+                >
+                  Create Tournament
+                </button>
+              : null
+            }
             <h3 className="heading heading--2">
               Tournament List
             </h3>
+            <FilterTabs 
+              filters={ filters } 
+              activeFilter={ activeFilter } 
+              onSelectFilter={ setActiveFilter } 
+            />
             <TournamentsTable 
               tournaments={ rows } 
               loggedAsGroupAdmin={ loggedAsGroupAdmin } 

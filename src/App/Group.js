@@ -6,6 +6,7 @@ import MembersPage from 'pages/group/MembersPage';
 import MyQuizzesPage from 'pages/group/MyQuizzesPage';
 import ChatPage from 'pages/group/ChatPage';
 import TournamentsPage from 'pages/group/TournamentsPage';
+import RoundsPage from 'pages/group/RoundsPage';
 
 
 const Group = () => {
@@ -21,6 +22,11 @@ const Group = () => {
       <Route exact path={`${path}/my-quizzes/`} component={ MyQuizzesPage }/>
       <Route exact path={`${path}/chat/`} component={ ChatPage }/>
       <Route exact path={`${path}/tournaments/`} component={ TournamentsPage } />
+      <Route exact path={`${path}/tournaments/:id/rounds/`} 
+        render={
+          ({match}) => <RoundsPage tournamentId={ parseInt(match.params.id) } />
+        }
+      />
       <Redirect to={`${path}/`} />
     </Switch>
   )

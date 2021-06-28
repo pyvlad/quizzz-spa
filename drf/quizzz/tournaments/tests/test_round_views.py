@@ -9,6 +9,7 @@ from quizzz.common import test_utils
 from ..models import Round
 from .setup_mixin import SetupTournamentDataMixin
 from quizzz.quizzes.tests.data import QUIZZES
+from quizzz.quizzes.models import Quiz
 
 
 
@@ -59,14 +60,25 @@ class CreateRoundTest(SetupTournamentDataMixin, APITestCase):
 
         self.assertEqual(Round.objects.count(), init_count)
 
-        # Group admin can create a new round:
+        # Group admin can create a new round, but need to finalize the quiz first:
         self.login_as("bob")
         with self.assertNumQueries(6):
+            response = self.client.post(self.url, self.payload)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data["data"]["quiz"][0], "Quiz has not been submitted yet.")
+
+        # finalize quiz
+        quiz = Quiz.objects.get(pk=self.payload["quiz"])
+        quiz.is_finalized = True
+        quiz.save()
+
+        # now it works:
+        with self.assertNumQueries(8):
             response = self.client.post(self.url, self.payload)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertListEqual(
             list(response.data.keys()), 
-            ['id', 'start_time', 'finish_time', 'tournament', 'quiz']
+            ['id', 'start_time', 'finish_time', 'tournament', 'quiz', 'status']
         )
         self.assertEqual(Round.objects.count(), init_count + 1)
 
@@ -120,13 +132,14 @@ class RoundListTest(SetupTournamentDataMixin, APITestCase):
 
         # Members see tournament rounds:
         self.login_as("alice")
-        with self.assertNumQueries(5): # (3) member (4) round (5) quiz
+        with self.assertNumQueries(6): # (3) member (4) round (5) quiz (6) users 
+            # TODO: N+1 (users)
             response = self.client.get(self.url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
         self.assertListEqual(
             list(response.data[0].keys()), 
-            ['id', 'start_time', 'finish_time', 'tournament', 'quiz'],
+            ['id', 'start_time', 'finish_time', 'tournament', 'quiz', 'status'],
         )
 
 
@@ -135,6 +148,11 @@ class RoundDetailTest(SetupTournamentDataMixin, APITestCase):
     def setUp(self):
         self.set_up_tournament_and_round_data()
         self.alice_joins_group1()
+
+        # finalize quiz
+        quiz = Quiz.objects.get(pk=self.round["quiz_id"])
+        quiz.is_finalized = True
+        quiz.save()
 
         self.community_id = self.communities["group1"]["id"]
         self.url = reverse(
@@ -150,7 +168,7 @@ class RoundDetailTest(SetupTournamentDataMixin, APITestCase):
         self.new_data["start_time"] = now + datetime.timedelta(minutes=60)
         self.new_data["finish_time"] = now + datetime.timedelta(minutes=120)
         self.new_data["quiz"] = self.round["quiz_id"]
-        self.expected_keys = ["id", "start_time", "finish_time", "tournament", "quiz"]
+        self.expected_keys = ["id", "start_time", "finish_time", "tournament", "quiz", "status"]
 
     def test_get_round(self):
         # anonymous users have no access:
@@ -166,7 +184,7 @@ class RoundDetailTest(SetupTournamentDataMixin, APITestCase):
 
         # alice is a group member, she sees the data:
         self.login_as("alice")
-        with self.assertNumQueries(5):  # (3) member check (4) round (5) quiz
+        with self.assertNumQueries(6):  # (3) member check (4) round (5) quiz (6) user
             response = self.client.get(self.url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(list(response.data.keys()), self.expected_keys)
@@ -195,7 +213,7 @@ class RoundDetailTest(SetupTournamentDataMixin, APITestCase):
 
         # bob is a group admin, he can update the data:
         self.login_as("bob")
-        with self.assertNumQueries(7):
+        with self.assertNumQueries(9):
             # (3) is admin check (4) select round (5) select quiz (6) quiz unique (7) update  
             response = self.client.put(self.url, self.new_data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
