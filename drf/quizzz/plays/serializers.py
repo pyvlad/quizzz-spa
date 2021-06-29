@@ -4,7 +4,6 @@ from django.db import transaction
 
 from .models import Play, PlayAnswer
 from quizzz.quizzes.models import Quiz, Question, Option
-from quizzz.communities.serializers import UserForMembershipListSerializer
 
 
 # ************
@@ -136,21 +135,22 @@ class ReviewOptionSerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "text", "is_correct"]
 
 class ReviewQuestionSerializer(serializers.ModelSerializer):
-    options = PlayOptionSerializer(many=True)
+    options = ReviewOptionSerializer(many=True)
     class Meta: 
         model = Question
         fields = [
             'id',
             'text',
             'options',
+            'explanation',
         ]
-        read_only_fields = ["id", "text", "options"]
+        read_only_fields = ["id", "text", "options", "explanation"]
 
 class ReviewQuizSerializer(serializers.ModelSerializer):
     """
     Top-level serializer to play a quiz (with nested questions and question options).
     """
-    questions = PlayQuestionSerializer(many=True)
+    questions = ReviewQuestionSerializer(many=True)
     class Meta: 
         model = Quiz
         fields = [
@@ -165,10 +165,6 @@ class ReviewPlaySerializer(serializers.ModelSerializer):
     """
     CRUD serializer for plays.
     """
-    answers = SubmittedAnswerSerializer(many=True)
-    quiz = ReviewQuizSerializer(source='round.quiz')
-    author = UserForMembershipListSerializer(source='round.quiz.user')
-
     class Meta:
         model = Play
         fields = [
@@ -178,11 +174,8 @@ class ReviewPlaySerializer(serializers.ModelSerializer):
             'finish_time',
             'client_start_time',
             'client_finish_time',
-            'answers',
-            'quiz',
-            'author',
         ]
         read_only_fields=[
-            'user', 'round', 'result', 'start_time', 'finish_time',
-            'client_start_time', 'client_finish_time', 'answers', 'quiz',
+            'round', 'result', 'start_time', 'finish_time',
+            'client_start_time', 'client_finish_time',
         ]

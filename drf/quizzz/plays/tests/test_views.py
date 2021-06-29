@@ -289,14 +289,14 @@ class ReviewRoundTest(SetupTournamentDataMixin, APITestCase):
         test_utils.assert_403_not_authorized(self, response)
 
         self.login_as("alice")
-        with self.assertNumQueries(4):
+        with self.assertNumQueries(8):
             response = self.client.get(self.url)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
         # start round
         response = self.client.post(self.start_url, {})
 
-        with self.assertNumQueries(4):
+        with self.assertNumQueries(8):
             response = self.client.get(self.url)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(response.data, "You have not finished this round yet.")
@@ -304,12 +304,30 @@ class ReviewRoundTest(SetupTournamentDataMixin, APITestCase):
         # submit round
         response = self.client.post(self.submit_url, self.payload)
 
-        with self.assertNumQueries(15):
+        with self.assertNumQueries(11):
             response = self.client.get(self.url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertListEqual(
             list(response.data.keys()),
-            ['round','result','start_time','finish_time',
-             'client_start_time','client_finish_time',
-             'answers','quiz','author']
+            ['play','play_answers','quiz','author','play_count','choices_by_question_id']
         )
+        self.assertListEqual(
+            list(response.data["play"].keys()),
+            ['round','result','start_time','finish_time',
+             'client_start_time','client_finish_time']
+        )
+
+    def test_author_can_review_round(self):
+        """
+        Quiz author can review a round at any time.
+        """
+        self.login_as("bob")
+        with self.assertNumQueries(9):
+            response = self.client.get(self.url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertListEqual(
+            list(response.data.keys()),
+            ['play','play_answers','quiz','author','play_count','choices_by_question_id']
+        )
+        self.assertDictEqual(response.data["play"], {})
+        self.assertListEqual(response.data["play_answers"], [])

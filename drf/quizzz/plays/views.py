@@ -1,3 +1,5 @@
+from collections import defaultdict
+
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import permissions, status
@@ -8,7 +10,15 @@ from quizzz.communities.permissions import IsCommunityMember
 from quizzz.tournaments.models import Round
 from quizzz.quizzes.models import Quiz
 from .models import Play, PlayAnswer
-from .serializers import SubmittedPlaySerializer, PlayQuizSerializer, ReviewPlaySerializer
+from .serializers import (
+    SubmittedPlaySerializer, 
+    PlayQuizSerializer, 
+    ReviewPlaySerializer,
+    ReviewQuizSerializer,
+    SubmittedAnswerSerializer,
+)
+from quizzz.communities.serializers import UserForMembershipListSerializer
+
 
 
 
@@ -40,7 +50,7 @@ class StartRound(APIView):
             user_id=request.user.id, round_id=round_id)
         if play.is_submitted:
             return Response(
-                "You have already played this round.", 
+                {"data": "You have already played this round."}, 
                 status.HTTP_400_BAD_REQUEST
             )
         
@@ -108,26 +118,48 @@ class ReviewRound(APIView):
     ]
 
     def get(self, request, community_id, round_id):
-        # load a play and run checks:
-        play = get_object_or_404(
-            Play.objects.filter(user_id=request.user.id, round_id=round_id)
-        )
-        if not play.is_submitted:
-            return Response(
-                "You have not finished this round yet.", 
-                status.HTTP_403_FORBIDDEN
-            )
-
         # load round information and run checks:
         round = get_object_or_404(Round.objects.filter(pk=round_id))
 
-        # load quiz with questions
+        # load quiz with questions and author
         quiz = get_object_or_404(
             Quiz.objects.filter(pk=round.quiz_id)
+            .select_related('user')
             .prefetch_related('questions')
             .prefetch_related('questions__options')
         )
 
+        # load a play and run checks (author has no play - but that's fine)
+        play = None if quiz.user_id == request.user.id else get_object_or_404(
+            Play.objects.filter(user_id=request.user.id, round_id=round_id))
+        if play and not play.is_submitted:
+            return Response(
+                "You have not finished this round yet.", 
+                status.HTTP_403_FORBIDDEN
+            )
+        # load user answers:
+        play_answers = play.answers.all() if play else []
+
+        # load play count:
+        play_count = Play.objects.filter(round__id=round_id).count()
+        
+        # load all choice stats:
+        all_answers = PlayAnswer.objects.filter(play__round__id=round_id).all()
+        choices_by_question_id = { q.id: defaultdict(int) for q in quiz.questions.all() }
+        for answer in all_answers:
+            choices_by_question_id[answer.question_id][answer.option_id] += 1
+
         # return data
-        serializer = ReviewPlaySerializer(play)
-        return Response(serializer.data)
+        play_serializer = ReviewPlaySerializer(play)
+        play_answers_serializer = SubmittedAnswerSerializer(play_answers, many=True)
+        quiz_serializer = ReviewQuizSerializer(quiz)
+        author_serializer = UserForMembershipListSerializer(quiz.user)
+
+        return Response({
+            "play": play_serializer.data,
+            "play_answers": play_answers_serializer.data,
+            "quiz": quiz_serializer.data,
+            "author": author_serializer.data,
+            "play_count": play_count,
+            "choices_by_question_id": choices_by_question_id,   # counts for all plays
+        })

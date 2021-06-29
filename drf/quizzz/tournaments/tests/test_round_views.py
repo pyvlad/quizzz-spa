@@ -73,12 +73,13 @@ class CreateRoundTest(SetupTournamentDataMixin, APITestCase):
         quiz.save()
 
         # now it works:
-        with self.assertNumQueries(8):
+        with self.assertNumQueries(9):
             response = self.client.post(self.url, self.payload)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertListEqual(
             list(response.data.keys()), 
-            ['id', 'start_time', 'finish_time', 'tournament', 'quiz', 'status']
+            ['id', 'start_time', 'finish_time', 'tournament', 
+             'quiz', 'status', 'user_play', 'is_author']
         )
         self.assertEqual(Round.objects.count(), init_count + 1)
 
@@ -132,14 +133,15 @@ class RoundListTest(SetupTournamentDataMixin, APITestCase):
 
         # Members see tournament rounds:
         self.login_as("alice")
-        with self.assertNumQueries(6): # (3) member (4) round (5) quiz (6) users 
+        with self.assertNumQueries(7): # (3) member (4) round (5) plays (6) quiz (7) users 
             # TODO: N+1 (users)
             response = self.client.get(self.url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
         self.assertListEqual(
             list(response.data[0].keys()), 
-            ['id', 'start_time', 'finish_time', 'tournament', 'quiz', 'status'],
+            ['id', 'start_time', 'finish_time', 'tournament', 
+             'quiz', 'status', 'user_play', 'is_author']
         )
 
 
@@ -168,7 +170,10 @@ class RoundDetailTest(SetupTournamentDataMixin, APITestCase):
         self.new_data["start_time"] = now + datetime.timedelta(minutes=60)
         self.new_data["finish_time"] = now + datetime.timedelta(minutes=120)
         self.new_data["quiz"] = self.round["quiz_id"]
-        self.expected_keys = ["id", "start_time", "finish_time", "tournament", "quiz", "status"]
+        self.expected_keys = [
+            'id', 'start_time', 'finish_time', 'tournament', 
+            'quiz', 'status', 'user_play', 'is_author'
+        ]
 
     def test_get_round(self):
         # anonymous users have no access:
@@ -184,11 +189,18 @@ class RoundDetailTest(SetupTournamentDataMixin, APITestCase):
 
         # alice is a group member, she sees the data:
         self.login_as("alice")
-        with self.assertNumQueries(6):  # (3) member check (4) round (5) quiz (6) user
+        with self.assertNumQueries(8):  # (3) member check (4) round (5) plays (6) quiz (7) user
             response = self.client.get(self.url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(list(response.data.keys()), self.expected_keys)
-        self.assertEqual(response.data["id"], self.round['id'])
+        self.assertEqual(
+            list(response.data.keys()), 
+            ["round", "standings"] # ["id", "user", "user_id", "result", "time", "score"]
+        )
+        self.assertEqual(
+            list(response.data["round"].keys()), 
+            self.expected_keys
+        )
+        self.assertEqual(response.data["round"]["id"], self.round['id'])
 
 
     def test_update_round_works_for_group_admins(self):
@@ -213,8 +225,7 @@ class RoundDetailTest(SetupTournamentDataMixin, APITestCase):
 
         # bob is a group admin, he can update the data:
         self.login_as("bob")
-        with self.assertNumQueries(9):
-            # (3) is admin check (4) select round (5) select quiz (6) quiz unique (7) update  
+        with self.assertNumQueries(10):  
             response = self.client.put(self.url, self.new_data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(list(response.data.keys()), self.expected_keys)

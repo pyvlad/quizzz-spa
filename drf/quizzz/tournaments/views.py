@@ -62,15 +62,23 @@ class RoundListOrCreate(APIView):
     ]
 
     def get(self, request, community_id, tournament_id):
-        rounds = Round.objects.filter(tournament_id=tournament_id).all()
-        serializer = ListedRoundSerializer(rounds, many=True)
+        
+        rounds = Round.objects\
+            .filter(tournament_id=tournament_id)\
+            .prefetch_related(Round.get_user_plays_prefetch_object(request.user.id))\
+            .all()
+        serializer = ListedRoundSerializer(rounds, many=True, context={'request': request})
+
         return Response(serializer.data)
 
     def post(self, request, community_id, tournament_id):
         serializer = EditableRoundSerializer(data=request.data)
         if serializer.is_valid(raise_exception=True):
             round_obj = serializer.save(tournament_id=tournament_id)
-            detailed_serializer = ListedRoundSerializer(round_obj)
+
+            round_obj.load_user_plays(request.user.id)
+            detailed_serializer = ListedRoundSerializer(round_obj, context={'request': request})
+            
             return Response(detailed_serializer.data, status=status.HTTP_201_CREATED)
 
 
@@ -87,9 +95,20 @@ class RoundDetail(generics.RetrieveDestroyAPIView):
     lookup_url_kwarg = "round_id"
 
     def get_serializer_class(self):
-        if self.request.method == 'GET':
-            return ListedRoundSerializer
-        return EditableRoundSerializer
+        if self.request.method == 'DELETE':
+            return EditableRoundSerializer
+
+    def get(self, request, community_id, round_id):
+        obj = get_object_or_404(Round.objects.filter(pk=round_id))
+        self.check_object_permissions(self.request, obj)
+
+        obj.load_user_plays(request.user.id)
+        serializer = ListedRoundSerializer(obj, context={'request': request})
+
+        return Response({
+            "round": serializer.data,
+            "standings": obj.get_standings(),
+        })
 
     def put(self, request, community_id, round_id):
         obj = get_object_or_404(Round.objects.filter(pk=round_id))
@@ -98,7 +117,10 @@ class RoundDetail(generics.RetrieveDestroyAPIView):
         serializer = EditableRoundSerializer(obj, data=request.data)
         if serializer.is_valid(raise_exception=True):
             round_obj = serializer.save(tournament_id=obj.tournament_id)
-            detailed_serializer = ListedRoundSerializer(round_obj)
+
+            round_obj.load_user_plays(request.user.id)
+            detailed_serializer = ListedRoundSerializer(round_obj, context={'request': request})
+            
             return Response(detailed_serializer.data)
 
 
@@ -121,3 +143,14 @@ class QuizPool(APIView):
             .all()
         serializer = ListedQuizSerializer(quizzes, many=True)
         return Response(serializer.data)
+
+
+class TournamentStandings(APIView):
+    permission_classes = [
+        permissions.IsAuthenticated,
+        IsCommunityMember,
+    ]
+    def get(self, request, community_id, tournament_id):
+        tournament = get_object_or_404(Tournament.objects.filter(pk=tournament_id))
+        standings = tournament.get_standings()
+        return Response(standings)

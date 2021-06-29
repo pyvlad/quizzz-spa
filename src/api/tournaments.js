@@ -49,6 +49,16 @@ export async function getTournamentRounds(communityId, tournamentId) {
   );
 }
 
+export async function getRound(communityId, roundId) {
+  /*
+    Fetch round by id.
+    A Round object is expected.
+  */
+  return await apiClient.get(
+    `/api/communities/${communityId}/tournaments/rounds/${roundId}/`
+  );
+}
+
 export async function createRound(communityId, tournamentId, payload) {
   /*
     Send request to create a new round.
@@ -87,4 +97,15 @@ export async function getQuizPool(communityId) {
     A list of Quiz objects is expected.
   */
   return await apiClient.get(`/api/communities/${communityId}/tournaments/quiz-pool/`);
+}
+
+
+export async function getTournamentStandings(communityId, tournamentId) {
+  /*
+    Fetch tournament standings.
+    A list of Round objects is expected.
+  */
+  return await apiClient.get(
+    `/api/communities/${communityId}/tournaments/${tournamentId}/standings/`
+  );
 }

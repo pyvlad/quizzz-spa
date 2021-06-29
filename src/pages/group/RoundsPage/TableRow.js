@@ -1,16 +1,25 @@
 import React from 'react';
 import moment from 'moment';
+import { useSelector } from 'react-redux';
+import { selectActiveGroupId } from 'state';
+import { Link } from 'react-router-dom';
+import urlFor from 'urls';
 
 
 const RoundsTableRow = ({ round, num, loggedAsGroupAdmin, onEdit }) => {
+  
+  const groupId = useSelector(selectActiveGroupId);
+  
   const {
+    id: roundId,
     finish_time,
     quiz: {
       name,
       user: {
         username
       },
-    }
+    },
+    user_play: play,
   } = round;
 
   return (
@@ -19,7 +28,9 @@ const RoundsTableRow = ({ round, num, loggedAsGroupAdmin, onEdit }) => {
         { num }
       </td>
       <td className="table__td">
-        { name }
+        <Link to={ urlFor("ROUND", {groupId, roundId}) } >
+          { name }
+        </Link>
       </td>
       <td className="table__td table__td--centered">
         { username }
@@ -27,7 +38,9 @@ const RoundsTableRow = ({ round, num, loggedAsGroupAdmin, onEdit }) => {
       <td className="table__td table__td--centered">
         { moment(finish_time).format("MMM D, YYYY [at] h:mm a")}
       </td>
-      <td></td>
+      <td className="table__td table__td--centered">
+        { play ? "yes" : "no"}
+      </td>
       <td className="table__td table__td--centered">
         { loggedAsGroupAdmin 
           ? <button className="link link--decorated" onClick={ onEdit }>✎</button>

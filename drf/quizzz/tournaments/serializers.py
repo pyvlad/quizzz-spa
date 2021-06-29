@@ -66,7 +66,13 @@ class ListedRoundSerializer(serializers.ModelSerializer):
             'tournament',
             'quiz',
             'status',
+            'user_play',    # id
         ]
+
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        ret['is_author'] = instance.is_authored_by(self.context["request"].user.id)
+        return ret
 
 
 class EditableRoundSerializer(serializers.ModelSerializer):
