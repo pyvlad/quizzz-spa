@@ -1,3 +1,7 @@
+/*
+  This component renders correct group page 
+  based on the url using relative paths.
+*/
 import React from 'react';
 import { Switch, Route, Redirect, useRouteMatch } from 'react-router-dom';
 
@@ -14,9 +18,7 @@ import TournamentStandingsPage from 'pages/group/TournamentStandingsPage';
 
 
 const Group = () => {
-  /*
-    This component renders correct page based on the url using relative paths.
-  */
+
   let { path } = useRouteMatch();
 
   return (

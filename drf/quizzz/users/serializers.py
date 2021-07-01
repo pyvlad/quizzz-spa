@@ -10,7 +10,7 @@ from .models import CustomUser
 class NewUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
-        fields = ['username', 'password']
+        fields = ['username', 'password', 'email']
 
     def validate_password(self, value):
         """
@@ -36,7 +36,7 @@ class NewUserSerializer(serializers.ModelSerializer):
 class LoginSerializer(serializers.Serializer):
     username = serializers.CharField(required=True, max_length=150, 
         validators=[UnicodeUsernameValidator])
-    password = serializers.CharField(required=True, max_length=128)
+    password = serializers.CharField(required=True, max_length=64)
 
     def validate(self, data):
         """
@@ -49,12 +49,40 @@ class LoginSerializer(serializers.Serializer):
         return data
 
 
-
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
         fields = ['id', 'username', 'first_name', 'last_name', 'email', 
-                  'is_active', 'date_joined', 'last_login']
+                  'is_active', 'date_joined', 'last_login', 'is_email_confirmed']
+
+
+class UserEmailSerializer(serializers.Serializer):
+    email = serializers.EmailField(label='Email address', max_length=254)
+
+
+class UserPasswordSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomUser
+        fields = ['password']
+
+    def validate_password(self, value):
+        """
+        Validate whether the password meets all validator requirements.
+        Default validators: settings.AUTH_PASSWORD_VALIDATORS.
+        
+        If the password is valid, return ``None``.
+        If the password is invalid, raise ValidationError with all error messages.
+        """
+        try:
+            validate_password(value)
+        except ValidationError as error:
+            raise serializers.ValidationError(" ".join(error.messages))
+        return value
+
+    def update(self, instance, validated_data):
+        instance.set_password(validated_data["password"])
+        instance.save()
+        return instance
 
 
 # NOTES

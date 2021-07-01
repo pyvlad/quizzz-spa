@@ -5,8 +5,8 @@ from rest_framework.response import Response
 from rest_framework import permissions, status
 from django.shortcuts import get_object_or_404
 
+from quizzz.common.permissions import IsAuthenticated
 from quizzz.communities.permissions import IsCommunityMember
-
 from quizzz.tournaments.models import Round
 from quizzz.quizzes.models import Quiz
 from .models import Play, PlayAnswer
@@ -26,10 +26,7 @@ class StartRound(APIView):
     """
     Create a new play or return a non-finished one.
     """
-    permission_classes = [
-        permissions.IsAuthenticated,
-        IsCommunityMember,
-    ]
+    permission_classes = [ IsAuthenticated, IsCommunityMember ]
 
     def post(self, request, community_id, round_id):
         # round information and checks:
@@ -70,10 +67,7 @@ class SubmitRound(APIView):
     """
     Submit a play with selected answers.
     """
-    permission_classes = [
-        permissions.IsAuthenticated,
-        IsCommunityMember,
-    ]
+    permission_classes = [IsAuthenticated, IsCommunityMember]
 
     def post(self, request, community_id, round_id):
         # load round information and run checks:
@@ -112,10 +106,7 @@ class ReviewRound(APIView):
     """
     Review round with selected answers.
     """
-    permission_classes = [
-        permissions.IsAuthenticated,
-        IsCommunityMember,
-    ]
+    permission_classes = [ IsAuthenticated, IsCommunityMember ]
 
     def get(self, request, community_id, round_id):
         # load round information and run checks:

@@ -2,6 +2,7 @@
 export {
   fetchLogin,
   fetchLogout,
+  setCurrentUser,
 } from './slices/authSlice';
 export {
   fetchMyMemberships,

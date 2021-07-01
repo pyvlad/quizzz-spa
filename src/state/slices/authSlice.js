@@ -51,7 +51,11 @@ export const authSlice = createSlice({
   // doesn't actually mutate the state because it uses the immer library,
   // which detects changes to a "draft state" and produces a brand new
   // immutable state based off those changes.
-  reducers: {},
+  reducers: {
+    setCurrentUser(state, action) {
+      state.user = action.payload;
+    },
+  },
   extraReducers: {
     [fetchLogin.pending]: (state, action) => {
       state.loading = true;
@@ -81,7 +85,7 @@ export const authSlice = createSlice({
 })
 
 export default authSlice.reducer;
-
+export const { setCurrentUser } = authSlice.actions;
 
 /* *** SELECTORS *** */
 // The functions below are called a selector and allow us to select values from

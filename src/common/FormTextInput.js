@@ -11,6 +11,8 @@ const FormTextInput = ({
   errors, 
   type="text",
   disabled=false,
+  helpText=null,
+  placeholder=null,
 }) => {
 
   const [htmlId] = React.useState(_uniqueId('html-id-'));
@@ -27,8 +29,16 @@ const FormTextInput = ({
         className="form__input"
         id={ htmlId }
         disabled={ disabled }
+        placeholder={ placeholder }
       />
       <FormFieldErrors errors={ errors } />
+      {
+        helpText
+        ? <div className="form__input-help">
+            { helpText }
+          </div>
+        : null
+      }
     </div>
   )
 }

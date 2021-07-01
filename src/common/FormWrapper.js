@@ -1,7 +1,7 @@
 import React from 'react';
 
 
-const LoginFormWrapper = ({ children }) => (
+const FormWrapper = ({ children }) => (
   <div className="container">
     <div className="row">
       <div className="col-12 col-sm-6 col-sm-offset-3 col-md-4 col-md-offset-4">
@@ -13,4 +13,4 @@ const LoginFormWrapper = ({ children }) => (
   </div>
 )
 
-export default LoginFormWrapper;
+export default FormWrapper;

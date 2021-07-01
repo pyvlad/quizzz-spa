@@ -4,7 +4,15 @@ const urlFor = (label, params) => {
     case 'HOME':
       return "/"
     case 'LOGIN':
-      return "/login/"
+      return "/auth/login/"
+    case 'REGISTER':
+      return "/auth/register/"
+    case 'REQUEST_RESET':
+      return "/auth/request-password-reset/"
+    case 'RESET_PASSWORD':
+      return `/auth/password-reset/${params.tokenUUID}/`
+    case 'EMAIL_NOT_CONFIRMED':
+      return "/auth/confirm-email/"
 
     // user groups
     case 'MY_GROUPS':

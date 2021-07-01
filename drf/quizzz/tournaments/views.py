@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework import permissions, status, generics
 
 from quizzz.communities.permissions import IsCommunityMember, IsCommunityAdmin
-from quizzz.common.permissions import IsSafeMethod
+from quizzz.common.permissions import IsSafeMethod, IsAuthenticated
 
 from .models import Tournament, Round
 from .serializers import (
@@ -21,7 +21,7 @@ class TournamentListOrCreate(APIView):
     Create a new tournament or list group's tournaments.
     """
     permission_classes = [
-        permissions.IsAuthenticated,
+        IsAuthenticated,
         (IsSafeMethod & IsCommunityMember) | IsCommunityAdmin,
     ]
 
@@ -43,7 +43,7 @@ class TournamentDetail(generics.RetrieveUpdateDestroyAPIView):
     Retrieve/update/delete existing tournament.
     """
     permission_classes = [
-        permissions.IsAuthenticated,
+        IsAuthenticated,
         (IsSafeMethod & IsCommunityMember) | IsCommunityAdmin,
     ]
     queryset = Tournament.objects.all()
@@ -57,7 +57,7 @@ class RoundListOrCreate(APIView):
     Create a new round or list tournament rounds.
     """
     permission_classes = [
-        permissions.IsAuthenticated,
+        IsAuthenticated,
         (IsSafeMethod & IsCommunityMember) | IsCommunityAdmin,
     ]
 
@@ -88,7 +88,7 @@ class RoundDetail(generics.RetrieveDestroyAPIView):
     Retrieve/update/delete existing round.
     """
     permission_classes = [
-        permissions.IsAuthenticated,
+        IsAuthenticated,
         (IsSafeMethod & IsCommunityMember) | IsCommunityAdmin,
     ]
     queryset = Round.objects.all()
@@ -129,10 +129,7 @@ class QuizPool(APIView):
     """
     List group's available quizzes.
     """
-    permission_classes = [
-        permissions.IsAuthenticated,
-        IsCommunityAdmin,
-    ]
+    permission_classes = [ IsAuthenticated, IsCommunityAdmin ]
 
     def get(self, request, community_id):
         quizzes = Quiz.objects\
@@ -146,10 +143,8 @@ class QuizPool(APIView):
 
 
 class TournamentStandings(APIView):
-    permission_classes = [
-        permissions.IsAuthenticated,
-        IsCommunityMember,
-    ]
+    permission_classes = [ IsAuthenticated,  IsCommunityMember ]
+    
     def get(self, request, community_id, tournament_id):
         tournament = get_object_or_404(Tournament.objects.filter(pk=tournament_id))
         standings = tournament.get_standings()

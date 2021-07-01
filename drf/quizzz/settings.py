@@ -105,6 +105,12 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
     },
     {
+        'NAME': 'quizzz.password_validation.MaximumLengthValidator',
+        'OPTIONS': {
+            'max_length': 64,
+        },
+    },
+    {
         'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
     },
     {
@@ -161,6 +167,9 @@ REST_FRAMEWORK = {
 }
 
 
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+
 # LOGGING = {
 #     'version': 1,
 #     'filters': {
@@ -183,4 +192,8 @@ REST_FRAMEWORK = {
 #     }
 # }
 
+PASSWORD_RESET_TOKEN_VALIDITY = 3600
+
 QUIZZZ_CHAT_PAGE_SIZE = 2
+
+FRONTEND_BASE_URL = "http://localhost:3000"

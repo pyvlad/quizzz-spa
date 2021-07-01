@@ -1,3 +1,6 @@
+/*
+  This component renders correct page for an authenticated user.
+*/
 import React from 'react';
 import { Switch, Route, Redirect } from 'react-router-dom';
 

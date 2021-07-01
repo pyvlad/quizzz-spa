@@ -31,12 +31,20 @@ const Menu = () => {
             >
               Logout
             </button>
-          : <Link 
-              to={ urlFor('LOGIN') } 
-              className="menu__item menu__item--link"
-            >
-              Login
-            </Link>
+          : <React.Fragment>
+              <Link 
+                to={ urlFor('REGISTER') } 
+                className="menu__item menu__item--link"
+              >
+                Register
+              </Link>
+              <Link 
+                to={ urlFor('LOGIN') } 
+                className="menu__item menu__item--link"
+              >
+                Login
+              </Link>
+            </React.Fragment>
         }
       </div>
     </nav>

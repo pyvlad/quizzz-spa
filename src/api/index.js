@@ -5,7 +5,12 @@ export {
 export {
   login, 
   logout,
+  register,
   loadUser,
+  resendConfirmEmail,
+  requestPasswordResetEmail,
+  resetPassword,
+  confirmEmail,
 } from './auth';
 
 export {

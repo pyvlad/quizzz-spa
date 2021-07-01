@@ -34,7 +34,7 @@ const RoundPage = ({ roundId }) => {
           Round Page
         </h2>
         <RoundTable round={round} groupId={groupId} />
-        <section class="my-4">
+        <section className="my-4">
           {
             standings.length
             ? <StandingsTable standings={standings} userId={user.id} />

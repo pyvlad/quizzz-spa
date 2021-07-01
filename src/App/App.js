@@ -1,31 +1,37 @@
 import React from 'react';
 import { Switch, Route } from 'react-router-dom';
 
-import Authentication from './containers/Authentication';
+import { useSelector } from 'react-redux';
+import { selectCurrentUser } from 'state';
 
 import BasePage from 'pages/BasePage';
-import LoginPage from 'pages/LoginPage';
-import HomePage from 'pages/HomePage';
-
+import HomeAndAuth from './HomeAndAuth';
 import MyGroups from './MyGroups';
-
-import urlFor from 'urls';
+import EmailConfirmationPage from 'pages/auth/EmailConfirmationPage';
+import EmailNotConfirmedPage from 'pages/auth/EmailNotConfirmedPage';
 
 import './Styles.js';
 
 
-const App = () => (
-  <BasePage>
-    <Switch>
-      <Route exact path={ urlFor('LOGIN') } component={ LoginPage } />
-      <Route path="/" render={ 
-        () => <Authentication 
-          componentIfAuthenticated={ <MyGroups /> }
-          componentIfAnonymous={ <HomePage /> }
+const App = () => {
+
+  const user = useSelector(selectCurrentUser);
+
+  return (
+    <BasePage>
+      <Switch>
+        <Route exact 
+          path="/auth/confirm-email/:token/" 
+          render={({match}) => <EmailConfirmationPage token={ match.params.token } />}
         />
-      }/>
-    </Switch>
-  </BasePage>
-)
+        <Route path="/" component={ 
+          user 
+          ? (user.is_email_confirmed ? MyGroups : EmailNotConfirmedPage ) 
+          : HomeAndAuth
+        } />
+      </Switch>
+    </BasePage>
+  )
+}
 
 export default App;

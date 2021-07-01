@@ -45,7 +45,7 @@ const useSubmit = (asyncSubmitFunction, onSuccess) => {
     }
   }
 
-  return { isLoading, errors, handleSubmit };
+  return { isLoading, errors, handleSubmit, setErrors };
 }
 
 export default useSubmit;

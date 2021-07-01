@@ -11,7 +11,7 @@ from .models import Membership, Community
 from .permissions import IsCommunityAdmin, IsCommunityMember
 
 from quizzz.users.permissions import IsSuperuser, AuthenticatedAsUrlUserId
-from quizzz.common.permissions import IsSafeMethod, IsDeleteMethod
+from quizzz.common.permissions import IsSafeMethod, IsDeleteMethod, IsAuthenticated
 
 from django.contrib.auth import get_user_model
 User = get_user_model()
@@ -22,10 +22,7 @@ class CommunityList(APIView):
     """
     List all communities.
     """
-    permission_classes = [
-        permissions.IsAuthenticated,
-        IsSuperuser,
-    ]
+    permission_classes = [IsAuthenticated, IsSuperuser]
 
     def get(self, request):
         communities = Community.objects.all()
@@ -39,7 +36,7 @@ class CommunityDetail(APIView):
     Read, update, delete an existing community.
     """
     permission_classes = [
-        permissions.IsAuthenticated,
+        IsAuthenticated,
         (IsSafeMethod & IsCommunityMember) | IsCommunityAdmin,
     ]
 
@@ -75,7 +72,7 @@ class UserCommunityList(APIView):
     List user's communities as part of membership objects.
     """
     permission_classes = [
-        permissions.IsAuthenticated,
+        IsAuthenticated,
         AuthenticatedAsUrlUserId,
     ]
 
@@ -95,9 +92,7 @@ class CreateCommunity(APIView):
     """
     Create a new community with user_id becoming an admin there.
     """
-    permission_classes = [
-        permissions.IsAuthenticated,
-    ]
+    permission_classes = [ IsAuthenticated ]
 
     def post(self, request):
         serializer = CommunitySerializer(data=request.data)
@@ -115,9 +110,7 @@ class JoinCommunity(APIView):
     """
     Create a membership in an existing community.
     """
-    permission_classes = [
-        permissions.IsAuthenticated,
-    ]
+    permission_classes = [ IsAuthenticated ]
 
     def post(self, request):
         serializer = JoinCommunitySerializer(data=request.data)
@@ -139,10 +132,7 @@ class MembershipList(APIView):
     """
     List all community members.
     """
-    permission_classes = [
-        permissions.IsAuthenticated,
-        IsCommunityMember,
-    ]
+    permission_classes = [ IsAuthenticated, IsCommunityMember ]
 
     def get(self, request, community_id):
         memberships = (
@@ -160,7 +150,7 @@ class MembershipDetail(APIView):
     Read, update, delete an existing membership.
     """
     permission_classes = [
-        permissions.IsAuthenticated,
+        IsAuthenticated,
         (IsSafeMethod & IsCommunityMember) 
         | (~(AuthenticatedAsUrlUserId & IsDeleteMethod) & IsCommunityAdmin) 
         | ((AuthenticatedAsUrlUserId & IsDeleteMethod) & (~IsCommunityAdmin))

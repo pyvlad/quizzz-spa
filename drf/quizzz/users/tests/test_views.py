@@ -1,9 +1,14 @@
 # DRF testing: https://www.django-rest-framework.org/api-guide/testing/
 # Django testing: https://docs.djangoproject.com/en/3.2/topics/testing/
+# email: https://docs.djangoproject.com/en/3.2/topics/testing/tools/#topics-testing-email
 # Unittest: https://docs.python.org/3/library/unittest.html#unittest.TestCase
+import re
 from django.urls import reverse
+from django.core import mail
+from django.conf import settings
 from rest_framework import status
 from rest_framework.test import APITestCase
+from itsdangerous import TimedJSONWebSignatureSerializer
 
 from ..models import CustomUser
 from .setup_mixin import SetupUsersMixin
@@ -16,27 +21,56 @@ class RegistrationViewTest(APITestCase):
     """
     def setUp(self):
         self.url = reverse('users:register')
-        self.user = {"username": "bob", "password": "dog12345"}
+        self.user = {"username": "bob", "password": "dog12345", "email": "bob@example.com"}
 
     def test_normal(self):
         """
         User with correct credentials is registered and created in database.
         """
-        with self.assertNumQueries(2):  # (1) unique check (2) insert 
-            response = self.client.post(self.url, self.user, format='json')
+        with self.assertNumQueries(11): 
+            # (1) username unique check (2) email unique check (3) insert 
+            # (4-11) login stuff
+            response = self.client.post(self.url, self.user)
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.data, None)
+        self.assertListEqual(
+            list(response.data.keys()), 
+            ["id", "username", "first_name", "last_name", "email", 
+             "is_active", "date_joined", "last_login", "is_email_confirmed"]
+        )
+        self.assertFalse(response.data["is_email_confirmed"])
+        self.assertTrue("sessionid" in response.cookies)
         self.assertEqual(CustomUser.objects.count(), 1)
         self.assertEqual(CustomUser.objects.get().username, self.user["username"])
+        # one message has been sent with email confirmation url:
+        self.assertEqual(len(mail.outbox), 1)  
+        self.assertEqual(mail.outbox[0].subject, '[Quizzz] Confirm Your Account')
+
+        pattern = re.compile(settings.FRONTEND_BASE_URL + "/auth/confirm-email/(?P<token>.*?)/")
+        m = pattern.search(mail.outbox[0].body)
+        token = m.group("token")
+        s = TimedJSONWebSignatureSerializer(settings.SECRET_KEY)
+        data = s.loads(token.encode('utf-8'))
+        self.assertEqual(data["user_name"], self.user["username"])
+
+        # follow the confirmation link to finish registration:
+        confirm_email_url = reverse('users:confirm-email-link', kwargs={"token": token})
+        with self.assertNumQueries(4):
+            response = self.client.get(confirm_email_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertListEqual(
+            list(response.data.keys()), 
+            ["id", "username", "first_name", "last_name", "email", 
+             "is_active", "date_joined", "last_login", "is_email_confirmed"]
+        )
+        self.assertTrue(response.data["is_email_confirmed"])
+        self.assertTrue(CustomUser.objects.get().is_email_confirmed)
 
     def test_password_too_short(self):
-        with self.assertNumQueries(1):  # (1) unique check
-            response = self.client.post(
-                self.url, 
-                {"username": "bob", "password": "dog"}, 
-                format='json'
-            )
+        bad_data = self.user.copy()
+        bad_data["password"] = "dog"
+        with self.assertNumQueries(2): # (1-2) unique checks
+            response = self.client.post(self.url, bad_data)
         test_utils.assert_400_validation_failed(self, response, 
             error="Bad data submitted.",
             data={"password": [
@@ -48,15 +82,32 @@ class RegistrationViewTest(APITestCase):
         self.assertEqual(CustomUser.objects.count(), 0)
 
     def test_empty_username(self):
-        with self.assertNumQueries(0):
-            response = self.client.post(
-                self.url, 
-                {"username": "", "password": "dog12345"}, 
-                format='json'
-            )
+        bad_data = self.user.copy()
+        bad_data["username"] = ""
+        with self.assertNumQueries(1): # (1) email unique check 
+            response = self.client.post(self.url, bad_data)
         test_utils.assert_400_validation_failed(self, response, 
             error="Bad data submitted.",
             data={"username": ["This field may not be blank."]})
+        self.assertEqual(CustomUser.objects.count(), 0)
+
+    def test_empty_email(self):
+        bad_data = self.user.copy()
+        bad_data.pop("email")
+        with self.assertNumQueries(1):  # username unique check
+            response = self.client.post(self.url, bad_data)
+        test_utils.assert_400_validation_failed(self, response, 
+            error="Bad data submitted.",
+            data={"email": ["This field is required."]})
+        self.assertEqual(CustomUser.objects.count(), 0)
+
+        bad_data = self.user.copy()
+        bad_data["email"] = ""
+        with self.assertNumQueries(1):  # username unique check
+            response = self.client.post(self.url, bad_data)
+        test_utils.assert_400_validation_failed(self, response, 
+            error="Bad data submitted.",
+            data={"email": ["This field may not be blank."]})
         self.assertEqual(CustomUser.objects.count(), 0)
 
     def test_duplicate_user(self):
@@ -64,18 +115,23 @@ class RegistrationViewTest(APITestCase):
         Trying to create same user returns Bad Request.
         """
         # a. create user 'bob'
-        response = self.client.post(self.url, self.user, format='json')
+        response = self.client.post(self.url, self.user)
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(CustomUser.objects.count(), 1)
 
         # b. try creating same user again
-        with self.assertNumQueries(1):  # (1) unique check
-            response = self.client.post(self.url, self.user, format='json')
+        self.client.logout()
+        with self.assertNumQueries(2):  # (1-2) unique checks
+            response = self.client.post(self.url, self.user)
 
         test_utils.assert_400_validation_failed(self, response, 
             error="Bad data submitted.",
-            data={"username": ["A user with that username already exists."]})
+            data={
+                "username": ["A user with that username already exists."],
+                "email": ["user with this email address already exists."],
+            }
+        )
         self.assertEqual(CustomUser.objects.count(), 1)
 
 
@@ -105,7 +161,7 @@ class LoginViewTest(SetupUsersMixin, APITestCase):
         self.assertListEqual(
             list(response.data.keys()), 
             ["id", "username", "first_name", "last_name", "email", 
-             "is_active", "date_joined", "last_login"]
+             "is_active", "date_joined", "last_login", "is_email_confirmed"]
         )
         self.assertTrue("sessionid" in response.cookies)
 

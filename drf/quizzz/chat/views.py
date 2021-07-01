@@ -8,6 +8,7 @@ from rest_framework.pagination import PageNumberPagination
 from .models import ChatMessage
 from .serializers import ChatMessageSerializer
 
+from quizzz.common.permissions import IsAuthenticated
 from quizzz.communities.permissions import IsCommunityMember, IsCommunityAdmin
 
 
@@ -20,10 +21,7 @@ class ChatMessageList(generics.ListCreateAPIView):
     List all chat messages, or create a new chat message.
     """
     serializer_class = ChatMessageSerializer
-    permission_classes = [
-        permissions.IsAuthenticated,
-        IsCommunityMember,
-    ]
+    permission_classes = [IsAuthenticated, IsCommunityMember]
     pagination_class = ChatPagination
 
     def get_queryset(self):
@@ -53,7 +51,7 @@ class ChatMessageList(generics.ListCreateAPIView):
 #     List all chat messages, or create a new chat message.
 #     """
 #     permission_classes = [
-#         permissions.IsAuthenticated,
+#         IsAuthenticated,
 #         IsCommunityMember,
 #     ]
 
@@ -73,10 +71,7 @@ class ChatMessageList(generics.ListCreateAPIView):
 
 
 class ChatMessageDetail(APIView):
-    permission_classes = [
-        permissions.IsAuthenticated,
-        IsCommunityAdmin,
-    ]
+    permission_classes = [IsAuthenticated, IsCommunityAdmin]
 
     def delete(self, request, community_id, message_id):
         message = get_object_or_404(ChatMessage.objects.filter(pk=message_id))

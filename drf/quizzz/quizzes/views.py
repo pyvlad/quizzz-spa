@@ -8,7 +8,7 @@ from rest_framework.exceptions import ValidationError
 from .serializers import EditableQuizSerializer, ListedQuizSerializer
 from .models import Quiz
 
-from quizzz.common.permissions import IsOwner
+from quizzz.common.permissions import IsOwner, IsAuthenticated
 from quizzz.communities.permissions import IsCommunityMember
 
 from django.contrib.auth import get_user_model
@@ -22,10 +22,7 @@ class QuizListOrCreate(APIView):
     """
     Create a new quiz or list user's quizzes.
     """
-    permission_classes = [
-        permissions.IsAuthenticated,
-        IsCommunityMember,
-    ]
+    permission_classes = [ IsAuthenticated, IsCommunityMember ]
 
     def get(self, request, community_id):
         quizzes = Quiz.objects\
@@ -52,7 +49,7 @@ class QuizDetail(APIView):
     Read, update, delete an existing quiz.
     """
     permission_classes = [
-        permissions.IsAuthenticated,
+        IsAuthenticated,
         IsCommunityMember & IsOwner,
     ]
 
