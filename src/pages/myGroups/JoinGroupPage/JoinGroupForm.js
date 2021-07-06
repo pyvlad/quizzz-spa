@@ -4,7 +4,7 @@ import { useHistory } from 'react-router-dom';
 
 import * as api from 'api';
 import urlFor from 'urls';
-import { addMembership } from 'state';
+import { addMembership, showMessage } from 'state';
 
 import Form from 'common/Form';
 import FormHeader from 'common/FormHeader';
@@ -17,26 +17,32 @@ import useSubmit from 'common/useSubmit';
 
 const JoinGroupForm = () => {
 
+  // globals
   const dispatch = useDispatch();
   const history = useHistory();
 
+  // local state
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
 
-  const { isLoading, errors, handleSubmit } = useSubmit(
+  // submission state
+  const { isLoading, formErrors, handleSubmit } = useSubmit(
     async () => await api.joinCommunity({ name, password }),
     membership => {
+      dispatch(showMessage("New group joined.", "success"));
       dispatch(addMembership(membership));
       history.push(urlFor('MY_GROUPS'))
     }
   )
 
+  // show errors
   const {
     non_field_errors: nonFieldErrors,
     name: nameErrors,
     password: passwordErrors,
-  } = errors;
+  } = formErrors || {};
 
+  // return component
   return (
     <Form onSubmit={ handleSubmit }>
       <FormFieldErrors errors={ nonFieldErrors } />

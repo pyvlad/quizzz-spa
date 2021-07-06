@@ -43,7 +43,7 @@ const EditQuizForm = ({ quiz=null, quizId, handleDone, groupId }) => {
     questions: selectQuestionsToSubmit(state)
   });
 
-  const { isLoading, errors, handleSubmit } = useSubmit(
+  const { isLoading, formErrors, handleSubmit } = useSubmit(
     async () => {
       const payload = getPayload();
       return await api.updateQuiz(groupId, quizId, payload);
@@ -67,13 +67,14 @@ const EditQuizForm = ({ quiz=null, quizId, handleDone, groupId }) => {
   const {
     non_field_errors: nonFieldErrors,
     name: nameErrors,
-  } = errors;
+    questions: questionsErrors,
+  } = formErrors || {};
 
-  const questionsErrors = (
-    errors.questions 
-    && errors.questions.length 
-    && typeof errors.questions[0] === "string"
-  ) ? errors.questions : [];
+  const questionsFieldErrors = (
+    questionsErrors 
+    && questionsErrors.length 
+    && typeof questionsErrors[0] === "string"
+  ) ? questionsErrors : [];
 
   const getQuestionErrors = (errors, index) => (
     errors.questions 
@@ -98,7 +99,7 @@ const EditQuizForm = ({ quiz=null, quizId, handleDone, groupId }) => {
           errors={ nameErrors } 
           disabled={ readOnly }
         />
-        <FormFieldErrors errors={ questionsErrors } />
+        <FormFieldErrors errors={ questionsFieldErrors } />
         {
           questions.allIds.map((questionId, i) => (
             <QuestionInput
@@ -106,7 +107,7 @@ const EditQuizForm = ({ quiz=null, quizId, handleDone, groupId }) => {
               questionId={ questionId }
               questionIndex= { i }
               readOnly={ readOnly }
-              errors={ getQuestionErrors(errors, i) }
+              errors={ getQuestionErrors(formErrors || {}, i) }
               dispatch={ dispatch }
             />
           ))

@@ -1,4 +1,4 @@
-import React, { useState} from 'react';
+import React from 'react';
 
 import * as api from 'api';
 
@@ -24,10 +24,10 @@ const EditMemberForm = ({ membership, onMemberUpdate }) => {
   } = membership;
 
   // FORM STATE
-  const [isApproved, setIsApproved] = useState(is_approved);
+  const [isApproved, setIsApproved] = React.useState(is_approved);
   
   // FORM SUBMISSION
-  const { isLoading, errors, handleSubmit } = useSubmit(
+  const { isLoading, formErrors, handleSubmit } = useSubmit(
     async () => {
       const payload = { is_admin: isAdmin, is_approved: isApproved };
       return await api.updateMembership(groupId, userId, payload);
@@ -42,7 +42,7 @@ const EditMemberForm = ({ membership, onMemberUpdate }) => {
     non_field_errors: nonFieldErrors,
     is_admin: isAdminErrors,
     is_approved: isApprovedErrors,
-  } = errors;
+  } = formErrors || {};
 
 
   // RENDERING

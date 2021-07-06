@@ -5,12 +5,13 @@ import { selectActiveGroupId } from 'state';
 import { selectMyMembershipByGroupId } from 'state';
 import * as api from 'api';
 
-import useListUpdateDeleteViews from 'common/useListUpdateDeleteViews';
 import TournamentsTable from './Table';
 import FormWrapper from './FormWrapper';
 import EditTournamentForm from './EditTournamentForm';
 import DeleteTournamentButton from './DeleteTournamentButton';
 import FilterTabs from 'common/FilterTabs';
+import useListUpdateDeleteViews from 'common/useListUpdateDeleteViews';
+import useFetchedListOfItems from 'common/useFetchedListOfItems';
 
 
 const TournamentsPage = () => {
@@ -20,19 +21,17 @@ const TournamentsPage = () => {
   const membership = useSelector(state => selectMyMembershipByGroupId(state, groupId));
   const { is_admin: loggedAsGroupAdmin } = membership;
 
-  // page data, views and handlers
-  const fetchFunc = React.useCallback(
-    async () => await api.getCommunityTournaments(groupId), 
-    [groupId]
-  )
+  // fetch tournaments array on page mount
+  const fetchFunc = React.useCallback(async () => await api.getCommunityTournaments(groupId), [groupId])
+  const [tournaments, setTournaments] = useFetchedListOfItems(fetchFunc);
+  
+  // views and handlers
   const {
-    items: tournaments,
     editedItemId: editedTournamentId,
     setEditedItemId: setEditedTournamentId,
     handleItemUpdated: handleTournamentUpdated,
     handleItemDeleted: handleTournamentDeleted,
-  } = useListUpdateDeleteViews(fetchFunc);
-
+  } = useListUpdateDeleteViews(tournaments, setTournaments);
 
   // FILTERS
   // define filters

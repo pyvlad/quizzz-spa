@@ -22,7 +22,8 @@ const App = () => {
       <Switch>
         <Route exact 
           path="/auth/confirm-email/:token/" 
-          render={({match}) => <EmailConfirmationPage token={ match.params.token } />}
+          render={({match}) => <EmailConfirmationPage 
+            token={ match.params.token } isLoggedIn={!!user} />}
         />
         <Route path="/" component={ 
           user 

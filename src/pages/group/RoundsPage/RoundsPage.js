@@ -5,12 +5,13 @@ import { selectActiveGroupId } from 'state';
 import { selectMyMembershipByGroupId } from 'state';
 import * as api from 'api';
 
-import useListUpdateDeleteViews from 'common/useListUpdateDeleteViews';
 import RoundsTable from './Table';
 import FormWrapper from './FormWrapper';
 import EditRoundForm from './EditRoundForm';
 import DeleteRoundButton from './DeleteRoundButton';
 import FilterTabs from 'common/FilterTabs';
+import useFetchedListOfItems from 'common/useFetchedListOfItems';
+import useListUpdateDeleteViews from 'common/useListUpdateDeleteViews';
 
 
 
@@ -21,18 +22,20 @@ const RoundsPage = ({ tournamentId }) => {
   const membership = useSelector(state => selectMyMembershipByGroupId(state, groupId));
   const { is_admin: loggedAsGroupAdmin } = membership;
 
-  // page data, views, and handlers
+  // fetch array of rounds on page component mount
   const fetchFunc = React.useCallback(
     async () => await api.getTournamentRounds(groupId, tournamentId), 
     [groupId, tournamentId]
   )
+  const [rounds, setRounds] = useFetchedListOfItems(fetchFunc);
+
+  // page views and handlers
   const {
-    items: rounds,
     editedItemId: editedRoundId,
     setEditedItemId: setEditedRoundId,
     handleItemUpdated: handleRoundUpdated,
     handleItemDeleted: handleRoundDeleted,
-  } = useListUpdateDeleteViews(fetchFunc);
+  } = useListUpdateDeleteViews(rounds, setRounds);
 
   // FILTERS
   // define filters

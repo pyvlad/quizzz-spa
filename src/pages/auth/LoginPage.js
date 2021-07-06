@@ -1,10 +1,11 @@
 import React from 'react';
-import { useSelector, useDispatch } from 'react-redux';
-import { Redirect } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
 
-import { selectCurrentUser, selectAuthLoading, fetchLogin } from 'state';
+import { setCurrentUser, showMessage } from 'state';
 import urlFor from 'urls';
+import * as api from 'api';
 
+import useSubmit from 'common/useSubmit';
 import FormWrapper from 'common/FormWrapper';
 import Form from 'common/Form';
 import FormHeader from 'common/FormHeader';
@@ -13,32 +14,43 @@ import FormTextInput from 'common/FormTextInput';
 
 
 
-const LoginPage = () => {
-  const user = useSelector(selectCurrentUser);
-  const loading = useSelector(selectAuthLoading);
-
-  return (user && !loading) 
-    ? <Redirect to={ urlFor('HOME') } />
-    : <FormWrapper>
-        <LoginForm />
-        <p>
-          Forgot Your Password? <a href={urlFor('REQUEST_RESET')}>Click to Reset It</a>
-        </p>
-      </FormWrapper>
-}
+const LoginPage = () => (
+  <FormWrapper>
+    <LoginForm />
+    <p>
+      Forgot Your Password? <a href={ urlFor('REQUEST_RESET') }>Click to Reset It</a>
+    </p>
+  </FormWrapper>
+)
 
 
 const LoginForm = () => {
+
+  // globals
   const dispatch = useDispatch();
 
-  const [username, onUsernameChange] = useFormInput("");
-  const [password, onPasswordChange] = useFormInput("");
+  // local state
+  const [username, setUsername] = React.useState("");
+  const [password, setPassword] = React.useState("");
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    dispatch(fetchLogin({ username, password }));
-  }
+  // submission state
+  const { isLoading, statusCode, errorMessage, handleSubmit } = useSubmit(
+    async () => await api.login(username, password),
+    user => {
+      dispatch(showMessage(`${user.username}, welcome back!`, 'success'));
+      dispatch(setCurrentUser(user));
+    }
+  );
 
+  // show error message
+  React.useEffect(() => {
+    if (errorMessage) {
+      const message = (statusCode === 400) ? "Incorrect credentials." : errorMessage;
+      dispatch(showMessage(message, 'error'))
+    }
+  }, [statusCode, errorMessage, dispatch])
+
+  // return component
   return (
     <Form onSubmit={ handleSubmit }>
       <FormHeader text="Log In Form" />
@@ -46,13 +58,13 @@ const LoginForm = () => {
       <FormTextInput 
         labelText="Name:"
         value={ username }
-        onValueChange={ onUsernameChange }
+        onValueChange={ e => setUsername(e.target.value) }
         type="text"
       />
       <FormTextInput
         labelText="Password:"
         value={ password }
-        onValueChange={ onPasswordChange }
+        onValueChange={ e => setPassword(e.target.value) }
         type="password"
       />
       <div className="form__item text-centered">
@@ -60,17 +72,11 @@ const LoginForm = () => {
           type="submit"
           value="Log In"
           className="btn btn--primary btn--mw150"
+          disabled={ isLoading }
         />
       </div>
     </Form>
   );
 }
-
-function useFormInput(initialValue) {
-  const [value, setValue] = React.useState(initialValue);
-  const handleChange = (e) => setValue(e.target.value);
-  return [value, handleChange];
-}
-
 
 export default LoginPage;

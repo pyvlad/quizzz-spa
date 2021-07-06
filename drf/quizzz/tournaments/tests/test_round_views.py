@@ -65,7 +65,7 @@ class CreateRoundTest(SetupTournamentDataMixin, APITestCase):
         with self.assertNumQueries(6):
             response = self.client.post(self.url, self.payload)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.data["data"]["quiz"][0], "Quiz has not been submitted yet.")
+        self.assertEqual(response.data["form_errors"]["quiz"][0], "Quiz has not been submitted yet.")
 
         # finalize quiz
         quiz = Quiz.objects.get(pk=self.payload["quiz"])
@@ -94,8 +94,8 @@ class CreateRoundTest(SetupTournamentDataMixin, APITestCase):
         bad_payload = {}
         response = self.client.post(self.url, bad_payload)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.data["error"], 'Bad data submitted.')
-        errors = response.data["data"]
+        self.assertEqual(response.data["detail"], 'Bad request.')
+        errors = response.data["form_errors"]
         self.assertEqual(str(errors['start_time'][0]), 'This field is required.')
         self.assertEqual(str(errors['finish_time'][0]), 'This field is required.')
         self.assertEqual(str(errors['quiz'][0]), 'This field is required.')

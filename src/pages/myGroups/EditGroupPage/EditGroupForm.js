@@ -11,6 +11,7 @@ import {
   deleteMembership, 
   updateGroup, 
   selectMyMembershipByGroupId, 
+  showMessage,
 } from 'state';
 
 import Form from 'common/Form';
@@ -21,31 +22,27 @@ import FormCheckboxInput from 'common/FormCheckboxInput';
 import FormSubmitButton from 'common/FormSubmitButton';
 import useSubmit from 'common/useSubmit';
 
-import DeleteButton from './DeleteButton';
+import DeleteGroupButton from './DeleteGroupButton';
 
 
 
 const EditGroupForm = ({ groupId }) => {
   
-  // tools
+  // globals
   const dispatch = useDispatch();
   const history = useHistory();
 
-  // INITIAL FORM DATA
+  // initial form data
   const membership = useSelector(state => selectMyMembershipByGroupId(state, groupId));
   const community = membership ? membership.community : null;
 
-  // FORM STATE
+  // local form state
   const [name, setName] = useState(community ? community.name : "");
   const [password, setPassword] = useState(community ? community.password : "");
   const [approve, setApprove] = useState(community ? community.approval_required : false);
   
-  // FORM SUBMISSION
-  const { 
-    isLoading: isFormLoading, 
-    errors: formErrors, 
-    handleSubmit: handleFormSubmit,
-  } = useSubmit(
+  // submission state
+  const { isLoading, formErrors, handleSubmit } = useSubmit(
     async () => {
       const payload = { name, password, approval_required: approve };
       const result = (community) 
@@ -54,58 +51,38 @@ const EditGroupForm = ({ groupId }) => {
       return result;
     },
     result => {
+      dispatch(showMessage(community ? 'Group updated.' : "Group created.", 'info'))
       dispatch(community ? updateGroup(result) : addMembership(result));
       history.push(urlFor('MY_GROUPS'))
     }
   )
 
-  // FORM ERRORS
+  // errors
   const {
     non_field_errors: nonFieldErrors,
     name: nameErrors,
     password: passwordErrors,
     approval_required: approveErrors,
-  } = formErrors;
+  } = formErrors || {};
 
-
-  // DELETE SUBMISSION HANDLING
-  const { 
-    isLoading: isDeleteLoading,
-    errors: deleteFormErrors,
-    handleSubmit: handleDelete,
-  } = useSubmit(
-    async () => await api.deleteCommunity(groupId),
-    () => {
-      dispatch(deleteMembership(groupId));
-      history.push(urlFor('MY_GROUPS'));
-    }
-  )
-
-  const handleDeleteWithConfirmation = (e) => {
-    e.preventDefault();
-    const confirmed = window.confirm("Are you sure you want to delete this group?")
-    if (!confirmed) {
-      return;
-    } else {
-      handleDelete(e);
-    }
+  // handler for the delete button
+  const onGroupDelete = () => {
+    dispatch(deleteMembership(groupId));
+    dispatch(showMessage('Group deleted.', 'info'));
+    history.push(urlFor('MY_GROUPS'));
   }
 
-  // DELETE ERRORS
-  const { non_field_errors: deleteErrors } = deleteFormErrors;
-
-  // RENDERING
+  // rendering
   // make sure user can edit this group
   if (groupId) {
     if (!community) return <div>No such group.</div>
     if (!membership.is_admin) return <div>You are not an administrator of this group.</div>
   }
-  
+
   return (
     <React.Fragment>
-      <Form onSubmit={ handleFormSubmit }>
+      <Form onSubmit={ handleSubmit }>
         <FormFieldErrors errors={ nonFieldErrors } />
-        <FormFieldErrors errors={ deleteErrors } />
         <FormHeader text={ community ? 'Edit' : 'Create' } />
         <FormHelp text='Please fill in the form below and hit "save".' />
         <FormTextInput 
@@ -128,15 +105,14 @@ const EditGroupForm = ({ groupId }) => {
         />
         <FormSubmitButton 
           text="Submit"
-          disabled={ isFormLoading || isDeleteLoading }
+          disabled={ isLoading }
         />
       </Form>
       { 
         groupId 
-        ? <DeleteButton 
-            text="Delete" 
-            onClick={ handleDeleteWithConfirmation } 
-            disabled={ isFormLoading || isDeleteLoading }
+        ? <DeleteGroupButton 
+            groupId={ groupId } 
+            onGroupDelete={ onGroupDelete }
           />
         : null
       }

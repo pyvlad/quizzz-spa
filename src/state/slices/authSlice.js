@@ -1,33 +1,5 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-
-import { login, logout, loadUser, clientError } from 'api'; 
-
-
-/* *** THUNKS *** */
-// createAsyncThunk returns a thunk action creator
-export const fetchLogin = createAsyncThunk(
-  // type (prefix)
-  'auth/loginRequest', 
-  // payloadCreator callback
-  async ({ username, password }, { rejectWithValue }) => {
-    try {
-      return await login(username, password);
-    } catch(e) {
-      return rejectWithValue(clientError(e));
-    }
-  }
-)
-
-export const fetchLogout = createAsyncThunk(
-  'auth/logoutRequest',
-  async (_, { rejectWithValue }) => {
-    try {
-      return await logout();
-    } catch(e) {
-      return rejectWithValue(clientError(e));
-    }
-  }
-)
+import { createSlice } from '@reduxjs/toolkit';
+import * as api from 'api'; 
 
 
 /* *** SLICE *** */
@@ -37,14 +9,12 @@ export const fetchLogout = createAsyncThunk(
 //  - action creator functions (named as reducer functions below),
 //  - action objects.
 export const authSlice = createSlice({
-  name: 'auth',
   // This string is used as the first part of each action type
   // (the key name of each reducer function is used as the second part).
+  name: 'auth',
 
   initialState: {
-    user: loadUser(),
-    loading: false,
-    error: '',
+    user: api.loadUser(),
   },
 
   // Redux Toolkit allows us to write "mutating" logic in reducers. It
@@ -55,45 +25,86 @@ export const authSlice = createSlice({
     setCurrentUser(state, action) {
       state.user = action.payload;
     },
-  },
-  extraReducers: {
-    [fetchLogin.pending]: (state, action) => {
-      state.loading = true;
-      state.error = '';
-    },
-    [fetchLogin.fulfilled]: (state, action) => {
-      state.loading = false;
-      state.user = action.payload;
-    },
-    [fetchLogin.rejected]: (state, action) => {
-      state.loading = false;
-      state.error = action.payload.message;
-    },
-    [fetchLogout.pending]: state => {
-      state.loading = true;
-      state.error = '';
-    },
-    [fetchLogout.fulfilled]: state => {
-      state.loading = false;
+    logout(state) {
       state.user = null;
-    },
-    [fetchLogout.rejected]: (state, action) => {
-      state.loading = false;
-      state.error = action.payload.message;
-    },
-  }
+    }
+  },
 })
 
 export default authSlice.reducer;
-export const { setCurrentUser } = authSlice.actions;
+export const { logout } = authSlice.actions;
+export const setCurrentUser = user => async dispatch => {
+  api.saveUser(user);
+  dispatch(authSlice.actions.setCurrentUser(user));
+}
+export const logCurrentUserOut = () => dispatch => {
+  api.saveUser(null);
+  dispatch(logout());
+}
 
 /* *** SELECTORS *** */
 // The functions below are called a selector and allow us to select values from
 // the state. Selectors can also be defined inline where they're used instead of
 // in the slice file. For example: `useSelector((state) => state.counter.value)`
 export const selectCurrentUser = state => state.auth.user;
-export const selectAuthLoading = state => state.auth.loading;
-export const selectAuthError = state => state.auth.error;
+
+
+// No longer used stuff:
+// /* *** THUNKS *** */
+// // createAsyncThunk returns a thunk action creator
+// export const fetchLogin = createAsyncThunk(
+//   // type (prefix)
+//   'auth/loginRequest', 
+//   // payloadCreator callback
+//   async ({ username, password }, { dispatch, rejectWithValue }) => {
+//     try {
+//       const user = await api.login(username, password);
+//       api.saveUser(user);
+//       return user;
+//     } catch(e) {
+//       const message = (e.status === 400) ? "Incorrect credentials." : e.message;
+//       dispatch(showMessage(message, 'error'));
+//       return rejectWithValue(message);
+//     }
+//   }
+// )
+
+// export const fetchLogout = createAsyncThunk(
+//   'auth/logoutRequest',
+//   async (_, { dispatch, rejectWithValue }) => {
+//     try {
+//       const result = await api.logout();
+//       api.saveUser(null);
+//       return result;
+//     } catch(e) {
+//       dispatch(showMessage(e.message, 'error'));
+//       return rejectWithValue(e.message);
+//     }
+//   }
+// )
+
+// extraReducers: {
+//   [fetchLogin.pending]: (state, action) => {
+//     state.loading = true;
+//   },
+//   [fetchLogin.fulfilled]: (state, action) => {
+//     state.loading = false;
+//     state.user = action.payload;
+//   },
+//   [fetchLogin.rejected]: (state, action) => {
+//     state.loading = false;
+//   },
+//   [fetchLogout.pending]: state => {
+//     state.loading = true;
+//   },
+//   [fetchLogout.fulfilled]: state => {
+//     state.loading = false;
+//     state.user = null;
+//   },
+//   [fetchLogout.rejected]: (state, action) => {
+//     state.loading = false;
+//   },
+// }
 
 
 // This is basically what the createAsyncThunk functions are doing:
@@ -111,7 +122,7 @@ export const selectAuthError = state => state.auth.error;
 //     const data = await login(username, password);
 //     dispatch(loginRequestSuccess(data));
 //   } catch(e) {
-//     dispatch(loginRequestFail((e.data) ? e.data : {message: e.message}));
+//     dispatch(loginRequestFail(e.message);
 //   }
 // }
 
@@ -122,6 +133,6 @@ export const selectAuthError = state => state.auth.error;
 //     await logout();
 //     dispatch(logoutRequestSuccess());
 //   } catch(e) {
-//     dispatch(logoutRequestFail((e.data) ? e.data : {message: e.message}));
+//     dispatch(logoutRequestFail(e.message);
 //   }
 // }

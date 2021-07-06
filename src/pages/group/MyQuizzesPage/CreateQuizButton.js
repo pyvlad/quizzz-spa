@@ -12,12 +12,12 @@ const CreateQuizButton = ({ handleEditQuiz }) => {
 
   const groupId = useSelector(selectActiveGroupId);
 
-  const { isLoading, errors, handleSubmit } = useSubmit(
+  const { isLoading, formErrors, handleSubmit } = useSubmit(
     async () => await api.createQuiz(groupId, {}),
     result => handleEditQuiz(result.id),
   )
 
-  const { non_field_errors: nonFieldErrors } = errors;
+  const { non_field_errors: nonFieldErrors } = formErrors || {};
 
   return (
     <div>

@@ -1,8 +1,8 @@
 import React from 'react';
-import { useSelector } from 'react-redux';
-import { Redirect, useHistory } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
+import { useHistory } from 'react-router-dom';
 
-import { selectCurrentUser, selectAuthLoading } from 'state';
+import { showMessage } from 'state';
 import * as api from 'api';
 import urlFor from 'urls';
 
@@ -16,34 +16,39 @@ import FormWrapper from 'common/FormWrapper';
 
 
 
-const RequestResetPage = () => {
-  const user = useSelector(selectCurrentUser);
-  const loading = useSelector(selectAuthLoading);
-
-  return (user && !loading)
-    ? <Redirect to={ urlFor('HOME') } />
-    : <FormWrapper>
-        <RequestResetForm />
-      </FormWrapper>
-}
+const RequestResetPage = () => (
+  <FormWrapper>
+    <RequestResetForm />
+  </FormWrapper>
+)
 
 
 const RequestResetForm = () => {
 
+  // globals
   const history = useHistory();
+  const dispatch = useDispatch();
 
+  // local state
   const [email, setEmail] = React.useState("");
 
-  const { isLoading, errors, handleSubmit } = useSubmit(
+  // submission state
+  const { isLoading, formErrors, handleSubmit } = useSubmit(
     async () => await api.requestPasswordResetEmail({ email }),
-    () => history.push(urlFor('HOME'))
+    () => {
+      const msg = 'Instructions to reset your password have been sent to your email.';
+      dispatch(showMessage(msg, 'success'));
+      history.push(urlFor('HOME'));
+    }
   );
 
+  // error handling
   const {
     non_field_errors: nonFieldErrors,
     email: emailErrors,
-  } = errors;
+  } = formErrors || {};
 
+  // return component
   return (
     <Form onSubmit={ handleSubmit }>
       <FormHeader text={"Request Password Reset"} />

@@ -6,6 +6,7 @@ export {
   login, 
   logout,
   register,
+  saveUser,
   loadUser,
   resendConfirmEmail,
   requestPasswordResetEmail,

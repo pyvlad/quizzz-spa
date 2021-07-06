@@ -17,7 +17,7 @@ const DeleteTournamentButton = ({ tournament, onTournamentDelete }) => {
   const { id, name } = tournament;
 
   // submission handling
-  const { isLoading, errors, handleSubmit } = useSubmit(
+  const { isLoading, formErrors, handleSubmit } = useSubmit(
     async () =>  await api.deleteTournament(groupId, id),
     () => onTournamentDelete()
   )
@@ -29,7 +29,7 @@ const DeleteTournamentButton = ({ tournament, onTournamentDelete }) => {
   }
 
   // errors
-  const { non_field_errors: nonFieldErrors } = errors;
+  const { non_field_errors: nonFieldErrors } = formErrors || {};
 
   // render
   return (

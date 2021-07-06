@@ -3,7 +3,6 @@ import React from 'react';
 import * as api from 'api';
 
 import useSubmit from 'common/useSubmit';
-import FormFieldErrors from 'common/FormFieldErrors';
 
 
 const DeleteMemberButton = ({ membership, onMemberDelete }) => {
@@ -18,7 +17,7 @@ const DeleteMemberButton = ({ membership, onMemberDelete }) => {
   } = membership;
 
   // submission handling
-  const { isLoading, errors, handleSubmit } = useSubmit(
+  const { isLoading, handleSubmit } = useSubmit(
     async () =>  await api.deleteMembership(groupId, userId),
     () => onMemberDelete()
   )
@@ -29,13 +28,9 @@ const DeleteMemberButton = ({ membership, onMemberDelete }) => {
     if (confirmed) handleSubmit(e);
   }
 
-  // errors
-  const { non_field_errors: nonFieldErrors } = errors;
-
   // render
   return (
     <React.Fragment>
-      <FormFieldErrors errors={ nonFieldErrors } />
       <div className="text-right">
         <button 
           className="btn bg-red text-red" 

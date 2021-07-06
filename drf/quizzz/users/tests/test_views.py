@@ -72,7 +72,7 @@ class RegistrationViewTest(APITestCase):
         with self.assertNumQueries(2): # (1-2) unique checks
             response = self.client.post(self.url, bad_data)
         test_utils.assert_400_validation_failed(self, response, 
-            error="Bad data submitted.",
+            error="Bad request.",
             data={"password": [
                 ("This password is too short. "
                  "It must contain at least 8 characters. "
@@ -87,7 +87,7 @@ class RegistrationViewTest(APITestCase):
         with self.assertNumQueries(1): # (1) email unique check 
             response = self.client.post(self.url, bad_data)
         test_utils.assert_400_validation_failed(self, response, 
-            error="Bad data submitted.",
+            error="Bad request.",
             data={"username": ["This field may not be blank."]})
         self.assertEqual(CustomUser.objects.count(), 0)
 
@@ -97,7 +97,7 @@ class RegistrationViewTest(APITestCase):
         with self.assertNumQueries(1):  # username unique check
             response = self.client.post(self.url, bad_data)
         test_utils.assert_400_validation_failed(self, response, 
-            error="Bad data submitted.",
+            error="Bad request.",
             data={"email": ["This field is required."]})
         self.assertEqual(CustomUser.objects.count(), 0)
 
@@ -106,7 +106,7 @@ class RegistrationViewTest(APITestCase):
         with self.assertNumQueries(1):  # username unique check
             response = self.client.post(self.url, bad_data)
         test_utils.assert_400_validation_failed(self, response, 
-            error="Bad data submitted.",
+            error="Bad request.",
             data={"email": ["This field may not be blank."]})
         self.assertEqual(CustomUser.objects.count(), 0)
 
@@ -126,7 +126,7 @@ class RegistrationViewTest(APITestCase):
             response = self.client.post(self.url, self.user)
 
         test_utils.assert_400_validation_failed(self, response, 
-            error="Bad data submitted.",
+            error="Bad request.",
             data={
                 "username": ["A user with that username already exists."],
                 "email": ["user with this email address already exists."],
@@ -176,7 +176,7 @@ class LoginViewTest(SetupUsersMixin, APITestCase):
             response = self.client.post(self.url, bad_credentials)
             
         test_utils.assert_400_validation_failed(self, response, 
-            error="Bad data submitted.",
+            error="Bad request.",
             data={"non_field_errors": ["Wrong credentials."]})
         self.assertTrue("sessionid" not in response.cookies)
 

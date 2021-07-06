@@ -2,6 +2,8 @@ import { configureStore } from '@reduxjs/toolkit';
 import authReducer from './slices/authSlice';
 import myGroupsReducer from './slices/myGroupsSlice';
 import activeGroupReducer from './slices/activeGroupSlice';
+import messagesReducer from './slices/messagesSlice';
+import loadingReducer from './slices/loadingSlice';
 
 
 export default configureStore({
@@ -9,6 +11,8 @@ export default configureStore({
     auth: authReducer,
     myGroups: myGroupsReducer,
     activeGroup: activeGroupReducer,
+    messages: messagesReducer,
+    loading: loadingReducer,
   }
 })
 // https://redux-toolkit.js.org/api/configureStore

@@ -35,7 +35,7 @@ const EditRoundForm = ({ round={}, onRoundUpdate, tournamentId }) => {
   const [quizId, setQuizId] = useState(quiz ? quiz.id : '');
   
   // FORM SUBMISSION
-  const { isLoading, errors, handleSubmit } = useSubmit(
+  const { isLoading, formErrors, handleSubmit } = useSubmit(
     async () => {
       const payload = { start_time: startTime, finish_time: finishTime, quiz: quizId };
       return id 
@@ -53,7 +53,7 @@ const EditRoundForm = ({ round={}, onRoundUpdate, tournamentId }) => {
     start_time: startTimeErrors,
     finish_time: finishTimeErrors,
     quiz: quizErrors,
-  } = errors;
+  } = formErrors || {};
 
 
   // RENDERING

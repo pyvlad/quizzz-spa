@@ -2,53 +2,33 @@ import React from 'react';
 import * as api from 'api';
 
 import FormFieldErrors from 'common/FormFieldErrors';
+import FormHeader from 'common/FormHeader';
+import FormHelp from 'common/FormHelp';
+import useSubmit from 'common/useSubmit';
 
 
-const NewMessageForm = ({ groupId, onSubmit }) => {
+const NewMessageForm = ({ groupId, onMessagePosted }) => {
+  
+  // local state
   const [text, setText] = React.useState('');
-  const [isLoading, setIsLoading] = React.useState(false);
-  const [errors, setErrors] = React.useState({});
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  // submission state
+  const { isLoading, formErrors, handleSubmit } = useSubmit(
+    async () => await api.postChatMessage(groupId, { text }),
+    msg => onMessagePosted(msg)
+  );
 
-    if (!isLoading) {
-      setErrors({});
-      setIsLoading(true);
-      let success = false;
-
-      try {
-        await api.postChatMessage(groupId, { text });
-        success = true;
-      } catch(err) {
-        setErrors(err.body ? err.body : {non_field_errors: [err.message]});
-      }
-
-      setIsLoading(false);
-      if (success) {
-        onSubmit();
-      }
-    }
-  }
-
+  // errors
   const {
     non_field_errors: nonFieldErrors,
     text: textErrors,
-  } = errors;
+  } = formErrors || {};
   
   return (
     <form onSubmit={ handleSubmit } className="form">
       <FormFieldErrors errors={ nonFieldErrors } />
-      
-      <div className="form__header">
-        Create New message
-      </div>
-
-      <div className="form__item">
-        <div className="form__help">
-          Please enter your message below.
-        </div>
-      </div>
+      <FormHeader text="Compose New Message" />
+      <FormHelp text="Please enter your message below." />
 
       <div className="form__item">
         <textarea 

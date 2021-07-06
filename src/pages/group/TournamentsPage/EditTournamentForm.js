@@ -26,7 +26,7 @@ const EditTournamentForm = ({ tournament={}, onTournamentUpdate }) => {
   const [isActive, setIsActive] = useState(is_active ? is_active : false);
   
   // FORM SUBMISSION
-  const { isLoading, errors, handleSubmit } = useSubmit(
+  const { isLoading, formErrors, handleSubmit } = useSubmit(
     async () => {
       const payload = { name, is_active: isActive };
       return id 
@@ -43,7 +43,7 @@ const EditTournamentForm = ({ tournament={}, onTournamentUpdate }) => {
     non_field_errors: nonFieldErrors,
     name: nameErrors,
     is_active: isActiveErrors,
-  } = errors;
+  } = formErrors || {};
 
 
   // RENDERING

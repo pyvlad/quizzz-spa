@@ -1,10 +1,8 @@
 import React from 'react';
-import { useSelector, useDispatch } from 'react-redux';
-import { Redirect } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
 
-import { selectCurrentUser, selectAuthLoading, setCurrentUser } from 'state';
+import { setCurrentUser, showMessage } from 'state';
 import * as api from 'api';
-import urlFor from 'urls';
 import * as helpMessages from 'helpMessages';
 
 import useSubmit from 'common/useSubmit';
@@ -17,48 +15,39 @@ import FormWrapper from 'common/FormWrapper';
 
 
 
-const RegisterPage = () => {
-  const user = useSelector(selectCurrentUser);
-  const loading = useSelector(selectAuthLoading);
-
-  return (user && !loading)
-    ? <Redirect to={ urlFor('HOME') } />
-    : <FormWrapper>
-        <RegisterForm />
-      </FormWrapper>
-}
+const RegisterPage = () => (
+  <FormWrapper>
+    <RegisterForm />
+  </FormWrapper>
+)
 
 
 const RegisterForm = () => {
 
+  // globals
   const dispatch = useDispatch();
 
+  // local state
   const [username, setUsername] = React.useState("");
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [password2, setPassword2] = React.useState("");
   const [clientErrors, setClientErrors] = React.useState([]);
 
-  const { isLoading, errors, handleSubmit, setErrors } = useSubmit(
-    async () => {
-      return await api.register({ username, password, email });
-    },
-    user => dispatch(setCurrentUser(user))
+  // submission state
+  const { isLoading, formErrors, handleSubmit } = useSubmit(
+    async () => await api.register({ username, password, email }),
+    user => {
+      dispatch(showMessage('Account created.', 'success'));
+      dispatch(setCurrentUser(user));
+    }
   );
 
-  const {
-    non_field_errors: nonFieldErrors,
-    username: usernameErrors,
-    password: passwordErrors,
-    email: emailErrors,
-  } = errors;
-
-
+  // modified submission HANDLER with an extra password check
   const handleSubmitWithPasswordCheck = (e) => {
     e.preventDefault();
     
     setClientErrors([]);
-    setErrors({});
 
     if (password === password2) {
       handleSubmit(e);
@@ -69,6 +58,23 @@ const RegisterForm = () => {
     }
   }
 
+  // form error handling
+  const {
+    non_field_errors: nonFieldErrors,
+    username: usernameErrors,
+    password: passwordErrors,
+    email: emailErrors,
+  } = formErrors || {};
+
+  // show custom error message on form errors
+  React.useEffect(() => {
+    if (formErrors) {
+      const message = 'Please fix form errors and try again.';
+      dispatch(showMessage(message, 'error'));
+    }
+  }, [formErrors, dispatch]);
+
+  // return component
   return (
     <Form onSubmit={ handleSubmitWithPasswordCheck }>
       <FormHeader text={"Registration Form"} />

@@ -9,50 +9,29 @@ import MembersTable from './Table';
 import FormWrapper from './FormWrapper';
 import EditMemberForm from './EditMemberForm';
 import DeleteMemberButton from './DeleteMemberButton';
+import useFetchedListOfItems from 'common/useFetchedListOfItems';
+import useListUpdateDeleteViews from 'common/useListUpdateDeleteViews';
 
 
 const MembersPage = () => {
 
+  // globals
   const groupId = useSelector(selectActiveGroupId);
-
   const membership = useSelector(state => selectMyMembershipByGroupId(state, groupId));
   const { is_admin: loggedAsGroupAdmin } = membership;
 
-  const [members, setMembers] = React.useState([]);
-  const [editedUserId, setEditedUserId] = React.useState(null);
+  // fetch members array on component mount
+  const fetchFunc = React.useCallback(async () => await api.getCommunityMembers(groupId), [groupId]);
+  const [members, setMembers] = useFetchedListOfItems(fetchFunc);
 
-  // On mount, fetch list of group members
-  React.useEffect(() => {
-    async function fetchData() {
-      try {
-        const data = await api.getCommunityMembers(groupId);
-        setMembers(data);
-      } catch(e) {
-        console.log(e);
-      }
-    }
-    fetchData();
-  }, [groupId, setMembers])
-
-
-  const handleMemberUpdated = (updatedMembership) => {
-    const memberIndex = members.findIndex(m => m.user.id === updatedMembership.user.id);
-    const newMembers = [
-      ...members.slice(0, memberIndex), 
-      updatedMembership,
-      ...members.slice(memberIndex + 1)
-    ]
-    setEditedUserId(null);
-    setMembers(newMembers);
-  }
-
-  const handleMemberDeleted = (userId) => {
-    const memberIndex = members.findIndex(m => m.user.id === userId);
-    let newMembers = members.slice();
-    newMembers.splice(memberIndex, 1);
-    setEditedUserId(null);
-    setMembers(newMembers);
-  }
+  // update/delete/back views
+  const getItemId = item => item.user.id;
+  const {
+    editedItemId,
+    setEditedItemId,
+    handleItemUpdated,
+    handleItemDeleted,
+  } = useListUpdateDeleteViews(members, setMembers, getItemId);
 
   return (
     <div>
@@ -60,21 +39,21 @@ const MembersPage = () => {
         Group Members
       </h2>
       {
-        editedUserId
+        editedItemId
         ? <div>
-            <button onClick={() => setEditedUserId(null)} 
+            <button onClick={() => setEditedItemId(null)} 
               className="btn btn--grey btn--mw150"
             >
              ⏎ back
             </button>
             <FormWrapper>
               <EditMemberForm
-                membership={ members.find(m => m.user.id === editedUserId) } 
-                onMemberUpdate={ updatedMembership => handleMemberUpdated(updatedMembership) }
+                membership={ members.find(m => getItemId(m) === editedItemId) } 
+                onMemberUpdate={ handleItemUpdated }
               />
               <DeleteMemberButton
-                membership={ members.find(m => m.user.id === editedUserId) }
-                onMemberDelete={ () => handleMemberDeleted(editedUserId) }
+                membership={ members.find(m => getItemId(m) === editedItemId) }
+                onMemberDelete={ () => handleItemDeleted(editedItemId) }
               />
             </FormWrapper>
           </div>
@@ -85,7 +64,7 @@ const MembersPage = () => {
             <MembersTable 
               members={ members } 
               loggedAsGroupAdmin={ loggedAsGroupAdmin } 
-              onEditMember={ userId => setEditedUserId(userId) }
+              onEditMember={ userId => setEditedItemId(userId) }
             />
           </div>
       }

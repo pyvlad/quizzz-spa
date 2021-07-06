@@ -1,8 +1,7 @@
 /* Actions */
 export {
-  fetchLogin,
-  fetchLogout,
   setCurrentUser,
+  logCurrentUserOut,
 } from './slices/authSlice';
 export {
   fetchMyMemberships,
@@ -13,13 +12,19 @@ export {
 export { 
   setActiveGroupId 
 } from './slices/activeGroupSlice';
+export {
+  showMessage,
+  removeMessage,
+} from './slices/messagesSlice';
+export {
+  showLoadingOverlay, 
+  hideLoadingOverlay,
+} from './slices/loadingSlice';
 
 
 /* Selectors */
 export { 
-  selectCurrentUser, 
-  selectAuthLoading, 
-  selectAuthError
+  selectCurrentUser,
 } from './slices/authSlice';
 export {
   selectMyMemberships,
@@ -32,3 +37,9 @@ export {
 export { 
   selectActiveGroupId,
 } from './slices/activeGroupSlice';
+export {
+  selectMessages,
+} from './slices/messagesSlice';
+export {
+  selectIsLoading
+} from './slices/loadingSlice';

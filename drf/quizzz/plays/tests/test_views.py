@@ -155,7 +155,10 @@ class SubmitRoundTest(SetupTournamentDataMixin, APITestCase):
         # empty payload raises 400:
         response = self.client.post(self.url, {})
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(str(response.data["data"]["answers"][0]), 'This field is required.')
+        self.assertEqual(
+            str(response.data["form_errors"]["answers"][0]), 
+            'This field is required.'
+        )
 
     def test_multiple_options_for_one_question(self):
         """

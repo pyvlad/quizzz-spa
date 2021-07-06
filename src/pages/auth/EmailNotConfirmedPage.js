@@ -1,15 +1,24 @@
 import React from 'react';
+import { useDispatch } from 'react-redux';
 
 import * as api from 'api';
-import useSubmit from 'common/useSubmit';
+import { showMessage } from 'state';
 
+import useSubmit from 'common/useSubmit';
 
 
 const EmailNotConfirmedPage = () => {
 
-  const { isLoading, errors, handleSubmit } = useSubmit(
+  // globals
+  const dispatch = useDispatch();
+
+  // submission state
+  const { handleSubmit } = useSubmit(
     async () => await api.resendConfirmEmail(),
-    () => console.log("sent")
+    () => {
+      const msg = 'A new confirmation email has been sent to you. Check your email inbox.';
+      dispatch(showMessage(msg, 'success'));
+    }
   );
 
   return (

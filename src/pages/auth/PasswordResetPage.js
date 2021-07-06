@@ -1,10 +1,10 @@
 import React from 'react';
-import { useSelector } from 'react-redux';
-import { Redirect, useHistory } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
+import { useHistory } from 'react-router-dom';
 
-import { selectCurrentUser, selectAuthLoading } from 'state';
 import * as api from 'api';
 import * as helpMessages from 'helpMessages';
+import { showMessage } from 'state';
 import urlFor from 'urls';
 
 import useSubmit from 'common/useSubmit';
@@ -17,43 +17,38 @@ import FormWrapper from 'common/FormWrapper';
 
 
 
-const PasswordResetPage = ({ tokenUUID }) => {
-  
-  const user = useSelector(selectCurrentUser);
-  const loading = useSelector(selectAuthLoading);
-
-  return (user && !loading)
-    ? <Redirect to={ urlFor('HOME') } />
-    : <FormWrapper>
-        <PasswordResetForm tokenUUID={tokenUUID} />
-      </FormWrapper>
-}
+const PasswordResetPage = ({ tokenUUID }) => (
+  <FormWrapper>
+    <PasswordResetForm tokenUUID={tokenUUID} />
+  </FormWrapper>
+)
 
 
 const PasswordResetForm = ({ tokenUUID }) => {
 
+  // globals
   const history = useHistory();
+  const dispatch = useDispatch();
 
+  // local state
   const [password, setPassword] = React.useState("");
   const [password2, setPassword2] = React.useState("");
   const [clientErrors, setClientErrors] = React.useState([]);
 
-  const { isLoading, errors, handleSubmit, setErrors } = useSubmit(
+  // submission state
+  const { isLoading, statusCode, formErrors, errorMessage, handleSubmit } = useSubmit(
     async () => await api.resetPassword(tokenUUID, { password }),
-    () => history.push(urlFor('HOME'))
+    () => {
+      dispatch(showMessage("Your password has been changed.", "success"));
+      history.push(urlFor('HOME'));
+    }
   );
 
-  const {
-    non_field_errors: nonFieldErrors,
-    password: passwordErrors,
-  } = errors;
-
-
+  // modified submission HANDLER with an extra password check
   const handleSubmitWithPasswordCheck = (e) => {
     e.preventDefault();
     
     setClientErrors([]);
-    setErrors({});
 
     if (password === password2) {
       handleSubmit(e);
@@ -64,6 +59,21 @@ const PasswordResetForm = ({ tokenUUID }) => {
     }
   }
 
+  // error handling
+  const {
+    non_field_errors: nonFieldErrors,
+    password: passwordErrors,
+  } = formErrors || {};
+
+  // show error message
+  React.useEffect(() => {
+    if (errorMessage) {
+      const message = (statusCode === 400) ? "Fix the errors and try again." : errorMessage;
+      dispatch(showMessage(message, 'error'))
+    }
+  }, [statusCode, errorMessage, dispatch])
+
+  // return component
   return (
     <Form onSubmit={ handleSubmitWithPasswordCheck }>
       <FormHeader text={"Password Reset Form"} />
@@ -98,6 +108,5 @@ const PasswordResetForm = ({ tokenUUID }) => {
     </Form>
   );
 }
-
 
 export default PasswordResetPage;

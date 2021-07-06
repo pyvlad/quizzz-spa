@@ -35,6 +35,7 @@ export async function client(endpoint, { body, ...customConfig } = {}) {
 
   // get response data / error message
   try {
+    await timeout(1000);  // TODO: remove this in production
     const response = await window.fetch(endpoint, config);
 
     // This shouldn't be needed but React proxy doesn't return json on proxy fails
@@ -52,7 +53,8 @@ export async function client(endpoint, { body, ...customConfig } = {}) {
     if (response.ok) {
       return body;
     } else {
-      throw apiError(response, body);
+      // throw apiError(response, body);
+      return Promise.reject(apiError(response, body));
     }
   } catch (err) {
     return Promise.reject(clientError(err));
@@ -80,28 +82,22 @@ function apiError(response, body) {
   /*
     Handle api responses with non-OK status codes.
   */
-  const error = new Error(response.statusText);
-
-  error.data = {
-    message: (body && body.error) ? body.error : response.statusText,
+  return {
+    message: (body && body.detail) ? body.detail : response.statusText,
     status: response.status,
-    body: (body && body.data) ? body.data : {},
+    formErrors: body ? body.form_errors : undefined,
   }
-
-  return error;
 }
 
 
 export function clientError(e) {
   /* 
+    Handle other request errors other than `apiError`.
     Make error serializable so that it can be passed as action.payload.
-    Successful requests with codes other than 200-299 return extra data
-    attached to the error: { message, status, body }. Return 
-    that object if it is present.
-    Other errors don't have such an object attached to them. 
-    Return { message } with e.message in that case.
   */
-  return (e.data) ? e.data : { message: e.message };
+  return {
+    message: e.message,
+  }
 }
 
 
@@ -114,4 +110,9 @@ function getCookie(name) {
     "(?:^|; )" + name.replace(/([.$?*|{}()[\]\\/+^])/g, '\\$1') + "=([^;]*)"
   ));
   return matches ? decodeURIComponent(matches[1]) : undefined;
+}
+
+
+function timeout(ms) { 
+  return new Promise(resolve => setTimeout(resolve, ms)); 
 }

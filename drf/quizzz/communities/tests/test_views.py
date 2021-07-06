@@ -131,7 +131,7 @@ class CreateCommunityTest(SetupCommunityDataMixin, APITestCase):
             response = self.client.post(self.url, new_community)
 
         test_utils.assert_400_validation_failed(self, response,
-            error="Bad data submitted.", 
+            error="Bad request.", 
             data={"name": ["community with this name already exists."]}
         )
         self.assertEqual(Community.objects.count(), len(self.communities))
@@ -200,7 +200,7 @@ class JoinCommunityTest(SetupCommunityDataMixin, APITransactionTestCase):
             response = self.client.post(self.url, self.join_data)
 
         test_utils.assert_400_validation_failed(self, response, 
-            error="Bad data submitted.", 
+            error="Bad request.", 
             data={"non_field_errors": ["This group has reached its member limit."]}
         )
         self.assertEqual(Membership.objects.count(), len(self.communities))
@@ -215,7 +215,7 @@ class JoinCommunityTest(SetupCommunityDataMixin, APITransactionTestCase):
             response = self.client.post(self.url, self.join_data)
 
         test_utils.assert_400_validation_failed(self, response, 
-            error="Bad data submitted.", 
+            error="Bad request.", 
             data={"non_field_errors": ["You are already a member of this group."]}
         )
         self.assertEqual(Membership.objects.count(), len(self.communities))
@@ -233,7 +233,7 @@ class JoinCommunityTest(SetupCommunityDataMixin, APITransactionTestCase):
             response = self.client.post(self.url, bad_credentials)
 
         test_utils.assert_400_validation_failed(self, response, 
-            error="Bad data submitted.", 
+            error="Bad request.", 
             data={"non_field_errors": ["Wrong password."]}
         )
         self.assertEqual(Membership.objects.count(), len(self.communities))
@@ -251,7 +251,7 @@ class JoinCommunityTest(SetupCommunityDataMixin, APITransactionTestCase):
             response = self.client.post(self.url, bad_credentials)
 
         test_utils.assert_400_validation_failed(self, response,
-            error="Bad data submitted.", 
+            error="Bad request.", 
             data={"non_field_errors": ["No such group."]}
         )
         self.assertEqual(Membership.objects.count(), len(self.communities))
@@ -373,7 +373,7 @@ class CommunityDetailTest(SetupCommunityDataMixin, APITestCase):
         with self.assertNumQueries(5):
             response = self.client.put(self.url, new_data)
         test_utils.assert_400_validation_failed(self, response, 
-            error="Bad data submitted.", 
+            error="Bad request.", 
             data={"name": ["community with this name already exists."]}
         )
         self.assertEqual(Community.objects.filter(name="group2").count(), 1)
@@ -531,7 +531,7 @@ class MembershipDetailTest(SetupCommunityDataMixin, APITestCase):
             response = self.client.put(self.url, new_data)
 
         test_utils.assert_400_validation_failed(self, response, 
-            error="Bad data submitted.", 
+            error="Bad request.", 
             data={"is_admin": ["Must be a valid boolean."]}
         )
         self.assertTrue(Membership.objects.get(

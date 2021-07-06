@@ -2,29 +2,19 @@ import React from 'react';
 
 import { useSelector } from 'react-redux';
 import { selectActiveGroupId } from 'state';
+import * as api from 'api';
+import useFetchedListOfItems from 'common/useFetchedListOfItems';
 
 import MyQuizzesTable from './Table';
 import FilterTabs from './FilterTabs';
-import * as api from 'api';
 
 
 const MyQuizzes = ({ onEditQuiz }) => {
 
-  const groupId = useSelector(selectActiveGroupId)
-  const [quizzes, setQuizzes] = React.useState([]);
+  const groupId = useSelector(selectActiveGroupId);
 
-  React.useEffect(() => {
-    async function fetchData() {
-      try {
-        const data = await api.getMyQuizzes(groupId);
-        setQuizzes(data);
-      } catch(e) {
-        console.log(e);
-      }
-    }
-    fetchData();
-  }, [groupId, setQuizzes])
-
+  const fetchFunc = React.useCallback(async () => await api.getMyQuizzes(groupId), [groupId]);
+  const [quizzes] = useFetchedListOfItems(fetchFunc);
 
   // define filters
   const filters = ["submitted", "unfinished", "all"];

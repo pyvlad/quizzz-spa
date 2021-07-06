@@ -225,9 +225,9 @@ class QuizDetailTest(SetupQuizDataMixin, APITestCase):
         with self.assertNumQueries(6):
             response = self.client.put(self.url, {})
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(str(response.data["data"]["questions"][0]), "This field is required.")
-        self.assertEqual(str(response.data["data"]["is_finalized"][0]), "This field is required.")
-        self.assertEqual(str(response.data["data"]["name"][0]), "This field is required.")
+        self.assertEqual(str(response.data["form_errors"]["questions"][0]), "This field is required.")
+        self.assertEqual(str(response.data["form_errors"]["is_finalized"][0]), "This field is required.")
+        self.assertEqual(str(response.data["form_errors"]["name"][0]), "This field is required.")
 
         # Not expected fields are simply ignored:
         bad_data = self.data.copy()
@@ -247,7 +247,7 @@ class QuizDetailTest(SetupQuizDataMixin, APITestCase):
         response = self.client.put(self.url, bad_data)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(
-            str(response.data["data"]["questions"][0]), 
+            str(response.data["form_errors"]["questions"][0]), 
             "This quiz has other question ids."
         )
         # b. questions with same id submitted => wrong set of options:
@@ -256,7 +256,7 @@ class QuizDetailTest(SetupQuizDataMixin, APITestCase):
         response = self.client.put(self.url, bad_data)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(
-            str(response.data["data"]["questions"][0]["non_field_errors"][0]), 
+            str(response.data["form_errors"]["questions"][0]["non_field_errors"][0]), 
             "This question has other option ids."
         )
         # c. question with a bad id is not validated:
@@ -265,7 +265,7 @@ class QuizDetailTest(SetupQuizDataMixin, APITestCase):
         response = self.client.put(self.url, bad_data)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(
-            str(response.data["data"]["questions"][0]["non_field_errors"][0]), 
+            str(response.data["form_errors"]["questions"][0]["non_field_errors"][0]), 
             "This question does not belong to this quiz."
         )
         # d. fields "id" and "options" are required
@@ -275,11 +275,11 @@ class QuizDetailTest(SetupQuizDataMixin, APITestCase):
         response = self.client.put(self.url, bad_data)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(
-            str(response.data["data"]["questions"][0]["id"][0]), 
+            str(response.data["form_errors"]["questions"][0]["id"][0]), 
             "This field is required."
         )
         self.assertEqual(
-            str(response.data["data"]["questions"][0]["options"][0]), 
+            str(response.data["form_errors"]["questions"][0]["options"][0]), 
             "This field is required."
         )
 
@@ -290,7 +290,7 @@ class QuizDetailTest(SetupQuizDataMixin, APITestCase):
         response = self.client.put(self.url, bad_data)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(
-            str(response.data["data"]["questions"][0]["non_field_errors"][0]), 
+            str(response.data["form_errors"]["questions"][0]["non_field_errors"][0]), 
             "This question has other option ids."
         )
         # b. question with a bad option id is not validated:
@@ -299,7 +299,7 @@ class QuizDetailTest(SetupQuizDataMixin, APITestCase):
         response = self.client.put(self.url, bad_data)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(
-            str(response.data["data"]["questions"][0]["non_field_errors"][0]), 
+            str(response.data["form_errors"]["questions"][0]["non_field_errors"][0]), 
             "This question has other option ids."
         )
         # c. multiple correct options not allowed:
@@ -309,7 +309,7 @@ class QuizDetailTest(SetupQuizDataMixin, APITestCase):
         response = self.client.put(self.url, bad_data)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(
-            str(response.data["data"]["questions"][0]["non_field_errors"][0]), 
+            str(response.data["form_errors"]["questions"][0]["non_field_errors"][0]), 
             "Multiple answers not allowed."
         )
 
@@ -322,7 +322,7 @@ class QuizDetailTest(SetupQuizDataMixin, APITestCase):
         response = self.client.put(self.url, bad_data)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(
-            str(response.data["data"]["questions"][0]["non_field_errors"][0]), 
+            str(response.data["form_errors"]["questions"][0]["non_field_errors"][0]), 
             "No correct answer selected."
         )
 
@@ -333,7 +333,7 @@ class QuizDetailTest(SetupQuizDataMixin, APITestCase):
         response = self.client.put(self.url, bad_data)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(
-            str(response.data["data"]["questions"][0]["text"][0]), 
+            str(response.data["form_errors"]["questions"][0]["text"][0]), 
             "This field is required."
         )
 
@@ -344,7 +344,7 @@ class QuizDetailTest(SetupQuizDataMixin, APITestCase):
         response = self.client.put(self.url, bad_data)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(
-            str(response.data["data"]["questions"][0]["options"][0]["text"][0]), 
+            str(response.data["form_errors"]["questions"][0]["options"][0]["text"][0]), 
             "This field is required."
         )
 
@@ -361,7 +361,7 @@ class QuizDetailTest(SetupQuizDataMixin, APITestCase):
             response = self.client.put(self.url, self.data)
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(str(response.data["data"][0]), "Submitted quiz cannot be updated.")
+        self.assertEqual(str(response.data["form_errors"][0]), "Submitted quiz cannot be updated.")
 
 
     def test_delete_quiz(self):
@@ -398,4 +398,4 @@ class QuizDetailTest(SetupQuizDataMixin, APITestCase):
             response = self.client.delete(self.url)
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(str(response.data["data"][0]), "Submitted quiz cannot be deleted.")
+        self.assertEqual(str(response.data["form_errors"][0]), "Submitted quiz cannot be deleted.")

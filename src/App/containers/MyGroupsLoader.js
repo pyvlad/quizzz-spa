@@ -1,7 +1,13 @@
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { fetchMyMemberships, selectMyGroupsStatus } from 'state';
+import { 
+  fetchMyMemberships, 
+  selectMyGroupsStatus, 
+  showLoadingOverlay, 
+  hideLoadingOverlay 
+} from 'state';
+
 
 
 const MyGroupsLoader = ({ children }) => {
@@ -15,6 +21,10 @@ const MyGroupsLoader = ({ children }) => {
   React.useEffect(() => {
     if (status === 'idle') {
       dispatch(fetchMyMemberships())
+    } else if (status === 'loading') {
+      dispatch(showLoadingOverlay())
+    } else {
+      dispatch(hideLoadingOverlay())
     }
   }, [dispatch, status]);
 
@@ -22,7 +32,7 @@ const MyGroupsLoader = ({ children }) => {
     case 'idle':
       return ''
     case 'loading':
-      return 'Please, wait...'
+      return 'Loading data. Please, wait...'
     case 'failed':
       return 'Could not load the data. Please try again later.'
     case 'ok':

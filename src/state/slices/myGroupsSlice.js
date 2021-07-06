@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 
-import { selectCurrentUser, fetchLogout } from './authSlice';
+import { selectCurrentUser, logout } from './authSlice';
 import * as api from 'api';
 
 
@@ -64,7 +64,7 @@ const myGroupsSlice = createSlice({
     },
     [fetchMyMemberships.rejected]: onRequestFail,
 
-    [fetchLogout.fulfilled]: () => initialState,  // reset on logout
+    [logout]: () => initialState,  // reset on logout
   },
 });
 

@@ -1,7 +1,48 @@
 import React from 'react';
+import { useDispatch } from 'react-redux';
+import { showMessage, showLoadingOverlay, hideLoadingOverlay } from 'state';
 
 
-const useSubmit = (asyncSubmitFunction, onSuccess) => {
+const initialState = {
+  isLoading: false,
+  statusCode: null,
+  errorMessage: null,
+  formErrors: null,
+};
+
+
+function reducer(state, action) {
+  switch (action.type) {
+    case 'startRequest':
+      return {
+        formErrors: state.formErrors, // keep former errors visible behind overlay
+        statusCode: null, 
+        errorMessage: null, 
+        isLoading: true
+      };
+    case 'requestSuccess':
+      return {
+        ...state, 
+        formErrors: null,
+        isLoading: false,
+      };
+    case 'requestFail':
+      const { error } = action.payload;
+      return {
+        isLoading: false,
+        statusCode: error.status ? error.status : null,
+        errorMessage: error.message ? error.message : null,
+        formErrors: error.formErrors ? error.formErrors : null,
+      };
+    case 'resetSubmissionState':
+      return initialState;
+    default:
+      throw new Error();
+  }
+}
+
+
+const useSubmit = (asyncSubmitFunction, onSuccess, withLoadingOverlay=true) => {
   /*
     Hook that wraps form / data submission.
 
@@ -14,38 +55,60 @@ const useSubmit = (asyncSubmitFunction, onSuccess) => {
     Returns:
     - `handleSubmit` function to handle form/data submission;
     - `isLoading` status that is set to true for the duration of `handleSubmit` call;
-    - `errors` object with the body of the fetch response or 
-      {non_field_errors: [err.message]} if the error doesn't have the 'body' property
-      (see 'client.js' in 'api' for details of error handling)
+    - `errors` object with a mandatory `message` property and an optional `formErrors` 
+      property (see 'client.js' in 'api' for details of error handling)
   */
-  const [isLoading, setIsLoading] = React.useState(false);
-  const [errors, setErrors] = React.useState({});
+  const reduxDispatch = useDispatch();
 
+  // state
+  const [state, localDispatch] = React.useReducer(reducer, initialState);
+  const { isLoading, statusCode, errorMessage, formErrors } = state;
+
+  // submit handler
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!isLoading) {
-      setErrors({});
-      setIsLoading(true);
+      if (withLoadingOverlay) reduxDispatch(showLoadingOverlay());
+      localDispatch({type: 'startRequest'});
       let success = false;
       let result = null;
       
       try {
         result = await asyncSubmitFunction();
         success = true;
-      } catch(err) {
-        setErrors(err.body ? err.body : {non_field_errors: [err.message]});
+      } catch(error) {
+        if (withLoadingOverlay) reduxDispatch(hideLoadingOverlay());
+        localDispatch({type: 'requestFail', payload: { error }})
       }
 
-      setIsLoading(false);
-
-      if (success && onSuccess) {
-        onSuccess(result);
+      if (success) {
+        if (withLoadingOverlay) reduxDispatch(hideLoadingOverlay());
+        localDispatch({type: 'requestSuccess'});
+        if (onSuccess) {
+          onSuccess(result);
+        }
       }
     }
   }
 
-  return { isLoading, errors, handleSubmit, setErrors };
+  // show error message when a request fails and does not contain formErrors
+  React.useEffect(() => {
+    if (errorMessage && !formErrors) {
+      reduxDispatch(showMessage(errorMessage, 'error'));
+    }
+  }, [errorMessage, formErrors, reduxDispatch]);
+
+  // return
+  // NOTE: currently statusCode is returned only when `apiError` happens (non 200-299)
+  return { 
+    isLoading, 
+    statusCode, 
+    errorMessage, 
+    formErrors,
+    handleSubmit, 
+    resetSubmissionState: () => localDispatch({type: 'resetSubmissionState'})
+  };
 }
 
 export default useSubmit;

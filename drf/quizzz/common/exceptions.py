@@ -34,15 +34,21 @@ def custom_exception_handler(exc, context):
         # else:
         #     data = {'detail': exc.detail}
 
+        payload = {'status_code': exc.status_code}
+
         if isinstance(exc.detail, (list, dict)):
-            data = {
-                'error': 'Bad data submitted.',
-                'data': exc.detail,
+            # TODO docs say it can be a list, but I can't think of an example
+            payload = {
+                'detail': 'Bad request.',
+                'form_errors': exc.detail,
             }
         else:
-            data = {'error': exc.detail}
+            payload = {
+                'detail': exc.detail,
+            }
 
         set_rollback()
-        return Response(data, status=exc.status_code, headers=headers)
+        
+        return Response(payload, status=exc.status_code, headers=headers)
 
     return None

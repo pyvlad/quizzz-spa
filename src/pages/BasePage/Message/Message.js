@@ -1,17 +1,8 @@
 import React from 'react';
-import { useSelector } from 'react-redux';
-
-import { selectAuthLoading, selectAuthError } from 'state';
-
 import './Message.scss';
 
 
-const Message = () => {
-  const isAuthLoading = useSelector(selectAuthLoading);
-  const authError = useSelector(selectAuthError);
-
-  const msg = isAuthLoading ? 'Please, wait...' : authError || "";
-
+const Message = ({ msg }) => {
   return msg 
     ? <div className="flash-messages my-3">
         <div className="flash-messages__item flash-messages__item--error my-2 p-2">

@@ -1,47 +1,58 @@
 import React from 'react';
 import { useDispatch } from 'react-redux';
-import { Redirect } from 'react-router-dom';
+import { useHistory } from 'react-router-dom';
 
 import * as api from 'api';
-import { setCurrentUser } from 'state';
+import { setCurrentUser, showMessage, showLoadingOverlay, hideLoadingOverlay } from 'state';
 import FormFieldErrors from 'common/FormFieldErrors';
 import urlFor from 'urls';
 
 
-const EmailConfirmationPage = ({ token }) => {
+const EmailConfirmationPage = ({ token, isLoggedIn }) => {
 
+  // globals
   const dispatch = useDispatch();
+  const history = useHistory();
 
-  const [success, setSuccess] = React.useState(null); 
-  const [errors, setErrors] = React.useState({});
+  // local state
+  const [error, setError] = React.useState("");
 
+  // submit AJAX request to check the link
   React.useEffect(() => {
     async function fetchData() {
+      dispatch(showLoadingOverlay());
+
+      let success = false;
+      let user = null;
+
       try {
-        const user = await api.confirmEmail(token);
-        dispatch(setCurrentUser(user));
-        setSuccess(true);
+        user = await api.confirmEmail(token);
+        success = true;
       } catch(err) {
-        setErrors(err.body ? err.body : {non_field_errors: [err.message]});
-        setSuccess(false);
+        dispatch(hideLoadingOverlay());
+        // on invalid link / request fail show error message:
+        setError((err.formErrors && err.formErrors.length) ? err.formErrors[0] : err.message);
+      }
+
+      if (success) {
+        dispatch(hideLoadingOverlay());
+        dispatch(showMessage("Email confirmed. Welcome to the site!", "success"));
+        // this page can be accessed by non-logged in users
+        // only update user if user is already logged in
+        if (isLoggedIn) {
+          dispatch(setCurrentUser(user));
+        }
+        history.push(urlFor("HOME"));
       }
     }
     fetchData();
-  }, [token, dispatch, setErrors, setSuccess])
+  }, [token, dispatch, history, setError, isLoggedIn])
 
-  const {
-    non_field_errors: nonFieldErrors
-  } = errors;
-
-  return (success === null)
-    ? <div>
-        Checking the link. Please wait...
-      </div>
-    : (
-        (success === true)
-        ? <Redirect to={ urlFor('HOME') } />
-        : <FormFieldErrors errors={nonFieldErrors} />
-      )
+  // return component
+  return (error 
+    ? <FormFieldErrors errors={[error]} />
+    : <div>Checking the link...</div>
+  )
 }
 
 export default EmailConfirmationPage;
