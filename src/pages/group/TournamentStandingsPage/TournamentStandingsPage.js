@@ -4,6 +4,7 @@ import * as api from 'api';
 import { useSelector } from 'react-redux';
 import { selectActiveGroupId, selectCurrentUser } from 'state';
 import StandingsTable from './StandingsTable';
+import { useGroupPageTitle } from 'common/useTitle';
 
 
 const TournamentStandingsPage = ({ tournamentId }) => {
@@ -11,6 +12,8 @@ const TournamentStandingsPage = ({ tournamentId }) => {
   const user = useSelector(selectCurrentUser);
   const groupId = useSelector(selectActiveGroupId);
   const [standings, setStandings] = React.useState(null);
+
+  useGroupPageTitle(groupId, "Tournament Standings");
 
   React.useEffect(() => {
     async function fetchData() {

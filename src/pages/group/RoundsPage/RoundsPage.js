@@ -12,7 +12,7 @@ import DeleteRoundButton from './DeleteRoundButton';
 import FilterTabs from 'common/FilterTabs';
 import useFetchedListOfItems from 'common/useFetchedListOfItems';
 import useListUpdateDeleteViews from 'common/useListUpdateDeleteViews';
-
+import { useGroupPageTitle } from 'common/useTitle';
 
 
 const RoundsPage = ({ tournamentId }) => {
@@ -21,6 +21,8 @@ const RoundsPage = ({ tournamentId }) => {
   const groupId = useSelector(selectActiveGroupId);
   const membership = useSelector(state => selectMyMembershipByGroupId(state, groupId));
   const { is_admin: loggedAsGroupAdmin } = membership;
+
+  useGroupPageTitle(groupId, "Tournament Rounds");
 
   // fetch array of rounds on page component mount
   const fetchFunc = React.useCallback(

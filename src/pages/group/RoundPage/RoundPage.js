@@ -5,6 +5,7 @@ import { useSelector } from 'react-redux';
 import { selectActiveGroupId, selectCurrentUser } from 'state';
 import RoundTable from './RoundTable';
 import StandingsTable from './StandingsTable';
+import { useGroupPageTitle } from 'common/useTitle';
 
 
 const RoundPage = ({ roundId }) => {
@@ -13,6 +14,8 @@ const RoundPage = ({ roundId }) => {
   const groupId = useSelector(selectActiveGroupId);
   const [round, setRound] = React.useState(null);
   const [standings, setStandings] = React.useState([]);
+
+  useGroupPageTitle(groupId, `Round ${roundId}`);
 
   React.useEffect(() => {
     async function fetchData() {

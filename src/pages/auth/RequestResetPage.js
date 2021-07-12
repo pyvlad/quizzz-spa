@@ -13,14 +13,19 @@ import FormHelp from 'common/FormHelp';
 import FormTextInput from 'common/FormTextInput';
 import FormFieldErrors from 'common/FormFieldErrors';
 import FormWrapper from 'common/FormWrapper';
+import useTitle from 'common/useTitle';
 
 
+const RequestResetPage = () => {
 
-const RequestResetPage = () => (
-  <FormWrapper>
-    <RequestResetForm />
-  </FormWrapper>
-)
+  useTitle("Request Password Reset");
+
+  return (
+    <FormWrapper>
+      <RequestResetForm />
+    </FormWrapper>
+  )
+}
 
 
 const RequestResetForm = () => {

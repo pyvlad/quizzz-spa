@@ -4,11 +4,13 @@ import { useSelector } from 'react-redux';
 import { selectActiveGroupId } from 'state';
 
 import Chat from 'common/Chat';
+import { useGroupPageTitle } from 'common/useTitle';
 
 
 const ChatPage = () => {
 
   const groupId = useSelector(selectActiveGroupId);
+  useGroupPageTitle(groupId, "Chat");
 
   return (
     <div>

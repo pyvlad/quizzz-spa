@@ -12,6 +12,7 @@ import DeleteTournamentButton from './DeleteTournamentButton';
 import FilterTabs from 'common/FilterTabs';
 import useListUpdateDeleteViews from 'common/useListUpdateDeleteViews';
 import useFetchedListOfItems from 'common/useFetchedListOfItems';
+import { useGroupPageTitle } from 'common/useTitle';
 
 
 const TournamentsPage = () => {
@@ -20,6 +21,8 @@ const TournamentsPage = () => {
   const groupId = useSelector(selectActiveGroupId);
   const membership = useSelector(state => selectMyMembershipByGroupId(state, groupId));
   const { is_admin: loggedAsGroupAdmin } = membership;
+
+  useGroupPageTitle(groupId, "Tournaments");
 
   // fetch tournaments array on page mount
   const fetchFunc = React.useCallback(async () => await api.getCommunityTournaments(groupId), [groupId])

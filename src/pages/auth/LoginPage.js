@@ -11,17 +11,23 @@ import Form from 'common/Form';
 import FormHeader from 'common/FormHeader';
 import FormHelp from 'common/FormHelp';
 import FormTextInput from 'common/FormTextInput';
+import useTitle from 'common/useTitle';
 
 
 
-const LoginPage = () => (
-  <FormWrapper>
-    <LoginForm />
-    <p>
-      Forgot Your Password? <a href={ urlFor('REQUEST_RESET') }>Click to Reset It</a>
-    </p>
-  </FormWrapper>
-)
+const LoginPage = () => {
+
+  useTitle("Login");
+
+  return (
+    <FormWrapper>
+      <LoginForm />
+      <p>
+        Forgot Your Password? <a href={ urlFor('REQUEST_RESET') }>Click to Reset It</a>
+      </p>
+    </FormWrapper>
+  )
+}
 
 
 const LoginForm = () => {

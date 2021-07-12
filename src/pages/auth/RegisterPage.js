@@ -12,14 +12,19 @@ import FormHelp from 'common/FormHelp';
 import FormTextInput from 'common/FormTextInput';
 import FormFieldErrors from 'common/FormFieldErrors';
 import FormWrapper from 'common/FormWrapper';
+import useTitle from 'common/useTitle';
 
 
+const RegisterPage = () => {
 
-const RegisterPage = () => (
-  <FormWrapper>
-    <RegisterForm />
-  </FormWrapper>
-)
+  useTitle('Registration');
+
+  return (
+    <FormWrapper>
+      <RegisterForm />
+    </FormWrapper>
+  )
+}
 
 
 const RegisterForm = () => {

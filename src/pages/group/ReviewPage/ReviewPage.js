@@ -6,11 +6,14 @@ import * as api from 'api';
 
 import ReviewForm from './ReviewForm';
 import FormFieldErrors from 'common/FormFieldErrors';
+import { useGroupPageTitle } from 'common/useTitle';
 
 
 const ReviewPage = ({ roundId }) => {
 
   const groupId = useSelector(selectActiveGroupId);
+  useGroupPageTitle(groupId, `Review Round ${roundId}`);
+
   const [data, setData] = React.useState(null);
   const [errors, setErrors] = React.useState([]);
 

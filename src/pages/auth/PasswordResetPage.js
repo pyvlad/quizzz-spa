@@ -14,14 +14,20 @@ import FormHelp from 'common/FormHelp';
 import FormTextInput from 'common/FormTextInput';
 import FormFieldErrors from 'common/FormFieldErrors';
 import FormWrapper from 'common/FormWrapper';
+import useTitle from 'common/useTitle';
 
 
 
-const PasswordResetPage = ({ tokenUUID }) => (
-  <FormWrapper>
-    <PasswordResetForm tokenUUID={tokenUUID} />
-  </FormWrapper>
-)
+const PasswordResetPage = ({ tokenUUID }) => {
+
+  useTitle("Reset Password");
+
+  return (
+    <FormWrapper>
+      <PasswordResetForm tokenUUID={tokenUUID} />
+    </FormWrapper>
+  )
+}
 
 
 const PasswordResetForm = ({ tokenUUID }) => {

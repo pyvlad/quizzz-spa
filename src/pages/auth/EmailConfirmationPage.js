@@ -6,9 +6,12 @@ import * as api from 'api';
 import { setCurrentUser, showMessage, showLoadingOverlay, hideLoadingOverlay } from 'state';
 import FormFieldErrors from 'common/FormFieldErrors';
 import urlFor from 'urls';
+import useTitle from 'common/useTitle';
 
 
 const EmailConfirmationPage = ({ token, isLoggedIn }) => {
+
+  useTitle("Email Confirmation Check");
 
   // globals
   const dispatch = useDispatch();

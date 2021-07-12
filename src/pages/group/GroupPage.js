@@ -4,12 +4,15 @@ import { Link } from 'react-router-dom';
 
 import { selectActiveGroupId, selectMyGroupById } from 'state';
 import urlFor from 'urls';
+import { useGroupPageTitle } from 'common/useTitle';
 
 
 const GroupPage = () => {
   
   const groupId = useSelector(selectActiveGroupId);
   const { name, max_members } = useSelector(state => selectMyGroupById(state, groupId));
+  
+  useGroupPageTitle(groupId, "Group");
 
   return (
     <div>

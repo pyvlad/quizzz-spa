@@ -5,9 +5,12 @@ import * as api from 'api';
 import { showMessage } from 'state';
 
 import useSubmit from 'common/useSubmit';
+import useTitle from 'common/useTitle';
 
 
 const EmailNotConfirmedPage = () => {
+
+  useTitle("Email Confirmation Required");
 
   // globals
   const dispatch = useDispatch();

@@ -6,6 +6,7 @@ import * as api from 'api';
 
 import PlayForm from './PlayForm';
 import FormFieldErrors from 'common/FormFieldErrors';
+import { useGroupPageTitle } from 'common/useTitle';
 
 
 const PlayPage = ({ roundId }) => {
@@ -13,6 +14,8 @@ const PlayPage = ({ roundId }) => {
   const groupId = useSelector(selectActiveGroupId);
   const [quiz, setQuiz] = React.useState(null);
   const [errors, setErrors] = React.useState([]);
+
+  useGroupPageTitle(groupId, `Play Round ${roundId}`);
 
   React.useEffect(() => {
     async function fetchData() {
