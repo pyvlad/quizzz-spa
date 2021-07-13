@@ -6,12 +6,22 @@ import MyQuizzes from './MyQuizzes/MyQuizzes';
 import EditQuiz from './EditQuiz';
 import CreateQuizButton from './CreateQuizButton';
 import { useGroupPageTitle } from 'common/useTitle';
+import { useNavbarItem } from 'common/Navbar';
+import urlFor from 'urls';
 
 
 const MyQuizzesPage = () => {
 
   const groupId = useSelector(selectActiveGroupId);
+  
   useGroupPageTitle(groupId, "My Quizzes");
+
+  const getItem = React.useCallback(() => ({
+    text: "My Quizzes", 
+    url: urlFor("GROUP_MY_QUIZZES", {groupId}), 
+    isName: false
+  }), [groupId]);
+  useNavbarItem(getItem);
 
   const [editedQuizId, setEditedQuizId] = React.useState(null);
   const handleEditQuiz = quizId => setEditedQuizId(quizId);

@@ -52,7 +52,7 @@ const LinkContainer = ({ to, text }) => {
   return (
     <div className="paper p-4 mb-4">
       <h3 className="heading heading--2">
-        <Link to={ to }>
+        <Link to={ to } className="link">
           { text }
         </Link>
       </h3>

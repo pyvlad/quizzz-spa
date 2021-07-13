@@ -1,10 +1,15 @@
 import React from 'react';
+import { useSelector } from 'react-redux';
+import { selectActiveTournamentId } from 'state';
+
 import moment from 'moment';
 import { Link } from 'react-router-dom';
 import urlFor from 'urls';
 
 
 const RoundTable = ({ round, groupId }) => {
+
+  const tournamentId = useSelector(selectActiveTournamentId);
 
   const {
     id: roundId,
@@ -50,14 +55,14 @@ const RoundTable = ({ round, groupId }) => {
             (!(isTaken || isAuthor) && status === "current")
             ? <Link 
                 className="btn btn--primary my-3" 
-                to={ urlFor("PLAY_ROUND", {groupId, roundId}) }
+                to={ urlFor("PLAY_ROUND", {groupId, tournamentId, roundId}) }
               >
                 Take Quiz
               </Link>
             : ((isTaken || isAuthor) 
                 ? <Link 
                     className="btn btn--secondary my-3"
-                    to={ urlFor("REVIEW_ROUND", {groupId, roundId}) }
+                    to={ urlFor("REVIEW_ROUND", {groupId, tournamentId, roundId}) }
                   >
                     Review Quiz
                   </Link>

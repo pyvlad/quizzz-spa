@@ -1,7 +1,7 @@
 import React from 'react';
 import moment from 'moment';
 import { useSelector } from 'react-redux';
-import { selectActiveGroupId } from 'state';
+import { selectActiveGroupId, selectActiveTournamentId } from 'state';
 import { Link } from 'react-router-dom';
 import urlFor from 'urls';
 
@@ -9,6 +9,7 @@ import urlFor from 'urls';
 const RoundsTableRow = ({ round, num, loggedAsGroupAdmin, onEdit }) => {
   
   const groupId = useSelector(selectActiveGroupId);
+  const tournamentId = useSelector(selectActiveTournamentId);
   
   const {
     id: roundId,
@@ -28,7 +29,7 @@ const RoundsTableRow = ({ round, num, loggedAsGroupAdmin, onEdit }) => {
         { num }
       </td>
       <td className="table__td">
-        <Link to={ urlFor("ROUND", {groupId, roundId}) } >
+        <Link to={ urlFor("ROUND", {groupId, tournamentId, roundId}) }  className="link">
           { name }
         </Link>
       </td>

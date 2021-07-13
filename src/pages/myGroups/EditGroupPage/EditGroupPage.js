@@ -2,11 +2,19 @@ import React from 'react';
 
 import EditGroupForm from './EditGroupForm';
 import useTitle from 'common/useTitle';
+import { useNavbarItem } from 'common/Navbar';
+import urlFor from 'urls';
 
 
 const EditGroupPage = ({ groupId }) => {
 
   useTitle(groupId ? "Edit Group" : "Create Group");
+  const getItem = React.useCallback(() => ({
+    text: groupId ? "Edit" : "Create", 
+    url: groupId ? urlFor("EDIT_GROUP", {groupId}) : urlFor("CREATE_GROUP"), 
+    isName: false
+  }), [groupId]);
+  useNavbarItem(getItem);
 
   return (
     <div className="container">

@@ -2,11 +2,19 @@ import React from 'react';
 
 import JoinGroupForm from './JoinGroupForm';
 import useTitle from 'common/useTitle';
+import { useNavbarItem } from 'common/Navbar';
+import urlFor from 'urls';
 
 
 const JoinGroupPage = () => {
 
   useTitle("Join Group");
+  const getItem = React.useCallback(() => ({
+    text: "Join", 
+    url: urlFor("JOIN_GROUP"),
+    isName: false
+  }), []);
+  useNavbarItem(getItem);
 
   return (
     <div className="container">

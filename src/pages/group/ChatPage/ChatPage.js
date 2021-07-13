@@ -5,12 +5,23 @@ import { selectActiveGroupId } from 'state';
 
 import Chat from 'common/Chat';
 import { useGroupPageTitle } from 'common/useTitle';
+import { useNavbarItem } from 'common/Navbar';
+import urlFor from 'urls';
 
 
 const ChatPage = () => {
 
   const groupId = useSelector(selectActiveGroupId);
+
   useGroupPageTitle(groupId, "Chat");
+
+  const getItem = React.useCallback(() => ({
+    text: "Chat", 
+    url: urlFor("GROUP_CHAT", {groupId}), 
+    isName: false
+  }), [groupId]);
+  useNavbarItem(getItem);
+
 
   return (
     <div>

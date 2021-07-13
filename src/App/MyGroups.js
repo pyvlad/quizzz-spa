@@ -12,10 +12,12 @@ import EditGroupPage from 'pages/myGroups/EditGroupPage';
 import JoinGroupPage from 'pages/myGroups/JoinGroupPage';
 
 import Group from './Group';
+import { GroupsNavbar, ActiveGroupNavbar } from 'common/Navbar';
 
 
 const MyGroups = () => (
   <MyGroupsLoader>
+    <GroupsNavbar/>
     <Switch>
       <Route exact path="/" component={ MyGroupsPage } />
       <Route exact path="/join-group/" component={ JoinGroupPage } />
@@ -26,7 +28,8 @@ const MyGroups = () => (
       <Route path="/group/:id" render={
         ({match}) => (
           <ActiveGroup id={ parseInt(match.params.id) }>
-            <Group /> 
+            <ActiveGroupNavbar />
+            <Group/>
           </ActiveGroup>
         )
       }/>

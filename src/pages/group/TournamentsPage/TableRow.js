@@ -24,7 +24,7 @@ const TournamentsTableRow = ({ tournament, num, loggedAsGroupAdmin, onEdit }) =>
         { num }
       </td>
       <td className="table__td">
-        <Link to={ urlFor("TOURNAMENT_ROUNDS", {groupId, tournamentId: id}) } >
+        <Link to={ urlFor("TOURNAMENT_ROUNDS", {groupId, tournamentId: id}) } className="link">
           { name }
         </Link>
       </td>

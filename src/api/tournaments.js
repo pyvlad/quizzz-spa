@@ -9,6 +9,16 @@ export async function getCommunityTournaments(communityId) {
   return await apiClient.get(`/api/communities/${communityId}/tournaments/`);
 }
 
+
+export async function getTournament(communityId, tournamentId) {
+  /*
+    Fetch tournament by id.
+    A single tournament object is expected.
+  */
+  return await apiClient.get(`/api/communities/${communityId}/tournaments/${tournamentId}/`);
+}
+
+
 export async function createTournament(communityId, payload) {
   /*
     Send request to create a new tournament.

@@ -2,20 +2,30 @@ import React from 'react';
 import * as api from 'api';
 
 import { useSelector } from 'react-redux';
-import { selectActiveGroupId, selectCurrentUser } from 'state';
+import { selectActiveGroupId, selectActiveTournamentId, selectCurrentUser } from 'state';
 import RoundTable from './RoundTable';
 import StandingsTable from './StandingsTable';
 import { useGroupPageTitle } from 'common/useTitle';
+import { useNavbarItem } from 'common/Navbar';
+import urlFor from 'urls';
 
 
 const RoundPage = ({ roundId }) => {
 
   const user = useSelector(selectCurrentUser);
   const groupId = useSelector(selectActiveGroupId);
+  const tournamentId = useSelector(selectActiveTournamentId);
   const [round, setRound] = React.useState(null);
   const [standings, setStandings] = React.useState([]);
 
   useGroupPageTitle(groupId, `Round ${roundId}`);
+
+  const getItem = React.useCallback(() => ({
+    text: `Round ${roundId}`,
+    url: urlFor("ROUND", {groupId, tournamentId, roundId}), 
+    isName: true
+  }), [groupId, tournamentId, roundId]);
+  useNavbarItem(getItem);
 
   React.useEffect(() => {
     async function fetchData() {

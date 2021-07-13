@@ -12,6 +12,8 @@ import DeleteMemberButton from './DeleteMemberButton';
 import useFetchedListOfItems from 'common/useFetchedListOfItems';
 import useListUpdateDeleteViews from 'common/useListUpdateDeleteViews';
 import { useGroupPageTitle } from 'common/useTitle';
+import { useNavbarItem } from 'common/Navbar';
+import urlFor from 'urls';
 
 
 const MembersPage = () => {
@@ -22,6 +24,13 @@ const MembersPage = () => {
   const { is_admin: loggedAsGroupAdmin } = membership;
 
   useGroupPageTitle(groupId, "Members");
+
+  const getItem = React.useCallback(() => ({
+    text: "Members", 
+    url: urlFor("GROUP_MEMBERS", {groupId}), 
+    isName: false
+  }), [groupId]);
+  useNavbarItem(getItem);
 
   // fetch members array on component mount
   const fetchFunc = React.useCallback(async () => await api.getCommunityMembers(groupId), [groupId]);

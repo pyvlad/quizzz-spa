@@ -13,6 +13,8 @@ import FilterTabs from 'common/FilterTabs';
 import useListUpdateDeleteViews from 'common/useListUpdateDeleteViews';
 import useFetchedListOfItems from 'common/useFetchedListOfItems';
 import { useGroupPageTitle } from 'common/useTitle';
+import { useNavbarItem } from 'common/Navbar';
+import urlFor from 'urls';
 
 
 const TournamentsPage = () => {
@@ -23,6 +25,12 @@ const TournamentsPage = () => {
   const { is_admin: loggedAsGroupAdmin } = membership;
 
   useGroupPageTitle(groupId, "Tournaments");
+  const getItem = React.useCallback(() => ({
+    text: "Tournaments", 
+    url: urlFor("GROUP_TOURNAMENTS", {groupId}), 
+    isName: false
+  }), [groupId]);
+  useNavbarItem(getItem);
 
   // fetch tournaments array on page mount
   const fetchFunc = React.useCallback(async () => await api.getCommunityTournaments(groupId), [groupId])

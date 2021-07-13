@@ -1,5 +1,7 @@
 import React from 'react';
 import { useHistory } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import { selectActiveTournamentId } from 'state';
 
 import * as api from 'api';
 
@@ -11,6 +13,8 @@ import urlFor from 'urls';
 
 
 const PlayForm = ({ groupId, roundId, quiz }) => {
+
+  const tournamentId = useSelector(selectActiveTournamentId);
 
   const {
     name,
@@ -31,7 +35,7 @@ const PlayForm = ({ groupId, roundId, quiz }) => {
       }
       return await api.submitRound(groupId, roundId, payload);
     },
-    () => history.push(urlFor('REVIEW_ROUND', {groupId, roundId}))
+    () => history.push(urlFor('REVIEW_ROUND', {groupId, tournamentId, roundId}))
   );
 
   return (

@@ -13,7 +13,8 @@ const loadingSlice = createSlice({
       state.count += 1;
     },
     hideLoadingOverlay(state, action) {
-      state.count -= 1;
+      const count = state.count - 1;
+      state.count = Math.max(0, count);
     }
   },
 });

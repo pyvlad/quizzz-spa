@@ -1,7 +1,7 @@
 import React from 'react';
 
 import { useSelector } from 'react-redux';
-import { selectActiveGroupId } from 'state';
+import { selectActiveGroupId, selectActiveTournamentId } from 'state';
 import { selectMyMembershipByGroupId } from 'state';
 import * as api from 'api';
 
@@ -15,10 +15,11 @@ import useListUpdateDeleteViews from 'common/useListUpdateDeleteViews';
 import { useGroupPageTitle } from 'common/useTitle';
 
 
-const RoundsPage = ({ tournamentId }) => {
+const TournamentRoundsPage = () => {
 
   // page parameters
   const groupId = useSelector(selectActiveGroupId);
+  const tournamentId = useSelector(selectActiveTournamentId);
   const membership = useSelector(state => selectMyMembershipByGroupId(state, groupId));
   const { is_admin: loggedAsGroupAdmin } = membership;
 
@@ -110,4 +111,4 @@ const RoundsPage = ({ tournamentId }) => {
   )
 }
 
-export default RoundsPage;
+export default TournamentRoundsPage;

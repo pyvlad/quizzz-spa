@@ -1,11 +1,15 @@
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { Link } from 'react-router-dom';
 
 import Messages from './Messages';
 import Menu from './Menu/Menu';
 import Logo from './Logo/Logo';
 import { LoadingOverlay } from 'common/Loading';
-import { selectIsLoading, selectCurrentUser, logCurrentUserOut, showMessage } from 'state';
+import { 
+  selectIsLoading, selectCurrentUser, logCurrentUserOut, 
+  showMessage, selectNavbarItems 
+} from 'state';
 import * as api from 'api';
 import useSubmit from 'common/useSubmit';
 
@@ -18,6 +22,7 @@ const BasePage = ({ children }) => {
   const dispatch = useDispatch();
   const user = useSelector(selectCurrentUser);
   const isLoading = useSelector(selectIsLoading);
+  const navbarItems = useSelector(selectNavbarItems);
 
   // submission state
   const { errorMessage, handleSubmit: handleLogout } = useSubmit(
@@ -48,6 +53,31 @@ const BasePage = ({ children }) => {
         </div>
       </div>
     </header>
+
+    { 
+      navbarItems.length 
+      ? <section className="page_section page__section--navbar">
+         <div className="container-fluid-lg px-2 py-2">
+          <header className="navbar">
+            {
+              navbarItems.map((item, i) => {
+                const { text, url, isName } = item;
+                return (
+                  <Link 
+                    to={ url }
+                    key={ i }
+                    className={`navbar__item ${isName ? "navbar__item--name" : ""}`}
+                  >
+                    { text }
+                  </Link>
+                );
+              })
+            }
+          </header>
+         </div>
+        </section>
+      : null 
+    }
 
     <section className="page__section page__section--main">
       <Messages />

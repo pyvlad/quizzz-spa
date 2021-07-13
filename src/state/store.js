@@ -4,6 +4,8 @@ import myGroupsReducer from './slices/myGroupsSlice';
 import activeGroupReducer from './slices/activeGroupSlice';
 import messagesReducer from './slices/messagesSlice';
 import loadingReducer from './slices/loadingSlice';
+import navbarItemsReducer from './slices/navbarItemsSlice';
+import tournamentReducer from './slices/tournamentSlice';
 
 
 export default configureStore({
@@ -13,6 +15,8 @@ export default configureStore({
     activeGroup: activeGroupReducer,
     messages: messagesReducer,
     loading: loadingReducer,
+    navbarItems: navbarItemsReducer, 
+    tournament: tournamentReducer,
   }
 })
 // https://redux-toolkit.js.org/api/configureStore

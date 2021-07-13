@@ -41,6 +41,7 @@ export {
 
 export {
   getCommunityTournaments,
+  getTournament,
   createTournament,
   updateTournament,
   deleteTournament,

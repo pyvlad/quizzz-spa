@@ -20,7 +20,15 @@ export {
   showLoadingOverlay, 
   hideLoadingOverlay,
 } from './slices/loadingSlice';
-
+export {
+  setNavbarItems,
+  pushNavbarItem,
+  popNavbarItem,
+} from './slices/navbarItemsSlice';
+export {
+  fetchTournament,
+  setActiveTournamentId,
+} from './slices/tournamentSlice';
 
 /* Selectors */
 export { 
@@ -43,3 +51,13 @@ export {
 export {
   selectIsLoading
 } from './slices/loadingSlice';
+export {
+  selectNavbarItems
+} from './slices/navbarItemsSlice';
+export {
+  selectActiveTournamentId,
+  selectTournament,
+  selectTournamentLoading,
+  selectTournamentStatus,
+  selectTournamentError,
+} from './slices/tournamentSlice';
