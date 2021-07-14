@@ -4,38 +4,31 @@
 import React from 'react';
 import { Switch, Route, Redirect } from 'react-router-dom';
 
-import MyGroupsLoader from './containers/MyGroupsLoader';
-import ActiveGroup from './containers/ActiveGroup';
-
 import MyGroupsPage from 'pages/myGroups/MyGroupsPage';
 import EditGroupPage from 'pages/myGroups/EditGroupPage';
 import JoinGroupPage from 'pages/myGroups/JoinGroupPage';
+import { GroupsNavbar } from 'common/Navbar';
 
-import Group from './Group';
-import { GroupsNavbar, ActiveGroupNavbar } from 'common/Navbar';
+import MyGroupsLoader from '../containers/MyGroupsLoader';
+import GroupSubpages from './GroupSubpages';
 
 
-const MyGroups = () => (
+const UserPages = () => (
   <MyGroupsLoader>
     <GroupsNavbar/>
     <Switch>
       <Route exact path="/" component={ MyGroupsPage } />
       <Route exact path="/join-group/" component={ JoinGroupPage } />
       <Route exact path="/create-group/" component={ EditGroupPage } />
-      <Route exact path='/edit-group/:id/' render={
+      <Route exact path='/edit-group/:groupId/' render={
         ({match}) => <EditGroupPage groupId={ parseInt(match.params.id) } />
       }/>
-      <Route path="/group/:id" render={
-        ({match}) => (
-          <ActiveGroup id={ parseInt(match.params.id) }>
-            <ActiveGroupNavbar />
-            <Group/>
-          </ActiveGroup>
-        )
+      <Route path="/group/:groupId" render={
+        ({match}) => <GroupSubpages urlGroupId={ parseInt(match.params.groupId)} />
       }/>
       <Redirect to="/" />
     </Switch>
   </MyGroupsLoader>
 )
 
-export default MyGroups;
+export default UserPages;

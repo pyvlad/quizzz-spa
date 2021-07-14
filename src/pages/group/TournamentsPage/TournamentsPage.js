@@ -11,7 +11,7 @@ import EditTournamentForm from './EditTournamentForm';
 import DeleteTournamentButton from './DeleteTournamentButton';
 import FilterTabs from 'common/FilterTabs';
 import useListUpdateDeleteViews from 'common/useListUpdateDeleteViews';
-import useFetchedListOfItems from 'common/useFetchedListOfItems';
+import { useFetchedListOfItems } from 'common/useFetch';
 import { useGroupPageTitle } from 'common/useTitle';
 import { useNavbarItem } from 'common/Navbar';
 import urlFor from 'urls';

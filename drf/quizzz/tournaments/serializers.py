@@ -66,7 +66,8 @@ class ListedRoundSerializer(serializers.ModelSerializer):
             'tournament',
             'quiz',
             'status',
-            'user_play',    # id
+            'user_play_id',    # id
+            'user_play_is_submitted', # bool
         ]
 
     def to_representation(self, instance):

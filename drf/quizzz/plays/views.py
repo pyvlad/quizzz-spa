@@ -2,7 +2,7 @@ from collections import defaultdict
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import permissions, status
+from rest_framework import serializers
 from django.shortcuts import get_object_or_404
 
 from quizzz.common.permissions import IsAuthenticated
@@ -32,24 +32,17 @@ class StartRound(APIView):
         # round information and checks:
         round = get_object_or_404(Round.objects.filter(pk=round_id))
         if not round.is_active:
-            return Response(
-                "This round is not available (already finished or not started yet).",
-                status.HTTP_400_BAD_REQUEST
+            raise serializers.ValidationError(
+                "This round is not available (already finished or not started yet)."
             )
         if round.is_authored_by(request.user.id):
-            return Response(
-                "You cannot play your own quiz.",
-                status.HTTP_400_BAD_REQUEST
-            )
+            raise serializers.ValidationError("You cannot play your own quiz.")
 
         # start a new play or continue (page reload)
         (play, created) = Play.objects.get_or_create(
             user_id=request.user.id, round_id=round_id)
         if play.is_submitted:
-            return Response(
-                {"data": "You have already played this round."}, 
-                status.HTTP_400_BAD_REQUEST
-            )
+            raise serializers.ValidationError("You have already played this round.")
         
         # load quiz with questions
         q = Quiz.objects\
@@ -73,9 +66,8 @@ class SubmitRound(APIView):
         # load round information and run checks:
         round = get_object_or_404(Round.objects.filter(pk=round_id))
         if not round.is_active:
-            return Response(
-                "This round is not available (already finished or not started yet).",
-                status.HTTP_400_BAD_REQUEST
+            raise serializers.ValidationError(
+                "This round is not available (already finished or not started yet)."
             )
 
         # load a play and run checks:
@@ -83,10 +75,7 @@ class SubmitRound(APIView):
             Play.objects.filter(user_id=request.user.id, round_id=round_id)
         )
         if play.is_submitted:
-            return Response(
-                "You have already played this round.", 
-                status.HTTP_400_BAD_REQUEST
-            )
+            raise serializers.ValidationError("You have already played this round.")
 
         # load quiz with questions
         quiz = get_object_or_404(
@@ -124,10 +113,8 @@ class ReviewRound(APIView):
         play = None if quiz.user_id == request.user.id else get_object_or_404(
             Play.objects.filter(user_id=request.user.id, round_id=round_id))
         if play and not play.is_submitted:
-            return Response(
-                "You have not finished this round yet.", 
-                status.HTTP_403_FORBIDDEN
-            )
+            raise serializers.ValidationError("You have not finished this round yet.")
+
         # load user answers:
         play_answers = play.answers.all() if play else []
 

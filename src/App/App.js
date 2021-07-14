@@ -5,8 +5,8 @@ import { useSelector } from 'react-redux';
 import { selectCurrentUser } from 'state';
 
 import BasePage from 'pages/BasePage';
-import HomeAndAuth from './HomeAndAuth';
-import MyGroups from './MyGroups';
+import PublicPages from './routing/PublicPages';
+import UserPages from './routing/UserPages';
 import EmailConfirmationPage from 'pages/auth/EmailConfirmationPage';
 import EmailNotConfirmedPage from 'pages/auth/EmailNotConfirmedPage';
 
@@ -27,8 +27,8 @@ const App = () => {
         />
         <Route path="/" component={ 
           user 
-          ? (user.is_email_confirmed ? MyGroups : EmailNotConfirmedPage ) 
-          : HomeAndAuth
+          ? (user.is_email_confirmed ? UserPages : EmailNotConfirmedPage ) 
+          : PublicPages
         } />
       </Switch>
     </BasePage>

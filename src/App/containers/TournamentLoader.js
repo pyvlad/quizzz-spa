@@ -2,11 +2,8 @@ import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { 
-  fetchTournament, 
-  selectActiveTournamentId,
-  selectTournamentStatus, 
-  showLoadingOverlay, 
-  hideLoadingOverlay 
+  fetchTournament, selectActiveTournamentId, selectTournamentStatus, 
+  selectTournamentError, showLoadingOverlay, hideLoadingOverlay, showMessage,
 } from 'state';
 
 
@@ -16,8 +13,9 @@ const TournamentLoader = ({ children }) => {
     has been fetched and can be accessed by child components.
   */
   const dispatch = useDispatch();
-  const status = useSelector(selectTournamentStatus);
   const activeId = useSelector(selectActiveTournamentId);
+  const status = useSelector(selectTournamentStatus);
+  const errorMessage = useSelector(selectTournamentError);
 
   React.useEffect(() => {
     if (activeId) {
@@ -25,19 +23,30 @@ const TournamentLoader = ({ children }) => {
         dispatch(fetchTournament(activeId));
       } else if (status === 'loading') {
         dispatch(showLoadingOverlay());
-      } else {
+      }
+
+      if ((status === 'failed') && errorMessage) {
+        dispatch(showMessage(errorMessage));
+      }
+  
+      if ((status === 'failed') || (status === 'ok')) {
         dispatch(hideLoadingOverlay());
       }
     }
-  }, [dispatch, status, activeId]);
+  }, [dispatch, activeId, status, errorMessage]);
 
   switch (status) {
     case 'idle':
       return ''
     case 'loading':
-      return 'Loading data. Please, wait...'
+      return 'Loading tournament data. Please, wait...'
     case 'failed':
-      return 'Could not load the data. Please try again later.'
+      return (
+        <div>
+          <p>Tournament data could not be loaded.</p>
+          <p>Please reload the page or try again later.</p>
+        </div>
+      )
     case 'ok':
       return children;
     default:

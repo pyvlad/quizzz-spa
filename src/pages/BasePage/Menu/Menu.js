@@ -8,34 +8,34 @@ import './Menu.scss';
 
 const Menu = ({ user, onLogoutClick }) => (
   <nav className="menu">
-    <div className="menu__item menu__item--username">
-      { user ? user.username : 'Welcome!'}
-    </div>
-    <div>
-      {
-        user
-        ? <button 
+    {
+      user
+      ? <React.Fragment>
+          <div className="menu__item menu__item--username">
+            { user ? user.username : 'Welcome!'}
+          </div>
+          <button 
             onClick={ onLogoutClick }
             className="menu__item menu__item--link" 
           >
             Logout
           </button>
-        : <React.Fragment>
-            <Link 
-              to={ urlFor('REGISTER') } 
-              className="menu__item menu__item--link"
-            >
-              Register
-            </Link>
-            <Link 
-              to={ urlFor('LOGIN') } 
-              className="menu__item menu__item--link"
-            >
-              Login
-            </Link>
-          </React.Fragment>
-      }
-    </div>
+        </React.Fragment>
+      : <React.Fragment>
+          <Link 
+            to={ urlFor('REGISTER') } 
+            className="menu__item menu__item--link"
+          >
+            Register
+          </Link>
+          <Link 
+            to={ urlFor('LOGIN') } 
+            className="menu__item menu__item--link"
+          >
+            Login
+          </Link>
+        </React.Fragment>
+    }
   </nav>
 )
 

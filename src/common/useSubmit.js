@@ -64,30 +64,40 @@ const useSubmit = (asyncSubmitFunction, onSuccess, withLoadingOverlay=true) => {
   const [state, localDispatch] = React.useReducer(reducer, initialState);
   const { isLoading, statusCode, errorMessage, formErrors } = state;
 
+  // callback
+  const fetchFunc = React.useCallback(async () => {
+
+    let success = false;
+    let responseData = null;
+
+    if (withLoadingOverlay) reduxDispatch(showLoadingOverlay());
+    localDispatch({type: 'startRequest'});
+    
+    try {
+      responseData = await asyncSubmitFunction();
+      success = true;
+    } catch(error) {
+      if (withLoadingOverlay) reduxDispatch(hideLoadingOverlay());
+      localDispatch({type: 'requestFail', payload: { error }})
+    }
+
+    if (success) {
+      if (withLoadingOverlay) reduxDispatch(hideLoadingOverlay());
+      localDispatch({type: 'requestSuccess'});
+    }
+
+    return {responseData, success};
+
+  }, [reduxDispatch, localDispatch, asyncSubmitFunction, withLoadingOverlay])
+
+
   // submit handler
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     if (!isLoading) {
-      if (withLoadingOverlay) reduxDispatch(showLoadingOverlay());
-      localDispatch({type: 'startRequest'});
-      let success = false;
-      let result = null;
-      
-      try {
-        result = await asyncSubmitFunction();
-        success = true;
-      } catch(error) {
-        if (withLoadingOverlay) reduxDispatch(hideLoadingOverlay());
-        localDispatch({type: 'requestFail', payload: { error }})
-      }
-
-      if (success) {
-        if (withLoadingOverlay) reduxDispatch(hideLoadingOverlay());
-        localDispatch({type: 'requestSuccess'});
-        if (onSuccess) {
-          onSuccess(result);
-        }
+      const {responseData, success} = await fetchFunc();
+      if (onSuccess && success) {
+        onSuccess(responseData);
       }
     }
   }
@@ -96,6 +106,9 @@ const useSubmit = (asyncSubmitFunction, onSuccess, withLoadingOverlay=true) => {
   React.useEffect(() => {
     if (errorMessage && !formErrors) {
       reduxDispatch(showMessage(errorMessage, 'error'));
+    }
+    if (Array.isArray(formErrors)) {
+      formErrors.forEach(msg => reduxDispatch(showMessage(msg, 'error')));
     }
   }, [errorMessage, formErrors, reduxDispatch]);
 
@@ -106,6 +119,7 @@ const useSubmit = (asyncSubmitFunction, onSuccess, withLoadingOverlay=true) => {
     statusCode, 
     errorMessage, 
     formErrors,
+    fetchFunc,
     handleSubmit, 
     resetSubmissionState: () => localDispatch({type: 'resetSubmissionState'})
   };

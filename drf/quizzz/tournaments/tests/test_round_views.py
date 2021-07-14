@@ -79,7 +79,7 @@ class CreateRoundTest(SetupTournamentDataMixin, APITestCase):
         self.assertListEqual(
             list(response.data.keys()), 
             ['id', 'start_time', 'finish_time', 'tournament', 
-             'quiz', 'status', 'user_play', 'is_author']
+             'quiz', 'status', 'user_play_id', 'user_play_is_submitted', 'is_author']
         )
         self.assertEqual(Round.objects.count(), init_count + 1)
 
@@ -141,7 +141,7 @@ class RoundListTest(SetupTournamentDataMixin, APITestCase):
         self.assertListEqual(
             list(response.data[0].keys()), 
             ['id', 'start_time', 'finish_time', 'tournament', 
-             'quiz', 'status', 'user_play', 'is_author']
+             'quiz', 'status', 'user_play_id', 'user_play_is_submitted', 'is_author']
         )
 
 
@@ -172,7 +172,7 @@ class RoundDetailTest(SetupTournamentDataMixin, APITestCase):
         self.new_data["quiz"] = self.round["quiz_id"]
         self.expected_keys = [
             'id', 'start_time', 'finish_time', 'tournament', 
-            'quiz', 'status', 'user_play', 'is_author'
+            'quiz', 'status', 'user_play_id', 'user_play_is_submitted', 'is_author'
         ]
 
     def test_get_round(self):

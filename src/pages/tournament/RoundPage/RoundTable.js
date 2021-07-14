@@ -1,9 +1,9 @@
 import React from 'react';
-import { useSelector } from 'react-redux';
-import { selectActiveTournamentId } from 'state';
-
 import moment from 'moment';
 import { Link } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+
+import { selectActiveTournamentId } from 'state';
 import urlFor from 'urls';
 
 
@@ -23,10 +23,11 @@ const RoundTable = ({ round, groupId }) => {
     finish_time: finishTime,
     is_author: isAuthor,
     status,
-    user_play: play,
+    user_play_id: playId,
+    user_play_is_submitted: isPlaySubmitted,
   } = round;
 
-  const isTaken = !!(play)
+  const isPlayStarted = !!(playId)
 
   return <table>
     <tbody>
@@ -52,14 +53,14 @@ const RoundTable = ({ round, groupId }) => {
         </td>
         <td>
           {
-            (!(isTaken || isAuthor) && status === "current")
+            (!(isPlaySubmitted || isAuthor) && status === "current")
             ? <Link 
                 className="btn btn--primary my-3" 
                 to={ urlFor("PLAY_ROUND", {groupId, tournamentId, roundId}) }
               >
-                Take Quiz
+                { isPlayStarted ? "Continue Quiz" : "Take Quiz" }
               </Link>
-            : ((isTaken || isAuthor) 
+            : ((isPlaySubmitted || isAuthor) 
                 ? <Link 
                     className="btn btn--secondary my-3"
                     to={ urlFor("REVIEW_ROUND", {groupId, tournamentId, roundId}) }

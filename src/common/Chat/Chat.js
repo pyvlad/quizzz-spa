@@ -6,7 +6,7 @@ import NewMessageForm from './NewMessageForm';
 
 import * as api from 'api';
 
-import useFetchedListOfItems from 'common/useFetchedListOfItems';
+import { useFetchedListOfItems } from 'common/useFetch';
 import useListUpdateDeleteViews from 'common/useListUpdateDeleteViews';
 
 

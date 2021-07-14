@@ -5,6 +5,7 @@ import { useSelector } from 'react-redux';
 import { selectActiveGroupId, selectActiveTournamentId, selectCurrentUser } from 'state';
 import RoundTable from './RoundTable';
 import StandingsTable from './StandingsTable';
+import { useFetch } from 'common/useFetch';
 import { useGroupPageTitle } from 'common/useTitle';
 import { useNavbarItem } from 'common/Navbar';
 import urlFor from 'urls';
@@ -12,14 +13,15 @@ import urlFor from 'urls';
 
 const RoundPage = ({ roundId }) => {
 
+  // page parameters
   const user = useSelector(selectCurrentUser);
   const groupId = useSelector(selectActiveGroupId);
   const tournamentId = useSelector(selectActiveTournamentId);
-  const [round, setRound] = React.useState(null);
-  const [standings, setStandings] = React.useState([]);
 
+  // page title
   useGroupPageTitle(groupId, `Round ${roundId}`);
 
+  // page navbar item
   const getItem = React.useCallback(() => ({
     text: `Round ${roundId}`,
     url: urlFor("ROUND", {groupId, tournamentId, roundId}), 
@@ -27,20 +29,15 @@ const RoundPage = ({ roundId }) => {
   }), [groupId, tournamentId, roundId]);
   useNavbarItem(getItem);
 
-  React.useEffect(() => {
-    async function fetchData() {
-      try {
-        const data = await api.getRound(groupId, roundId);
-        setStandings(data["standings"]);
-        setRound(data["round"]);
-      } catch(e) {
-        console.log(e);
-      }
-    }
-    fetchData();
-  }, [groupId, roundId, setRound])
+  // fetch round and standings data on page component mount
+  const fetchFunc = React.useCallback(
+    async () => await api.getRound(groupId, roundId), 
+    [groupId, roundId]
+  )
+  const [{round, standings}] = useFetch(fetchFunc, {});
 
-  return (round === null) 
+  // return component with `round === undefined` being a proxy for loading state
+  return (round === undefined) 
     ? "Please, wait..."
     : <div>
         <h2 className="heading heading--1">

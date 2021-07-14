@@ -3,21 +3,20 @@ import { useDispatch, useSelector } from 'react-redux';
 import { selectActiveTournamentId, setActiveTournamentId } from 'state';
 
 
-const ActiveTournament = ({ id, children }) => {
+const ActiveTournament = ({ urlTournamentId, children }) => {
   /*
-    This component ensures that the active tournament id has been set
-    and can be used by child components.
+    This component ensures that:
+    - `tournament.activeId` is available in the Redux store for child components;
+    - `tournament.activeId` corresponds to the URL;
   */
   const dispatch = useDispatch();
   const activeId = useSelector(selectActiveTournamentId);
 
   React.useEffect(() => {
-    if (activeId !== id) {
-      dispatch(setActiveTournamentId(id));
-    }
-  }, [dispatch, activeId, id]);
+    dispatch(setActiveTournamentId(urlTournamentId));
+  }, [dispatch, urlTournamentId]);
 
-  return (id === activeId) ? children : null;
+  return (urlTournamentId === activeId) ? children : null;
 }
 
 export default ActiveTournament;

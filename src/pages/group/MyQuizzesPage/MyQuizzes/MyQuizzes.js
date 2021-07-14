@@ -3,7 +3,7 @@ import React from 'react';
 import { useSelector } from 'react-redux';
 import { selectActiveGroupId } from 'state';
 import * as api from 'api';
-import useFetchedListOfItems from 'common/useFetchedListOfItems';
+import { useFetchedListOfItems } from 'common/useFetch';
 
 import MyQuizzesTable from './Table';
 import FilterTabs from './FilterTabs';

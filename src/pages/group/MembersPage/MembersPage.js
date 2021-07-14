@@ -9,7 +9,7 @@ import MembersTable from './Table';
 import FormWrapper from './FormWrapper';
 import EditMemberForm from './EditMemberForm';
 import DeleteMemberButton from './DeleteMemberButton';
-import useFetchedListOfItems from 'common/useFetchedListOfItems';
+import { useFetchedListOfItems } from 'common/useFetch';
 import useListUpdateDeleteViews from 'common/useListUpdateDeleteViews';
 import { useGroupPageTitle } from 'common/useTitle';
 import { useNavbarItem } from 'common/Navbar';

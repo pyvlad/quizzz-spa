@@ -66,9 +66,21 @@ class Round(models.Model):
         return play
 
     @property
-    def user_play(self):
+    def user_play_id(self):
         try:
             return self.user_plays[0].id
+        except IndexError:
+            return None
+        except AttributeError:
+            raise AttributeError(
+                'You must either use Prefetch with `to_attr=user_plays` '
+                'or `self.load_user_plays(user_id)`.'
+            )
+
+    @property
+    def user_play_is_submitted(self):
+        try:
+            return bool(self.user_plays[0].finish_time)
         except IndexError:
             return None
         except AttributeError:

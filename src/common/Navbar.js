@@ -1,11 +1,8 @@
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { 
-  selectActiveGroupId, 
-  selectMyGroupById, 
-  selectTournament, 
-  popNavbarItem, 
-  pushNavbarItem 
+  selectActiveGroupId, selectMyGroupById, selectTournament, 
+  popNavbarItem, pushNavbarItem 
 } from 'state';
 import urlFor from 'urls';
 

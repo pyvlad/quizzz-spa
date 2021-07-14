@@ -17,10 +17,10 @@ import { useDispatch } from 'react-redux';
 import { showMessage, showLoadingOverlay, hideLoadingOverlay } from 'state';
 
 
-const useFetchedListOfItems = (asyncFetchFunc) => {
-  
+export const useFetch = (asyncFetchFunc, initValue=null) => {
+
   const dispatch = useDispatch();
-  const [items, setItems] = React.useState([]);
+  const [data, setData] = React.useState(initValue);
 
   React.useEffect(() => {
     
@@ -29,10 +29,10 @@ const useFetchedListOfItems = (asyncFetchFunc) => {
       dispatch(showLoadingOverlay());
 
       let success = false;
-      let data = null;
+      let fetchedData = null;
 
       try {
-        data = await asyncFetchFunc();
+        fetchedData = await asyncFetchFunc();
         success = true;
       } catch(err) {
         dispatch(hideLoadingOverlay());
@@ -40,14 +40,18 @@ const useFetchedListOfItems = (asyncFetchFunc) => {
       }
 
       if (success) {
-        setItems(data);
+        setData(fetchedData);
         dispatch(hideLoadingOverlay());
       }
     })();
 
-  }, [dispatch, setItems, asyncFetchFunc])
+  }, [dispatch, setData, asyncFetchFunc])
 
-  return [items, setItems];
+  return [data, setData];
 }
 
-export default useFetchedListOfItems;
+
+export const useFetchedListOfItems = (asyncFetchFunc) => {
+  const [items, setItems] = useFetch(asyncFetchFunc, []);
+  return [items, setItems];
+}

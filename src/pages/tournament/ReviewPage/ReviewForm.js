@@ -34,6 +34,14 @@ const ReviewForm = ({ data }) => {
           Taken by: <strong>{ playCount }</strong> players
         </p>
       </div>
+      <div className="form__item">
+        { 
+          play.result
+          ? <p>Correct answers: <strong>{ play.result }</strong></p>
+          : <p>You didn't play this round.</p>
+        }
+      </div>
+
       {
         questions.map((q,i) => (
           <Question 

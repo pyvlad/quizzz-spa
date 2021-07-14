@@ -1,16 +1,16 @@
 import React from 'react';
-
-import MomentDateTime from 'common/MomentDateTime';
+import moment from 'moment';
 
 
 const MembersTableRow = ({ membership, num, loggedAsGroupAdmin, onEdit }) => {
+
   const {
     is_admin: isAdmin,
     is_approved: isApproved,
+    time_created: timeCreated,  // membership created (not user)
     user: {
-      id: userId,
       username,
-      time_created: timeCreated,
+      last_login: lastLogin,
     },
   } = membership;
 
@@ -23,15 +23,10 @@ const MembersTableRow = ({ membership, num, loggedAsGroupAdmin, onEdit }) => {
         { username }
       </td>
       <td className="table__td table__td--centered">
-        { userId }
+        { moment(lastLogin).fromNow() }
       </td>
       <td className="table__td table__td--centered">
-        <MomentDateTime 
-          timestamp={ timeCreated } 
-          func="format" 
-          format="MMM D, YYYY [at] h:mm a"
-          refresh={false}
-        />
+        { moment(timeCreated).format("MMM D, YYYY") }
       </td>
       <td className="table__td table__td--centered">
         { isAdmin ? "admin" : (isApproved ? "" : "❓") }

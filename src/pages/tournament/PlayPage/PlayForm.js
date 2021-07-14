@@ -25,7 +25,7 @@ const PlayForm = ({ groupId, roundId, quiz }) => {
   const history = useHistory();
   const [choices, setChoices] = React.useState({});
 
-  const { isLoading, errors, handleSubmit } = useSubmit(
+  const { isLoading, handleSubmit } = useSubmit(
     async () => {
       const payload = {
         "answers": Object.keys(choices).map(k => ({
@@ -71,11 +71,8 @@ export default PlayForm;
 
 
 const Question = ({ num, question, selectedOptionId, onSelectOption }) => {
-  const {
-    id, 
-    text,
-    options
-  } = question;
+  
+  const { text, options } = question;
 
   return (
     <div className='form__item form__item--outlined'>

@@ -71,7 +71,7 @@ class StartRoundTest(SetupTournamentDataMixin, APITestCase):
         with self.assertNumQueries(5):
             response = self.client.post(self.url, {})
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.data, "You cannot play your own quiz.")
+        self.assertEqual(response.data["form_errors"][0], "You cannot play your own quiz.")
         self.assertEqual(Play.objects.count(), init_count + 1)
 
 
@@ -229,7 +229,7 @@ class SubmitRoundTest(SetupTournamentDataMixin, APITestCase):
             ]
         })
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.data, "You have already played this round.")
+        self.assertEqual(response.data["form_errors"][0], "You have already played this round.")
         
         play = Play.objects.get(pk=1)
         self.assertEqual(play.result, 1)
@@ -301,8 +301,8 @@ class ReviewRoundTest(SetupTournamentDataMixin, APITestCase):
 
         with self.assertNumQueries(8):
             response = self.client.get(self.url)
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-        self.assertEqual(response.data, "You have not finished this round yet.")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data["form_errors"][0], "You have not finished this round yet.")
         
         # submit round
         response = self.client.post(self.submit_url, self.payload)

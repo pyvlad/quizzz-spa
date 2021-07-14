@@ -8,9 +8,9 @@ const MembersTable = ({ members, loggedAsGroupAdmin, onEditMember }) => (
     <thead>
       <tr>
         <th width="5%">#</th>
-        <th width="40%">Name</th>
-        <th width="10%">ID</th>
-        <th width="25%">Account Created</th>
+        <th width="35%">Name</th>
+        <th width="20%">Last Login</th>
+        <th width="20%">Member Since</th>
         <th width="10%">Status</th>
         <th width="10%">Actions</th>
       </tr>

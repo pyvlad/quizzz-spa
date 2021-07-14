@@ -10,7 +10,7 @@ import FormWrapper from './FormWrapper';
 import EditRoundForm from './EditRoundForm';
 import DeleteRoundButton from './DeleteRoundButton';
 import FilterTabs from 'common/FilterTabs';
-import useFetchedListOfItems from 'common/useFetchedListOfItems';
+import { useFetchedListOfItems } from 'common/useFetch';
 import useListUpdateDeleteViews from 'common/useListUpdateDeleteViews';
 import { useGroupPageTitle } from 'common/useTitle';
 

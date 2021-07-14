@@ -4,20 +4,23 @@ import { selectActiveGroupId, selectActiveTournamentId } from 'state';
 
 import * as api from 'api';
 import urlFor from 'urls';
-
-import ReviewForm from './ReviewForm';
-import FormFieldErrors from 'common/FormFieldErrors';
 import { useGroupPageTitle } from 'common/useTitle';
 import { useNavbarItem } from 'common/Navbar';
+import useSubmit from 'common/useSubmit';
+
+import ReviewForm from './ReviewForm';
 
 
 const ReviewPage = ({ roundId }) => {
 
+  // page parameters
   const groupId = useSelector(selectActiveGroupId);
   const tournamentId = useSelector(selectActiveTournamentId);
 
+  // page title
   useGroupPageTitle(groupId, `Review Round ${roundId}`);
 
+  // page navbar item
   const getItem = React.useCallback(() => ({
     text: `Round ${roundId}`,
     url: urlFor("ROUND", {groupId, tournamentId, roundId}), 
@@ -25,29 +28,31 @@ const ReviewPage = ({ roundId }) => {
   }), [groupId, tournamentId, roundId]);
   useNavbarItem(getItem);
 
+  // load quiz data on component mount
   const [data, setData] = React.useState(null);
-  const [errors, setErrors] = React.useState([]);
 
+  const apiFunc = React.useCallback(
+    async () => await api.reviewRound(groupId, roundId), 
+    [groupId, roundId]
+  );
+  const { isLoading, fetchFunc } = useSubmit(apiFunc, null, false);
   React.useEffect(() => {
-    async function fetchData() {
-      try {
-        setData(await api.reviewRound(groupId, roundId));
-      } catch(e) {
-        console.log(e)
-        setErrors(e.message ? [e.message] : [])
-      }
-    }
-    fetchData();
-  }, [groupId, roundId, setData])
+    (async () => {
+      const { responseData, success } = await fetchFunc();
+      if (success) setData(responseData);
+    })();
+  }, [fetchFunc, setData]);
 
-
+  // return component
   return (
     <div className="paper-lg bg-grey p-2 p-sm-4">
-      <FormFieldErrors errors={ errors } />
       {
-        data
-        ? <ReviewForm data={data} groupId={groupId} roundId={roundId} />
-        : "Please, wait..."
+        isLoading
+        ? "Please, wait..."
+        : (data 
+           ? <ReviewForm data={data} groupId={groupId} roundId={roundId} /> 
+           : "Not available."
+          )
       }
     </div>
   )

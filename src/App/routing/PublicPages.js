@@ -11,7 +11,7 @@ import RequestResetPage  from 'pages/auth/RequestResetPage';
 import PasswordResetPage from 'pages/auth/PasswordResetPage';
 
 
-const HomeAndAuth = () => (
+const PublicPages = () => (
   <Switch>
     <Route exact path="/" component={ HomePage } />
     <Route exact path="/auth/login/" component={ LoginPage } />
@@ -25,4 +25,4 @@ const HomeAndAuth = () => (
   </Switch>
 )
 
-export default HomeAndAuth;
+export default PublicPages;
