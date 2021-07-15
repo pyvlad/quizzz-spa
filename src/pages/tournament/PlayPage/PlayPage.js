@@ -6,7 +6,7 @@ import * as api from 'api';
 
 import PlayForm from './PlayForm';
 import { useGroupPageTitle } from 'common/useTitle';
-import useSubmit from 'common/useSubmit';
+import { useSubmit } from 'common/useApi';
 
 
 const PlayPage = ({ roundId }) => {

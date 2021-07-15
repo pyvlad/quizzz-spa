@@ -5,7 +5,7 @@ import { useSelector } from 'react-redux';
 import { selectActiveGroupId, selectActiveTournamentId, selectCurrentUser } from 'state';
 import urlFor from 'urls';
 import StandingsTable from './StandingsTable';
-import { useFetchedListOfItems } from 'common/useFetch';
+import { useFetchedListOfItems } from 'common/useApi';
 import { useGroupPageTitle } from 'common/useTitle';
 import { useNavbarItem } from 'common/Navbar';
 

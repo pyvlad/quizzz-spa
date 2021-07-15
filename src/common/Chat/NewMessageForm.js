@@ -4,7 +4,7 @@ import * as api from 'api';
 import FormFieldErrors from 'common/FormFieldErrors';
 import FormHeader from 'common/FormHeader';
 import FormHelp from 'common/FormHelp';
-import useSubmit from 'common/useSubmit';
+import { useSubmit } from 'common/useApi';
 
 
 const NewMessageForm = ({ groupId, onMessagePosted }) => {

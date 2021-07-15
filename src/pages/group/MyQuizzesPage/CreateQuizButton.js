@@ -4,7 +4,7 @@ import { useSelector } from 'react-redux';
 import * as api from 'api';
 import { selectActiveGroupId } from 'state';
 
-import useSubmit from 'common/useSubmit';
+import { useSubmit } from 'common/useApi';
 import FormFieldErrors from 'common/FormFieldErrors';
 
 

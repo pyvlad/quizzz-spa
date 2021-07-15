@@ -5,7 +5,7 @@ import { useSelector } from 'react-redux';
 import { selectActiveGroupId, selectActiveTournamentId, selectCurrentUser } from 'state';
 import RoundTable from './RoundTable';
 import StandingsTable from './StandingsTable';
-import { useFetch } from 'common/useFetch';
+import useApi from 'common/useApi';
 import { useGroupPageTitle } from 'common/useTitle';
 import { useNavbarItem } from 'common/Navbar';
 import urlFor from 'urls';
@@ -34,7 +34,8 @@ const RoundPage = ({ roundId }) => {
     async () => await api.getRound(groupId, roundId), 
     [groupId, roundId]
   )
-  const [{round, standings}] = useFetch(fetchFunc, {});
+  const { data } = useApi(fetchFunc, {fetchOnMount: true, withLoadingOverlay: true});
+  const {round, standings} = data || {};
 
   // return component with `round === undefined` being a proxy for loading state
   return (round === undefined) 

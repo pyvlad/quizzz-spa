@@ -21,7 +21,7 @@ const UserPages = () => (
       <Route exact path="/join-group/" component={ JoinGroupPage } />
       <Route exact path="/create-group/" component={ EditGroupPage } />
       <Route exact path='/edit-group/:groupId/' render={
-        ({match}) => <EditGroupPage groupId={ parseInt(match.params.id) } />
+        ({match}) => <EditGroupPage groupId={ parseInt(match.params.groupId) } />
       }/>
       <Route path="/group/:groupId" render={
         ({match}) => <GroupSubpages urlGroupId={ parseInt(match.params.groupId)} />

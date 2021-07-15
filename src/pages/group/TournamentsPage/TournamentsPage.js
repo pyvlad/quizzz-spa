@@ -4,6 +4,7 @@ import { useSelector } from 'react-redux';
 import { selectActiveGroupId } from 'state';
 import { selectMyMembershipByGroupId } from 'state';
 import * as api from 'api';
+import urlFor from 'urls';
 
 import TournamentsTable from './Table';
 import FormWrapper from './FormWrapper';
@@ -11,10 +12,10 @@ import EditTournamentForm from './EditTournamentForm';
 import DeleteTournamentButton from './DeleteTournamentButton';
 import FilterTabs from 'common/FilterTabs';
 import useListUpdateDeleteViews from 'common/useListUpdateDeleteViews';
-import { useFetchedListOfItems } from 'common/useFetch';
+import { useFetchedListOfItems } from 'common/useApi';
 import { useGroupPageTitle } from 'common/useTitle';
 import { useNavbarItem } from 'common/Navbar';
-import urlFor from 'urls';
+
 
 
 const TournamentsPage = () => {

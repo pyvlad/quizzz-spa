@@ -4,7 +4,7 @@ import { useDispatch } from 'react-redux';
 import * as api from 'api';
 import { showMessage } from 'state';
 
-import useSubmit from 'common/useSubmit';
+import { useSubmit } from 'common/useApi';
 import useTitle from 'common/useTitle';
 
 

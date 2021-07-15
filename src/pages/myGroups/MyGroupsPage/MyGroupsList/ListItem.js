@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom';
 import { selectCurrentUser, deleteMembership, showMessage } from 'state';
 import urlFor from 'urls';
 import * as api from 'api';
-import useSubmit from 'common/useSubmit';
+import { useSubmit } from 'common/useApi';
 import Loading from 'common/Loading';
 
 import './styles.scss';

@@ -20,7 +20,7 @@ import FormHelp from 'common/FormHelp';
 import FormTextInput from 'common/FormTextInput';
 import FormCheckboxInput from 'common/FormCheckboxInput';
 import FormSubmitButton from 'common/FormSubmitButton';
-import useSubmit from 'common/useSubmit';
+import { useSubmit } from 'common/useApi';
 
 import DeleteGroupButton from './DeleteGroupButton';
 

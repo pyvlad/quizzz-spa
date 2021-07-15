@@ -5,7 +5,7 @@ import { selectActiveGroupId } from 'state';
 
 import * as api from 'api';
 
-import useSubmit from 'common/useSubmit';
+import { useSubmit } from 'common/useApi';
 import FormFieldErrors from 'common/FormFieldErrors';
 import Form from 'common/Form';
 import FormHeader from 'common/FormHeader';

@@ -12,7 +12,7 @@ import FormHelp from 'common/FormHelp';
 import FormFieldErrors from 'common/FormFieldErrors';
 import FormTextInput from 'common/FormTextInput';
 import FormSubmitButton from 'common/FormSubmitButton';
-import useSubmit from 'common/useSubmit';
+import { useSubmit } from 'common/useApi';
 
 
 const JoinGroupForm = () => {

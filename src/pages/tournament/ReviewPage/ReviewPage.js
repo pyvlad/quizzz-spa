@@ -6,7 +6,7 @@ import * as api from 'api';
 import urlFor from 'urls';
 import { useGroupPageTitle } from 'common/useTitle';
 import { useNavbarItem } from 'common/Navbar';
-import useSubmit from 'common/useSubmit';
+import useApi from 'common/useApi';
 
 import ReviewForm from './ReviewForm';
 
@@ -29,19 +29,12 @@ const ReviewPage = ({ roundId }) => {
   useNavbarItem(getItem);
 
   // load quiz data on component mount
-  const [data, setData] = React.useState(null);
-
   const apiFunc = React.useCallback(
     async () => await api.reviewRound(groupId, roundId), 
     [groupId, roundId]
   );
-  const { isLoading, fetchFunc } = useSubmit(apiFunc, null, false);
-  React.useEffect(() => {
-    (async () => {
-      const { responseData, success } = await fetchFunc();
-      if (success) setData(responseData);
-    })();
-  }, [fetchFunc, setData]);
+  const { data, isLoading } = useApi(apiFunc, { fetchOnMount: true });
+
 
   // return component
   return (

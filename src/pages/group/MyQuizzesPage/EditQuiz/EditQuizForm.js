@@ -4,7 +4,7 @@ import initQuestionsReducer from './questionsReducer/init';
 import questionsReducer from './questionsReducer/reducer';
 import QuizContext from './questionsReducer/QuizContext';
 
-import useSubmit from 'common/useSubmit';
+import { useSubmit } from 'common/useApi';
 import Form from 'common/Form';
 import FormFieldErrors from 'common/FormFieldErrors';
 import FormHeader from 'common/FormHeader';

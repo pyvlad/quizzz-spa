@@ -7,7 +7,7 @@ import * as helpMessages from 'helpMessages';
 import { showMessage } from 'state';
 import urlFor from 'urls';
 
-import useSubmit from 'common/useSubmit';
+import { useSubmit } from 'common/useApi';
 import Form from 'common/Form';
 import FormHeader from 'common/FormHeader';
 import FormHelp from 'common/FormHelp';

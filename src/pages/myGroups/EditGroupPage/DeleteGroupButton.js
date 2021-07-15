@@ -1,7 +1,7 @@
 import React from 'react';
 
 import * as api from 'api';
-import useSubmit from 'common/useSubmit';
+import { useSubmit } from 'common/useApi';
 
 
 const DeleteGroupButton = ({ groupId, onGroupDelete }) => {

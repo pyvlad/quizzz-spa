@@ -4,16 +4,16 @@ import { selectActiveGroupId } from 'state';
 
 import * as api from 'api';
 import { selectMyMembershipByGroupId } from 'state';
+import urlFor from 'urls';
 
 import MembersTable from './Table';
 import FormWrapper from './FormWrapper';
 import EditMemberForm from './EditMemberForm';
 import DeleteMemberButton from './DeleteMemberButton';
-import { useFetchedListOfItems } from 'common/useFetch';
 import useListUpdateDeleteViews from 'common/useListUpdateDeleteViews';
 import { useGroupPageTitle } from 'common/useTitle';
 import { useNavbarItem } from 'common/Navbar';
-import urlFor from 'urls';
+import { useFetchedListOfItems } from 'common/useApi';
 
 
 const MembersPage = () => {
@@ -23,8 +23,10 @@ const MembersPage = () => {
   const membership = useSelector(state => selectMyMembershipByGroupId(state, groupId));
   const { is_admin: loggedAsGroupAdmin } = membership;
 
+  // page title
   useGroupPageTitle(groupId, "Members");
 
+  // page navbar item
   const getItem = React.useCallback(() => ({
     text: "Members", 
     url: urlFor("GROUP_MEMBERS", {groupId}), 
@@ -32,9 +34,9 @@ const MembersPage = () => {
   }), [groupId]);
   useNavbarItem(getItem);
 
-  // fetch members array on component mount
-  const fetchFunc = React.useCallback(async () => await api.getCommunityMembers(groupId), [groupId]);
-  const [members, setMembers] = useFetchedListOfItems(fetchFunc);
+  // fetch members on component mount
+  const apiFunc = React.useCallback(async () => await api.getCommunityMembers(groupId), [groupId]);
+  const [members, setMembers] = useFetchedListOfItems(apiFunc);
 
   // update/delete/back views
   const getItemId = item => item.user.id;
@@ -45,6 +47,7 @@ const MembersPage = () => {
     handleItemDeleted,
   } = useListUpdateDeleteViews(members, setMembers, getItemId);
 
+  // return component
   return (
     <div>
       <h2 className="heading heading--1">
