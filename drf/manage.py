@@ -1,12 +1,21 @@
 #!/usr/bin/env python
-"""Django's command-line utility for administrative tasks."""
-import os
+"""
+Django's command-line utility for administrative tasks.
+
+`manage.py` does the same thing as `django-admin` but also sets 
+the `DJANGO_SETTINGS_MODULE` environment variable so that 
+it points to your project’s `settings.py` file.
+"""
 import sys
+from settings import configure_from_dotenv
 
 
 def main():
-    """Run administrative tasks."""
-    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'quizzz.settings')
+    """
+    Run administrative tasks.
+    """
+    configure_from_dotenv()
+
     try:
         from django.core.management import execute_from_command_line
     except ImportError as exc:

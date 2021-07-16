@@ -36,7 +36,7 @@ def validate_email_confirmation_token(token):
 
 def send_confirmation_email(user):
     token = generate_email_confirmation_token(user)
-    token_url = f"{settings.FRONTEND_BASE_URL}/auth/confirm-email/{token}/"
+    token_url = f"{settings.QUIZZZ_FRONTEND_BASE_URL}/auth/confirm-email/{token}/"
     context = {'username': user.username, "token_url": token_url}
     send_mail(
         subject='[Quizzz] Confirm Your Account',
@@ -67,7 +67,7 @@ def get_password_reset_token(token_uuid):
 
 def send_password_reset_email(user):
     token = generate_password_reset_token(user)
-    token_url = f"{settings.FRONTEND_BASE_URL}/auth/password-reset/{token.uuid}/"
+    token_url = f"{settings.QUIZZZ_FRONTEND_BASE_URL}/auth/password-reset/{token.uuid}/"
     context = { 'username': user.username, "token_url": token_url }
     send_mail(
         subject='[Quizzz] Reset Your Password',

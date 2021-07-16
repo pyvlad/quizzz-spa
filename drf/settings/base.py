@@ -8,28 +8,37 @@ https://docs.djangoproject.com/en/3.2/topics/settings/
 
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.2/ref/settings/
+
+For the checklist for staging/production enviroment, see
+https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
 """
-
+import json
 from pathlib import Path
+from django.core.exceptions import ImproperlyConfigured
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
+
+# Build paths inside the project like this: BASE_DIR / 'subdir'
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
+# JSON-based secrets module
+try:
+    with open(BASE_DIR / '.secrets.json') as f:
+        secrets = json.load(f)
+except FileNotFoundError:
+    secrets = {}
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-vrn(6)$*i*f0vbuv2l(qb9+-)i*@e3df^+suxvxdv$91++zq*9'
-
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-ALLOWED_HOSTS = []
+def get_secret(setting):
+    """
+    Get the secret variable or return explicit exception.
+    """
+    try:
+        return secrets[setting]
+    except KeyError:
+        raise ImproperlyConfigured(f'Set the {setting} secret variable')
 
 
 # Application definition
-
 INSTALLED_APPS = [
     # default
     'django.contrib.admin',
@@ -81,17 +90,6 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'quizzz.wsgi.application'
-
-
-# Database
-# https://docs.djangoproject.com/en/3.2/ref/settings/#databases
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
-}
 
 
 # Password validation
@@ -152,48 +150,29 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'users.CustomUser' # (app_label, model_name)
 
         
-# By default, 'rest_framework.authentication.BasicAuthentication' is the first in the list.
-# I remove it for clarity because I am using SessionAuthentication.
 REST_FRAMEWORK = {
+    # By default, 'rest_framework.authentication.BasicAuthentication' is 
+    # the first in the list. I remove it for clarity because I am using 
+    # SessionAuthentication.
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.SessionAuthentication',
     ],
+
     'EXCEPTION_HANDLER': 'quizzz.common.exceptions.custom_exception_handler',
+
     # Pagination is only performed automatically for generic views and viewsets:
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 100,
+
     # miltipart (default) uploads don't support nesting:
     'TEST_REQUEST_DEFAULT_FORMAT': 'json',
 }
 
 
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-
-
-# LOGGING = {
-#     'version': 1,
-#     'filters': {
-#         'require_debug_true': {
-#             '()': 'django.utils.log.RequireDebugTrue',
-#         }
-#     },
-#     'handlers': {
-#         'console': {
-#             'level': 'DEBUG',
-#             'filters': ['require_debug_true'],
-#             'class': 'logging.StreamHandler',
-#         }
-#     },
-#     'loggers': {
-#         'django.db.backends': {
-#             'level': 'DEBUG',
-#             'handlers': ['console'],
-#         }
-#     }
-# }
-
-PASSWORD_RESET_TOKEN_VALIDITY = 3600
+# Custom project-specific settings:
+QUIZZZ_PASSWORD_RESET_TOKEN_VALID_SECONDS = 3600
 
 QUIZZZ_CHAT_PAGE_SIZE = 2
 
-FRONTEND_BASE_URL = "http://localhost:3000"
+# for external links used when sending out emails:
+QUIZZZ_FRONTEND_BASE_URL = "http://localhost:3000"

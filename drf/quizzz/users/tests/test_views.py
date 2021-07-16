@@ -46,7 +46,7 @@ class RegistrationViewTest(APITestCase):
         self.assertEqual(len(mail.outbox), 1)  
         self.assertEqual(mail.outbox[0].subject, '[Quizzz] Confirm Your Account')
 
-        pattern = re.compile(settings.FRONTEND_BASE_URL + "/auth/confirm-email/(?P<token>.*?)/")
+        pattern = re.compile(settings.QUIZZZ_FRONTEND_BASE_URL + "/auth/confirm-email/(?P<token>.*?)/")
         m = pattern.search(mail.outbox[0].body)
         token = m.group("token")
         s = TimedJSONWebSignatureSerializer(settings.SECRET_KEY)

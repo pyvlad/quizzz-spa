@@ -159,3 +159,9 @@ dmypy.json
 # local project-specific environment
 .npmrc 
 .vscode
+
+# django's dotenv
+.env
+
+# django secrets
+.secrets.json

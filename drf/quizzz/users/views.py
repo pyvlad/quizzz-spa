@@ -136,7 +136,7 @@ class ResetPassword(APIView):
         if not token:
             raise Http404
         
-        valid_seconds = settings.PASSWORD_RESET_TOKEN_VALIDITY
+        valid_seconds = settings.QUIZZZ_PASSWORD_RESET_TOKEN_VALID_SECONDS
         if (token.was_used or token.has_expired(valid_seconds=valid_seconds)):
             raise Http404
             
