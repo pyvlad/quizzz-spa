@@ -1,0 +1,37 @@
+---
+# Create clone of the code repository on a remote machine using "git push".
+
+# How to delegate some tasks to localhost (to keep all the tasks within the same play):
+# https://docs.ansible.com/ansible/latest/user_guide/playbooks_delegation.html
+
+      
+- name: "Delete existing bare repo (if present)"
+  file:
+    path: "{{ app__repo_remote_bare_path }}"
+    state: "absent"
+
+- name: "Initialize bare repository"
+  command: "git init --bare {{ app__repo_remote_bare_path }}"
+  args:
+    creates: "{{ app__repo_remote_bare_path }}/HEAD"
+
+- debug: var=app__git_push_ssh_command
+- debug: var=app__remote_host
+
+- name: "Push master branch from control machine to remote repository"
+  delegate_to: localhost
+  command: "git push ssh://{{ app__remote_user }}@{{ app__remote_host }}:/{{ app__repo_remote_bare_path }} master"
+  args:
+    chdir: "{{ app__repo_local_path }}"
+  environment:
+    GIT_SSH_COMMAND: "{{ app__git_push_ssh_command }}"
+
+- name: "Delete existing clone repo (if present)"
+  file:
+    path: "{{ app__repo_remote_clone_path }}"
+    state: "absent"
+
+- name: "Clone code from the repository"
+  git:
+    repo: "{{ app__repo_remote_bare_path }}"
+    dest: "{{ app__repo_remote_clone_path }}"

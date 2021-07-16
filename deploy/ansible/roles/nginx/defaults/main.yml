@@ -1,0 +1,7 @@
+---
+
+# Config template name.
+nginx__config_template: "default.conf"
+
+# Toggle https.
+nginx__use_ssl: false

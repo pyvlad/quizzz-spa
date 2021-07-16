@@ -165,3 +165,9 @@ dmypy.json
 
 # django secrets
 .secrets.json
+
+# vagrant files
+.vagrant/
+
+# SSL files for deployment process
+.ssl/

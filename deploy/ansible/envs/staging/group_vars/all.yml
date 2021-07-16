@@ -1,0 +1,4 @@
+---
+
+http_host: "localhost"
+postfix_host: "vagrant.vm"

@@ -1,0 +1,38 @@
+---
+
+- name: "App folder exists and is empty"
+  block:
+  - name: "Delete app folder (if present)"
+    file:
+      path: "{{ app__container_dir }}"
+      state: "absent"
+  - name: "Create app folder"
+    file:
+      path: "{{ app__container_dir }}"
+      state: "directory"
+
+- name: "Copy app code from repository"
+  copy:
+    src: "{{ app__repo_backend_dir }}/"  # trailing "/" is important: https://docs.ansible.com/ansible/latest/collections/ansible/builtin/copy_module.html#parameter-src
+    dest: "{{ app__backend_dir }}"
+    remote_src: yes
+    directory_mode: yes
+
+- name: "Create venv and install dependencies"
+  pip:
+    requirements: "{{ app__requirements_path }}"
+    virtualenv: "{{ app__venv_path }}"
+    virtualenv_command: "/usr/local/bin/python{{ app__python_major_version }} -m venv"
+  # note: pip does not report "changed" status without version changes
+
+- name: "Upload Dotenv"
+  copy:
+    src: "{{ app__python_dotenv_local }}"
+    dest: "{{ app__backend_dir }}/.env"
+    mode: '600'
+
+- name: "Upload secrets file"
+  copy:
+    src: "{{ app__django_secrets_local }}"
+    dest: "{{ app__backend_dir }}/.secrets.json"
+    mode: '600'

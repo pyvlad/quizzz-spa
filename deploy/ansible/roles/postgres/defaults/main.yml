@@ -1,0 +1,11 @@
+---
+
+postgres__db_environment:
+  - key: "PATH"
+    value: "/usr/lib/postgresql/{{ postgres__version }}/bin:$PATH"
+  - key: "MANPATH"
+    value: "/usr/share/postgresql/{{ postgres__version }}/man:$MANPATH"
+  - key: "PGDATA"
+    value: "/var/lib/postgresql/{{ postgres__version }}/main"
+    
+postgres__bash_profile_filepath: "/var/lib/postgresql/.bash_profile"

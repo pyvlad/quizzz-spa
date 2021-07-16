@@ -1,0 +1,20 @@
+---
+
+- become: true
+  block:
+  - name: "Fill in and Copy systemd service config"
+    template:
+      src: "systemd.conf"
+      dest: "/etc/systemd/system/{{ app__service_name }}"
+
+  # restart is necessary before enabling or erroneous service config won't be updated
+  - name: "Restart {{ app__service_name }} (temporary task)"
+    systemd:
+      daemon_reload: true
+      name: "{{ app__service_name }}"
+      state: "restarted"
+
+  - name: "Enable {{ app__service_name }}"
+    systemd:
+      name: "{{ app__service_name }}"
+      enabled: yes

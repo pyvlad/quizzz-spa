@@ -1,0 +1,8 @@
+---
+
+python__tmp_directory: "/tmp"
+python__version: "{{ python__major_version }}.{{ python__minor_version }}"
+python__filename: "Python-{{ python__version }}"
+python__archive_filename: "{{ python__filename }}.tgz"
+python__filepath: "{{ python__tmp_directory }}/{{ python__filename }}"
+python__archive_filepath: "{{ python__tmp_directory }}/{{ python__archive_filename }}"

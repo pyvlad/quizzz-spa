@@ -1,0 +1,35 @@
+---
+
+- name: "Set up SSL files"
+  become: true
+
+  block:
+    - name: "Check that expected variables have been passed"
+      assert:
+        that:
+          - ssl__local_crt is defined
+          - ssl__local_key is defined
+          - ssl__remote_dir is defined
+          - ssl__remote_crt is defined
+          - ssl__remote_key is defined
+
+    - name: "Make sure directory for SSL files exists"
+      file:
+        path: "{{ ssl__remote_dir }}"
+        state: "directory"
+    
+    - name: "Upload SSL certificate file (with correct permissions)"
+      copy:
+        src: "{{ ssl__local_crt }}"
+        dest: "{{ ssl__remote_crt }}"
+        owner: "root"
+        group: "root"
+        mode: '644'
+
+    - name: "Upload SSL key file (with correct permissions)"
+      copy:
+        src: "{{ ssl__local_key }}"
+        dest: "{{ ssl__remote_key }}"
+        owner: "root"
+        group: "root"
+        mode: "640"

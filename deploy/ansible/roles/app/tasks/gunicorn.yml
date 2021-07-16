@@ -1,0 +1,18 @@
+---
+
+- name: "Install Gunicorn into virtual environment"
+  pip:
+    name: "gunicorn==20.1.0"
+    virtualenv: "{{ app__venv_path }}"
+
+- name: "Make sure directory for Gunicorn stuff exists"
+  file:
+    path: "{{ app__gunicorn_dir }}"
+    state: "directory"
+    mode: '0755'
+
+- name: "Fill in and copy Gunicorn config"
+  template:
+    src: "{{ app__gunicorn_config_name }}"
+    dest: "{{ app__gunicorn_dir }}/{{ app__gunicorn_config_name }}"   
+    # must have valid python extension

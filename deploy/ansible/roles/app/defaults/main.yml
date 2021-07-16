@@ -1,0 +1,47 @@
+---
+
+# absolute paths to temporary git repositories on remote host:
+app__repo_remote_bare_path: "/tmp/{{ app__project_name }}.git"
+app__repo_remote_clone_path: "/tmp/{{ app__project_name }}"
+
+# ssh command configuration to use with 'git_push':
+app__git_push_ssh_command: "ssh"
+
+# build (static files)
+app__build_dir: "{{ app__repo_local_path }}/build"
+
+# directory for application code and virtual environment
+app__container_dir: "/home/{{ app__remote_user }}/{{ app__project_name }}"
+
+# path to backend directory if it is nested in the repository (only used below 
+#   to automatically set "app__repo_backend_dir" and "app__backend_dir"):
+app__backend_rel_dir: "drf"
+
+# absolute path to backend directory in the cloned repository on remote host:
+app__repo_backend_dir: "{{ app__repo_remote_clone_path }}/{{ app__backend_rel_dir }}"
+
+# absolute path to backend directory when deployed on remote host:
+app__backend_dir: "{{ app__container_dir }}/{{ app__backend_rel_dir }}"
+
+# absolute path to the virtual environment:
+app__venv_path: "{{ app__container_dir }}/venv"
+
+# asbolute path to the requirements file to install dependencies into venv:
+app__requirements_path: "{{ app__backend_dir }}/requirements/main.txt"
+
+# absolute path to project's gunicorn directory
+app__gunicorn_dir: "/home/{{ ansible_user }}/gunicorn/{{ project_name }}"
+
+# project's gunicorn config filename
+app__gunicorn_config_name: "config.py"
+
+# project's systemd service name
+app__service_name: "{{ project_name }}.service"
+
+# how to run the app with systemd
+app__exec_command: >
+  {{ app__container_dir }}/venv/bin/gunicorn
+  -c {{ app__gunicorn_dir }}/{{ app__gunicorn_config_name }}
+  --chdir {{ app__backend_dir }}
+  --pid {{ app__gunicorn_dir }}/pid
+  {{ app__wsgi_entry_point }}

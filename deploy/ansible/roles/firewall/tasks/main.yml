@@ -1,0 +1,30 @@
+---
+# Sets up the Uncomplicated Firewall (UFW) 
+# with open ports for SSH and HTTP[S] traffic.
+
+- name: "Set up firewall"
+  become: true
+  block:
+    - name: "UFW is installed"
+      apt:
+        name: "ufw"
+        state: "present"
+        update_cache: yes
+
+    - name: "Configure UFW: SSH is allowed"
+      ufw:
+        rule: "allow"
+        name: "OpenSSH"
+
+    - name: "Configure UFW: HTTP & HTTPS is allowed"
+      ufw:
+        rule: "allow"
+        port: "{{ item }}"
+        proto: "tcp"
+      loop:
+        - "80"
+        - "443"
+
+    - name: "UFW is enabled"
+      ufw: 
+        state: "enabled"

@@ -1,0 +1,12 @@
+---
+
+- name: "Create Database Tables and Apply All Migrations"
+  command: "{{ app__venv_path }}/bin/python manage.py migrate"
+  args:
+    chdir: "{{ app__backend_dir }}"
+
+# - name: "Fill Database with Initial Dev Data"
+#   command: "{{ app__venv_path}}/bin/python -m flask add-dev-data"
+#   args:
+#     chdir: "{{ app__backend_dir }}"
+#   when: db_add_dev_data | bool

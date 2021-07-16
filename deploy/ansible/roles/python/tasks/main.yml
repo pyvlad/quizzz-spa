@@ -1,0 +1,67 @@
+---
+
+- name: "Install Python interpreter from source"
+  
+  block:
+  - name: "Check that expected variables have been passed"
+    assert:
+      that:
+        - python__major_version is defined
+        - python__minor_version is defined
+        - python__tgz_md5 is defined
+        - python__ubuntu_distro is defined
+
+  - name: "Check if python{{ python__major_version }} is present"
+    command: "which python{{ python__major_version }}"
+    register: python__is_already_installed
+    ignore_errors: true
+
+  - name: "Install absent Python{{ python__major_version }}"
+    when: python__is_already_installed is failed
+    block:
+      - name: "Add source repository to sources.list"
+        apt_repository:
+          repo: "deb-src http://archive.ubuntu.com/ubuntu/ {{ python__ubuntu_distro }} main"
+          state: "present"
+        become: true
+
+      - name: "Install python dependencies"
+        apt:
+          name: "python3.8"
+          state: "build-dep"
+          update_cache: yes
+        become: true
+
+      # - name: "Install missing uuid dependency"
+      #   apt:
+      #     name: "uuid-dev"
+      #     state: "present"
+      #   become: true
+
+      - name: "Download file with check (md5)"
+        get_url:
+          url: "https://www.python.org/ftp/python/{{ python__version }}/{{ python__archive_filename }}"
+          dest: "{{ python__archive_filepath }}"
+          checksum: "md5:{{ python__tgz_md5 }}"
+
+      - name: "Unarchive Python"
+        unarchive:
+          src: "{{ python__archive_filepath }}"
+          dest: "{{ python__filepath | dirname }}"
+          remote_src: yes
+
+      - name: "Install Python"
+        shell: "./configure && make && make altinstall"
+        args:
+          chdir: "{{ python__filepath }}/"
+          creates: "/usr/local/bin/python{{ python__major_version }}"
+        become: true
+
+      - name: "Clean Up"
+        file:
+          path: "{{ item }}"
+          state: absent
+        become: true
+        loop:
+          - "{{ python__filepath }}"
+          - "{{ python__archive_filepath }}"

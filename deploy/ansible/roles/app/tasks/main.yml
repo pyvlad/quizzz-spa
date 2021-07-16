@@ -1,0 +1,50 @@
+---
+
+- name: "Check that expected variables have been passed"
+  assert:
+    that:
+      - app__project_name is defined
+      # Project name is used to determine:
+      # - file system paths to remote repository locations (bare & cloned)
+      # - for code container directory
+      # - to isolate project's config and logs in gunicorn's directory 
+      - app__repo_local_path is defined
+      - app__remote_user is defined
+      # Remote user is used:
+      # - in ssh command for pushing the code;
+      # - to get home directory path (where code and gunicorn are deployed to);
+      # - to run the app by systemd on his behalf.
+      - app__remote_host is defined
+      - app__python_major_version is defined
+      - app__python_dotenv_local is defined
+      - app__django_secrets_local is defined
+      - app__wsgi_server_host is defined
+      - app__wsgi_server_port is defined
+      - app__wsgi_entry_point is defined
+      - app__static_root is defined
+
+- name: 'Deploy React build'
+  import_tasks: 'static.yml'
+
+- name: 'Push and clone git repository'
+  import_tasks: 'repository.yml'
+
+- name: 'Install python app and dependencies (into venv)'
+  import_tasks: 'code.yml'
+
+- name: 'Delete remote repositories'
+  file:
+    path: "{{ item }}"
+    state: "absent"
+  loop:
+    - "{{ app__repo_remote_bare_path }}"
+    - "{{ app__repo_remote_clone_path }}"
+
+- name: 'Set up database for application'
+  import_tasks: 'db.yml'
+
+- name: 'Set up gunicorn'
+  import_tasks: 'gunicorn.yml'
+
+- name: 'Set up systemd service'
+  import_tasks: 'systemd.yml'

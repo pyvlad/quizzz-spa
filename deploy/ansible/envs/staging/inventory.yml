@@ -1,0 +1,14 @@
+---
+# Notes:
+# - YAML file has better formatting than INI
+# - ".yml" extension is for VIM to format it correctly
+# - Each host is a member of at least 2 groups: 'all' and 'ungrouped'/<some group>, e.g.
+#   here "this_machine": ('all', 'ungrouped'), vagrant: ('all', 'webservers')
+
+all:
+  # hosts:
+  #   this_machine:
+  children:
+    webservers:
+      hosts:
+        vagrant:

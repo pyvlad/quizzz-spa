@@ -1,0 +1,113 @@
+---
+# Each playbook is composed of one or more ‘plays’ in a list.
+# The goal of a play is to map a group of hosts to some tasks.
+# At a basic level, a task is just a call to an ansible module.
+
+# By default, Ansible looks for roles in two locations:
+# - in a directory called roles/, relative to the playbook file
+# - in /etc/ansible/roles
+# By default, variables are merged/flattened to the specific host before a play is run.
+
+# Relevant docs:
+# https://docs.ansible.com/ansible/latest/user_guide/playbooks_variables.html
+# https://docs.ansible.com/ansible/latest/user_guide/intro_inventory.html
+
+# To debug, add tasks with 'ansible.builtin.debug' module, e.g.
+# tasks:
+# - debug: var=ansible_host
+# - name: Print a message
+#   ansible.builtin.debug:
+#     msg: "after we ran our role"
+
+
+- hosts: webservers
+  gather_facts: no
+  
+  # common variables that don't depend on environment
+  vars:
+    project_name: "quizzz"
+    repository_path: "{{ inventory_dir | dirname | dirname | dirname | dirname }}"
+    wsgi: {"host": "localhost", "port": "5000"}
+    ssl:
+      enable_https: true
+      dir_local: "{{ inventory_dir }}/files/.ssl"
+      dir_remote: "/etc/ssl/{{ project_name }}"
+      key: "ssl.key"
+      crt: "ssl.crt"
+    ubuntu_distro: "focal"
+    python: 
+      major_version: "3.9"
+      minor_version: "2"
+      tgz_md5: "8cf053206beeca72c7ee531817dc24c7"
+    app_dotenv: "{{ inventory_dir }}/files/dotenv"
+    app_secrets: "{{ inventory_dir }}/files/.secrets.json"
+    static_root: "/www/data/{{ project_name }}"
+
+  # When you use the 'roles' option at the play level, Ansible treats the roles 
+  # as static imports and processes them during playbook parsing. Roles are executed 
+  # in the listed order before any 'tasks' defined in the play.
+
+  # When using 'vars:' within the 'roles:' section of a playbook, 
+  # the variables are added to the play variables, making them available 
+  # to all tasks within the play before and after the role.
+  # TODO: maybe use variables like 'nginx__wsgi_port' in subsequent plays? 
+  #       but then there is a dependency on order, what if I want to skip nginx role? 
+
+  roles:
+    - "firewall"
+
+    - role: "ssl"
+      vars:
+        ssl__local_crt: "{{ ssl['dir_local'] }}/{{ ssl['crt'] }}"
+        ssl__local_key: "{{ ssl['dir_local'] }}/{{ ssl['key'] }}"
+        ssl__remote_dir: "{{ ssl['dir_remote'] }}"
+        ssl__remote_crt: "{{ ssl['dir_remote'] }}/{{ ssl['crt'] }}"
+        ssl__remote_key: "{{ ssl['dir_remote'] }}/{{ ssl['key'] }}"
+
+    - role: "nginx"
+      vars:
+        nginx__project_name: "{{ project_name }}"
+        nginx__static_root: "{{ static_root }}"
+        nginx__http_host: "{{ http_host }}"
+        nginx__wsgi_host: "{{ wsgi['host'] }}"
+        nginx__wsgi_port: "{{ wsgi['port'] }}"
+        nginx__use_ssl: "{{ ssl['enable_https'] }}"
+        nginx__ssl_crt: "{{ ssl['dir_remote'] }}/{{ ssl['crt'] }}"
+        nginx__ssl_key: "{{ ssl['dir_remote'] }}/{{ ssl['key'] }}"
+
+    - role: "postfix"
+      vars:
+        postfix__host: "{{ postfix_host }}"
+        postfix__ssl_crt: "{{ ssl['dir_remote'] }}/{{ ssl['crt'] }}"
+        postfix__ssl_key: "{{ ssl['dir_remote'] }}/{{ ssl['key'] }}"
+
+    - role: "python"
+      vars:
+        python__major_version: "{{ python['major_version'] }}"
+        python__minor_version: "{{ python['minor_version'] }}"
+        python__tgz_md5: "{{ python['tgz_md5'] }}"
+        python__ubuntu_distro: "{{ ubuntu_distro }}"
+
+    - role: "postgres"
+      vars:
+        postgres__version: "12"
+        postgres__user: "{{ ansible_user }}"
+        postgres__database: "{{ project_name }}"
+   
+    - role: "app"
+      vars:
+        app__project_name: "{{ project_name }}"
+        app__repo_local_path: "{{ repository_path }}"
+        app__static_root: "{{ static_root }}"
+        app__remote_user: "{{ ansible_user }}"
+        app__remote_host: "{{ ansible_host }}"
+        # note: "app" uses delegation to push code
+        # Currently if 'ansible_host' is set for a host in inventory - it is used in the task:
+        # https://github.com/ansible/ansible/pull/71299#issuecomment-675219239
+        # if this breaks, use 'inventory_hostname' special variable instead.
+        app__python_major_version: "{{ python['major_version'] }}"
+        app__python_dotenv_local: "{{ app_dotenv }}"
+        app__django_secrets_local: "{{ app_secrets }}"
+        app__wsgi_server_host: "{{ wsgi['host'] }}"
+        app__wsgi_server_port: "{{ wsgi['port'] }}"
+        app__wsgi_entry_point: "quizzz.wsgi:application"

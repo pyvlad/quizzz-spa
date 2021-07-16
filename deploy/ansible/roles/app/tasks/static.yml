@@ -1,0 +1,13 @@
+---
+
+- name: "Create React build"
+  delegate_to: localhost
+  command: "npm run build"
+  args:
+    chdir: "{{ app__repo_local_path }}"
+
+- name: "Copy React build"
+  become: true
+  copy:
+    src: "{{ app__build_dir }}/"
+    dest: "{{ app__static_root }}"

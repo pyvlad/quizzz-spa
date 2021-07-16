@@ -1,0 +1,65 @@
+---
+# Set up Nginx to server static files with:
+# - reverse proxy to the WSGI server,
+# - goaccess package to view logs,
+# - and HTTPS (optionally).
+
+- name: "Set up Nginx web server"
+  become: true
+
+  block:
+    - name: "Check that expected variables have been passed"
+      assert:
+        that:
+          - nginx__project_name is defined
+          # Project name is used to identify project-related files in operating system: 
+          # - paths to log files,
+          # - file name in 'sites-available'
+          # - link name in 'sites-enabled'.
+          - nginx__static_root is defined
+          # The root directory to serve static files from.
+          - nginx__http_host is defined
+          # HTTP host determines the required HTTP 'HOST' header;
+          # it is used as 'server_name' in nginx config.
+          - nginx__wsgi_host is defined
+          - nginx__wsgi_port is defined
+
+    - name: "Check that expected variables have been passed (for SSL)"
+      when: nginx__use_ssl
+      assert:
+        that:
+          - nginx__ssl_crt is defined
+          - nginx__ssl_key is defined
+
+    - name: "Ensure Nginx is installed via system package"
+      apt:
+        name: "nginx"
+        state: "present"
+        update_cache: yes
+    
+    - name: "Ensure Goaccess is installed via system package"
+      apt:
+        name: "goaccess"
+        state: "present"
+
+    - name: "Upload Nginx configuration"
+      template:
+        src: "{{ nginx__config_template }}"
+        dest: "/etc/nginx/sites-available/{{ nginx__project_name }}"
+      notify:
+      - restart nginx
+
+    - name: "Remove default Nginx site config"
+      file:
+        path: "/etc/nginx/sites-enabled/default"
+        state: "absent"
+      notify:
+      - restart nginx
+
+    - name: "Enable as available site for Nginx"
+      file:
+        src: "/etc/nginx/sites-available/{{ nginx__project_name }}"
+        dest: "/etc/nginx/sites-enabled/{{ nginx__project_name }}"
+        state: "link"
+      notify:
+      - restart nginx
