@@ -1,4 +1,4 @@
 ---
 
-http_host: # TODO
-postfix_host: # TODO
+http_host: "{{ ansible_host }}"
+postfix_host: "{{ ansible_host }}"

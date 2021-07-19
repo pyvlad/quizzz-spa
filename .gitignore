@@ -171,3 +171,7 @@ dmypy.json
 
 # SSL files for deployment process
 .ssl/
+
+# production server inventory with 'ansible_host' and 'ansible_user' 
+# variables (probably no harm in adding it to source control?) 
+production_server.yml
