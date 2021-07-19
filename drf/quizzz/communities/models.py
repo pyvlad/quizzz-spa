@@ -35,7 +35,8 @@ class Community(TimeStampedModel):
                 is_approved=(False if self.approval_required else True),
             )
         except IntegrityError as e:
-            if 'UNIQUE constraint failed' in str(e):
+            if 'unique constraint' in str(e).lower():   
+                # using .lower() would make it work for both SQLite and Posgres
                 raise MemberAlreadyExistsException()
             else:
                 raise

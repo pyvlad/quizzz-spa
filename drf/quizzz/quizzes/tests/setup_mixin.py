@@ -1,4 +1,5 @@
 import collections
+from quizzz.common.test_utils import update_pk_sequence
 from quizzz.communities.tests.setup_mixin import SetupCommunityDataMixin
 from quizzz.communities.models import Membership
 
@@ -11,12 +12,15 @@ class SetupQuizDataMixin(SetupCommunityDataMixin):
         self.set_up_community_data()
 
         Quiz.objects.create(**QUIZZES["quiz1"])
+        update_pk_sequence(Quiz)
 
         for question in QUIZ_QUESTIONS.values():
             Question.objects.create(**question)
+        update_pk_sequence(Question)
             
         for option in QUESTION_OPTIONS:
             Option.objects.create(**option)
+        update_pk_sequence(Option)
 
         self.quiz = QUIZZES["quiz1"]
         self.quiz_questions = QUIZ_QUESTIONS

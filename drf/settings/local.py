@@ -15,10 +15,22 @@ ALLOWED_HOSTS = []
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'quizzz',
+        'TEST': {
+            'NAME': 'quizzz-tests',
+            # to allow db creation (from postgres): ALTER USER user1 CREATEDB;
+        },
     }
 }
+# # Uncomment for faster tests with in-memory SQLite:
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
+
 
 # Email
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'

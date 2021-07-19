@@ -109,7 +109,7 @@ class ChatMessageListTest(SetupChatDataMixin, APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertListEqual(list(response.data.keys()), self.expected_keys)
-        self.assertEqual(ChatMessage.objects.count(), len(self.communities) + 1)
+        self.assertEqual(ChatMessage.objects.count(), len(self.messages) + 1)
 
 
     def test_delete_message_works_for_group_admins(self):

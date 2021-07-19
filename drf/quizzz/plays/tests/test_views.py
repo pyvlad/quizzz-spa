@@ -113,7 +113,7 @@ class SubmitRoundTest(SetupTournamentDataMixin, APITestCase):
         init_play_count = Play.objects.count()
         init_answer_count = PlayAnswer.objects.count()
 
-        # Non-admins cannot create rounds:
+        # Non-members cannot start rounds:
         with self.assertNumQueries(0):
             response = self.client.post(self.url, self.payload)
         test_utils.assert_403_not_authenticated(self, response)
@@ -133,7 +133,7 @@ class SubmitRoundTest(SetupTournamentDataMixin, APITestCase):
             response = self.client.post(self.url, self.payload)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        play = Play.objects.get(pk=1)
+        play = Play.objects.get(user_id=self.users["alice"]["id"], round_id=self.round["id"])
         self.assertTrue(play.is_submitted)
         self.assertEqual(play.result, 2)
         self.assertIsNotNone(play.finish_time)
@@ -178,7 +178,7 @@ class SubmitRoundTest(SetupTournamentDataMixin, APITestCase):
             ]
         })
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        play = Play.objects.get(pk=1)
+        play = Play.objects.get(user_id=self.users["alice"]["id"], round_id=self.round["id"])
         self.assertEqual(play.result, 1)
 
     def test_incomplete_answers(self):
@@ -194,7 +194,7 @@ class SubmitRoundTest(SetupTournamentDataMixin, APITestCase):
             ]
         })
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        play = Play.objects.get(pk=1)
+        play = Play.objects.get(user_id=self.users["alice"]["id"], round_id=self.round["id"])
         self.assertEqual(play.result, 1)
         self.assertEqual(PlayAnswer.objects.count(), 2)
 
@@ -213,10 +213,10 @@ class SubmitRoundTest(SetupTournamentDataMixin, APITestCase):
         })
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         
-        play = Play.objects.get(pk=1)
+        play = Play.objects.get(user_id=self.users["alice"]["id"], round_id=self.round["id"])
         finish_time = play.finish_time
-        selected_option_one = PlayAnswer.objects.get(pk=1)
-        selected_option_two = PlayAnswer.objects.get(pk=2)
+        selected_option_one = PlayAnswer.objects.get(play_id=play.id, question_id=1)
+        selected_option_two = PlayAnswer.objects.get(play_id=play.id, question_id=2)
         
         self.assertEqual(play.result, 1)
         self.assertTrue(play.is_submitted)
@@ -231,11 +231,11 @@ class SubmitRoundTest(SetupTournamentDataMixin, APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.data["form_errors"][0], "You have already played this round.")
         
-        play = Play.objects.get(pk=1)
+        play = Play.objects.get(user_id=self.users["alice"]["id"], round_id=self.round["id"])
         self.assertEqual(play.result, 1)
         self.assertEqual(finish_time, play.finish_time)
-        self.assertEqual(selected_option_one.option_id, PlayAnswer.objects.get(pk=1).option_id)
-        self.assertEqual(selected_option_two.option_id, PlayAnswer.objects.get(pk=2).option_id)
+        self.assertEqual(selected_option_one.option_id, PlayAnswer.objects.get(play_id=play.id, question_id=1).option_id)
+        self.assertEqual(selected_option_two.option_id, PlayAnswer.objects.get(play_id=play.id, question_id=2).option_id)
         self.assertTrue(play.is_submitted)
         self.assertEqual(PlayAnswer.objects.count(), 2)
 

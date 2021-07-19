@@ -1,3 +1,4 @@
+from quizzz.common.test_utils import update_pk_sequence
 from quizzz.users.tests.setup_mixin import SetupUsersMixin
 
 from quizzz.communities.models import Community
@@ -13,7 +14,8 @@ class SetupCommunityDataMixin(SetupUsersMixin):
         for community_name, community_obj in COMMUNITIES.items():
             admin = CustomUser.objects.get(pk=ADMIN_IDS[community_name])
             Community.create(admin, **community_obj)
-
+        update_pk_sequence(Community)
+        
         self.communities = COMMUNITIES
         self.admin_ids = ADMIN_IDS
 

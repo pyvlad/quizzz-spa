@@ -1,3 +1,4 @@
+from quizzz.common.test_utils import update_pk_sequence
 from ..models import CustomUser
 
 from .data import USERS
@@ -10,6 +11,7 @@ class SetupUsersMixin:
     def set_up_users(self):
         for user_obj in USERS.values():
             CustomUser.objects.create_user(**user_obj)
+        update_pk_sequence(CustomUser)
         self.users = USERS
 
     def login(self, username, password):

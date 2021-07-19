@@ -1,3 +1,5 @@
+from quizzz.common.test_utils import update_pk_sequence
+
 from quizzz.communities.tests.setup_mixin import SetupCommunityDataMixin
 from quizzz.communities.models import Membership
 
@@ -15,5 +17,6 @@ class SetupChatDataMixin(SetupCommunityDataMixin):
 
         for message in MESSAGES:
             ChatMessage.objects.create(**message)
+        update_pk_sequence(ChatMessage)
 
         self.messages = MESSAGES

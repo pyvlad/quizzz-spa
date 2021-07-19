@@ -55,17 +55,17 @@ class ChatMessageList(generics.ListCreateAPIView):
 #         IsCommunityMember,
 #     ]
 
-#     def get(self, request):
+#     def get(self, request, community_id):
 #         messages = ChatMessage.objects.filter(community_id=self.kwargs['community_id'])
 #         serializer = ChatMessageSerializer(messages, many=True)
 #         return Response(serializer.data)
 
-#     def post(self, request):
+#     def post(self, request, community_id):
 #         serializer = ChatMessageSerializer(data=request.data)
 #         if serializer.is_valid(raise_exception=True):
 #             serializer.save(
 #                 user=self.request.user, 
-#                 group=self.kwargs['community_id']
+#                 community_id=self.kwargs['community_id']
 #             )
 #             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
