@@ -1,4 +1,0 @@
--c main.txt
-pip-tools
-coverage
-pytest
