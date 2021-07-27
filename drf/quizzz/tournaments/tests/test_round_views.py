@@ -6,16 +6,15 @@ from django.urls import reverse
 
 from quizzz.common import test_utils
 from quizzz.common.testdata import QUIZZES
-from quizzz.common.test_mixins import SetupTournamentDataMixin
+from quizzz.common.test_mixins import SetupTournamentsMixin, SetupRoundsMixin
 
 from quizzz.quizzes.models import Quiz
 from ..models import Round
 
 
 
-class CreateRoundTest(SetupTournamentDataMixin, APITestCase):
+class CreateRoundTest(SetupTournamentsMixin, APITestCase):
     def setUp(self):
-        self.set_up_tournament_data()
         self.alice_joins_group1()
 
         self.community_id = self.communities["group1"]["id"]
@@ -102,9 +101,8 @@ class CreateRoundTest(SetupTournamentDataMixin, APITestCase):
 
 
 
-class RoundListTest(SetupTournamentDataMixin, APITestCase):
+class RoundListTest(SetupRoundsMixin, APITestCase):
     def setUp(self):
-        self.set_up_tournament_and_round_data()
         self.alice_joins_group1()
 
         self.community_id = self.communities["group1"]["id"]
@@ -146,9 +144,8 @@ class RoundListTest(SetupTournamentDataMixin, APITestCase):
 
 
 
-class RoundDetailTest(SetupTournamentDataMixin, APITestCase):
+class RoundDetailTest(SetupRoundsMixin, APITestCase):
     def setUp(self):
-        self.set_up_tournament_and_round_data()
         self.alice_joins_group1()
 
         # finalize quiz

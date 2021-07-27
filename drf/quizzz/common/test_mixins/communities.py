@@ -8,16 +8,22 @@ from . import SetupUsersMixin
 
 
 class SetupCommunityDataMixin(SetupUsersMixin):
-    def set_up_community_data(self):
-        self.set_up_users()
 
+    @classmethod
+    def setUpTestData(cls):
+        cls.set_up_users()
+        cls.set_up_communities()
+
+    @classmethod
+    def set_up_communities(cls):
         for community_name, community_obj in COMMUNITIES.items():
             admin = CustomUser.objects.get(pk=ADMIN_IDS[community_name])
             Community.create(admin, **community_obj)
+
         update_pk_sequence(Community)
         
-        self.communities = COMMUNITIES
-        self.admin_ids = ADMIN_IDS
+        cls.communities = COMMUNITIES
+        cls.admin_ids = ADMIN_IDS
 
     def alice_joins_group1(self):
         """ Reusable helper method """

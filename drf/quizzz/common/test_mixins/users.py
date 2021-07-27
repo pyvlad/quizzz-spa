@@ -8,11 +8,16 @@ class SetupUsersMixin:
     """
     Mixin with user data and methods for login/logout.
     """
-    def set_up_users(self):
+    @classmethod
+    def setUpTestData(cls):
+        cls.set_up_users()
+
+    @classmethod
+    def set_up_users(cls):
         for user_obj in USERS.values():
             CustomUser.objects.create_user(**user_obj)
         update_pk_sequence(CustomUser)
-        self.users = USERS
+        cls.users = USERS
 
     def login(self, username, password):
         """

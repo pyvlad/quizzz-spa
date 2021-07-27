@@ -143,7 +143,6 @@ class LoginViewTest(SetupUsersMixin, APITestCase):
     Ensure login view works as expected.
     """
     def setUp(self):
-        self.set_up_users()
         self.url = reverse('users:login')
 
     def test_normal(self):
@@ -189,7 +188,6 @@ class LogoutViewTest(SetupUsersMixin, APITestCase):
     Ensure logout view works as expected.
     """
     def setUp(self):
-        self.set_up_users()
         self.url = reverse('users:logout')
 
     def test_normal(self):
@@ -231,7 +229,6 @@ class LogoutViewTest(SetupUsersMixin, APITestCase):
 
 class UserListViewTest(SetupUsersMixin, APITestCase):
     def setUp(self):
-        self.set_up_users()
         self.url = reverse('users:list')
 
     def test_normal(self):
@@ -256,9 +253,7 @@ class UserListViewTest(SetupUsersMixin, APITestCase):
 
 
 class TimeViewTest(SetupUsersMixin, APITestCase):
-    def setUp(self):
-        self.set_up_users()
-
+    
     def test_normal(self):
         """ 
         Ensure time view works as expected.

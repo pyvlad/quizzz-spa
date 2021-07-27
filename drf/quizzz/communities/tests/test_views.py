@@ -16,7 +16,6 @@ from quizzz.communities.models import Community, Membership
 class CommunityListTest(SetupCommunityDataMixin, APITestCase):
 
     def setUp(self):
-        self.set_up_community_data()
         self.url = reverse('communities:community-list')
 
     def test_normal(self):
@@ -50,7 +49,6 @@ class CommunityListTest(SetupCommunityDataMixin, APITestCase):
 class UserCommunitiesTest(SetupCommunityDataMixin, APITestCase):
     
     def setUp(self):
-        self.set_up_community_data()
         # bob's community list:
         self.url = reverse(
             'communities:user-communities',  
@@ -86,7 +84,6 @@ class UserCommunitiesTest(SetupCommunityDataMixin, APITestCase):
 class CreateCommunityTest(SetupCommunityDataMixin, APITestCase):
     
     def setUp(self):
-        self.set_up_community_data()
         self.url = reverse('communities:create-community')
         self.new_community = {"name": "group4"}
 
@@ -137,14 +134,8 @@ class CreateCommunityTest(SetupCommunityDataMixin, APITestCase):
 
 
 
-class JoinCommunityTest(SetupCommunityDataMixin, APITransactionTestCase):
-    # Using TransactionTestCase here because in "test_member_already_exists"
-    # IntegrityError is raised - TestCase wraps all code in a transaction, and 
-    # cannot proceed when a DB query fails: 
-    # "An error occurred in the current transaction.
-    # You can't execute queries until the end of the 'atomic' block."
+class JoinCommunityTest(SetupCommunityDataMixin, APITestCase):
     def setUp(self):
-        self.set_up_community_data()
         self.url = reverse('communities:join-community')
         self.join_data = {
             "name": "group1", 
@@ -204,20 +195,6 @@ class JoinCommunityTest(SetupCommunityDataMixin, APITransactionTestCase):
         )
         self.assertEqual(Membership.objects.count(), len(self.communities))
 
-    def test_member_already_exists(self):
-        """ 
-        Can only join a group once.
-        """
-        self.login_as("bob")
-
-        with self.assertNumQueries(5):
-            response = self.client.post(self.url, self.join_data)
-
-        test_utils.assert_400_validation_failed(self, response, 
-            error="Bad request.", 
-            data={"non_field_errors": ["You are already a member of this group."]}
-        )
-        self.assertEqual(Membership.objects.count(), len(self.communities))
 
     def test_wrong_password(self):
         """
@@ -257,10 +234,41 @@ class JoinCommunityTest(SetupCommunityDataMixin, APITransactionTestCase):
 
 
 
+class JoinAlreadyJoinedCommunityTest(SetupCommunityDataMixin, APITransactionTestCase):
+    # Special case requiring 'TransactionTestCase'
+    # Using TransactionTestCase here because in "test_member_already_exists"
+    # IntegrityError is raised - TestCase wraps all code in a transaction, and 
+    # cannot proceed when a DB query fails: 
+    # "An error occurred in the current transaction.
+    # You can't execute queries until the end of the 'atomic' block."
+    def setUp(self):
+        super().setUpTestData()
+        self.url = reverse('communities:join-community')
+        self.join_data = {
+            "name": "group1", 
+            "password": self.communities["group1"]["password"]
+        }
+
+    def test_member_already_exists(self):
+        """ 
+        Can only join a group once.
+        """
+        self.login_as("bob")
+
+        with self.assertNumQueries(5):
+            response = self.client.post(self.url, self.join_data)
+
+        test_utils.assert_400_validation_failed(self, response, 
+            error="Bad request.", 
+            data={"non_field_errors": ["You are already a member of this group."]}
+        )
+        self.assertEqual(Membership.objects.count(), len(self.communities))
+
+
+
 class MembershipListTest(SetupCommunityDataMixin, APITestCase):
     
     def setUp(self):
-        self.set_up_community_data()
         self.url = reverse(
             'communities:community-members',  
             kwargs={'community_id': self.communities["group1"]["id"]}
@@ -307,7 +315,6 @@ class MembershipListTest(SetupCommunityDataMixin, APITestCase):
 
 class CommunityDetailTest(SetupCommunityDataMixin, APITestCase):
     def setUp(self):
-        self.set_up_community_data()
         self.url = reverse(
             'communities:community-detail',  
             kwargs={'community_id': self.communities["group1"]["id"]}
@@ -439,7 +446,6 @@ class CommunityDetailTest(SetupCommunityDataMixin, APITestCase):
 
 class MembershipDetailTest(SetupCommunityDataMixin, APITestCase):
     def setUp(self):
-        self.set_up_community_data()
         self.COMMUNITY = self.communities["group1"]["id"]
         self.USER = self.users["bob"]["id"]
         self.url = reverse(
@@ -633,5 +639,3 @@ class MembershipDetailTest(SetupCommunityDataMixin, APITestCase):
 
         self.assertEqual(Membership.objects.filter(
             community_id=self.COMMUNITY, user_id=self.USER).count(), 1)
-
-

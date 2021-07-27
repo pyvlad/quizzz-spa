@@ -8,15 +8,21 @@ from . import SetupCommunityDataMixin
 
 
 class SetupChatDataMixin(SetupCommunityDataMixin):
-    def set_up_community_and_chat_data(self):
-        # set up users, communities and admin memberships:
-        self.set_up_community_data()
 
+    @classmethod
+    def setUpTestData(cls):
+        cls.set_up_users()
+        cls.set_up_communities()
+        cls.set_up_chat_data()
+
+    @classmethod
+    def set_up_chat_data(cls):
         for membership in EXTRA_MEMBERSHIPS:
             Membership.objects.create(**membership)
 
         for message in MESSAGES:
             ChatMessage.objects.create(**message)
+
         update_pk_sequence(ChatMessage)
 
-        self.messages = MESSAGES
+        cls.messages = MESSAGES

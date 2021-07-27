@@ -1,20 +1,22 @@
 from quizzz.common.test_utils import update_pk_sequence
-from quizzz.common.testdata import TOURNAMENTS, ROUNDS
+from quizzz.common.testdata import TOURNAMENTS
 
-from quizzz.tournaments.models import Tournament, Round
+from quizzz.tournaments.models import Tournament
 
 from . import SetupQuizDataMixin
 
 
-class SetupTournamentDataMixin(SetupQuizDataMixin):
-    def set_up_tournament_data(self):
-        self.set_up_quiz_data()
+class SetupTournamentsMixin(SetupQuizDataMixin):
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.set_up_users()
+        cls.set_up_communities()
+        cls.set_up_quiz_data()
+        cls.set_up_tournaments()
+
+    @classmethod
+    def set_up_tournaments(cls):
         Tournament.objects.create(**TOURNAMENTS["tournament1"])
         update_pk_sequence(Tournament)
-        self.tournament = TOURNAMENTS["tournament1"]
-        
-    def set_up_tournament_and_round_data(self):
-        self.set_up_tournament_data()
-        Round.objects.create(**ROUNDS["round1"])
-        update_pk_sequence(Round)
-        self.round = ROUNDS["round1"]
+        cls.tournament = TOURNAMENTS["tournament1"]

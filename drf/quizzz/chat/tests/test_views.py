@@ -12,8 +12,6 @@ from ..views import ChatMessageList
 class ChatMessageListTest(SetupChatDataMixin, APITestCase):
 
     def setUp(self):
-        self.set_up_community_and_chat_data()
-
         self.community_id = self.communities["group1"]["id"]
         self.community_messages = [
             m for m in self.messages 

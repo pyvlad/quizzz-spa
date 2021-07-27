@@ -9,9 +9,15 @@ from . import SetupCommunityDataMixin
 
 
 class SetupQuizDataMixin(SetupCommunityDataMixin):
-    def set_up_quiz_data(self):
-        self.set_up_community_data()
 
+    @classmethod
+    def setUpTestData(cls):
+        cls.set_up_users()
+        cls.set_up_communities()
+        cls.set_up_quiz_data()
+
+    @classmethod
+    def set_up_quiz_data(cls):
         Quiz.objects.create(**QUIZZES["quiz1"])
         update_pk_sequence(Quiz)
 
@@ -23,9 +29,9 @@ class SetupQuizDataMixin(SetupCommunityDataMixin):
             Option.objects.create(**option)
         update_pk_sequence(Option)
 
-        self.quiz = QUIZZES["quiz1"]
-        self.quiz_questions = QUIZ_QUESTIONS
-        self.quiz_options = QUESTION_OPTIONS
-        self.quiz_options_by_question_id = collections.defaultdict(list)
+        cls.quiz = QUIZZES["quiz1"]
+        cls.quiz_questions = QUIZ_QUESTIONS
+        cls.quiz_options = QUESTION_OPTIONS
+        cls.quiz_options_by_question_id = collections.defaultdict(list)
         for option in QUESTION_OPTIONS:
-            self.quiz_options_by_question_id[option["question_id"]] += [option]
+            cls.quiz_options_by_question_id[option["question_id"]] += [option]

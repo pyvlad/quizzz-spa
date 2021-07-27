@@ -12,8 +12,6 @@ from ..models import Quiz, Question, Option
 class CreateQuizTest(SetupCommunityDataMixin, APITestCase):
     
     def setUp(self):
-        self.set_up_community_data()
-
         self.community_id = self.communities["group1"]["id"]
         self.url = reverse(
             'quizzes:quiz-list-create', 
@@ -56,7 +54,6 @@ class CreateQuizTest(SetupCommunityDataMixin, APITestCase):
 
 class QuizListTest(SetupQuizDataMixin, APITestCase):
     def setUp(self):
-        self.set_up_quiz_data()
         self.alice_joins_group1()
 
         self.community_id = self.communities["group1"]["id"]
@@ -114,7 +111,6 @@ class QuizListTest(SetupQuizDataMixin, APITestCase):
 class QuizDetailTest(SetupQuizDataMixin, APITestCase):
     
     def setUp(self):
-        self.set_up_quiz_data()
         self.alice_joins_group1()
 
         self.community_id = self.communities["group1"]["id"]

@@ -3,7 +3,7 @@ from rest_framework.test import APITestCase
 from django.urls import reverse
 
 from quizzz.common import test_utils
-from quizzz.common.test_mixins import SetupCommunityDataMixin, SetupTournamentDataMixin
+from quizzz.common.test_mixins import SetupCommunityDataMixin, SetupTournamentsMixin
 
 from ..models import Tournament
 
@@ -11,7 +11,6 @@ from ..models import Tournament
 
 class CreateTournamentTest(SetupCommunityDataMixin, APITestCase):
     def setUp(self):
-        self.set_up_community_data()
         self.alice_joins_group1()
 
         self.community_id = self.communities["group1"]["id"]
@@ -58,9 +57,8 @@ class CreateTournamentTest(SetupCommunityDataMixin, APITestCase):
 
 
 
-class TournamentListTest(SetupTournamentDataMixin, APITestCase):
+class TournamentListTest(SetupTournamentsMixin, APITestCase):
     def setUp(self):
-        self.set_up_tournament_data()
         self.alice_joins_group1()
 
         self.community_id = self.communities["group1"]["id"]
@@ -97,9 +95,8 @@ class TournamentListTest(SetupTournamentDataMixin, APITestCase):
 
 
 
-class TournamentDetailTest(SetupTournamentDataMixin, APITestCase):
+class TournamentDetailTest(SetupTournamentsMixin, APITestCase):
     def setUp(self):
-        self.set_up_tournament_data()
         self.alice_joins_group1()
 
         self.community_id = self.communities["group1"]["id"]
