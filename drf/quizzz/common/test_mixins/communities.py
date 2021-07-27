@@ -1,9 +1,7 @@
-from quizzz.common.test_utils import update_pk_sequence
-from quizzz.common.testdata import COMMUNITIES, ADMIN_IDS
-
-from quizzz.communities.models import Community
+from quizzz.communities.models import Community, Membership
 from quizzz.users.models import CustomUser
 
+from .data import COMMUNITIES, ADMIN_IDS, MEMBERSHIPS
 from . import SetupUsersMixin
 
 
@@ -16,20 +14,19 @@ class SetupCommunityDataMixin(SetupUsersMixin):
 
     @classmethod
     def set_up_communities(cls):
+        # create communities and admin memberships:
         for community_name, community_obj in COMMUNITIES.items():
             admin = CustomUser.objects.get(pk=ADMIN_IDS[community_name])
             Community.create(admin, **community_obj)
+        cls.update_pk_sequence(Community)
 
-        update_pk_sequence(Community)
+        # create regular memberships
+        for membership in MEMBERSHIPS.values():
+            if not membership["is_admin"]:
+                Membership.objects.create(**membership)
         
-        cls.communities = COMMUNITIES
-        cls.admin_ids = ADMIN_IDS
-
-    def alice_joins_group1(self):
-        """ Reusable helper method """
-        community = Community.objects.get(name="group1")
-        alice = CustomUser.objects.get(username="alice")
-        community.join(alice)
+        cls.COMMUNITIES = COMMUNITIES
+        cls.MEMBERSHIPS = MEMBERSHIPS
 
     def bob_joins_group2(self):
         """ Reusable helper method """

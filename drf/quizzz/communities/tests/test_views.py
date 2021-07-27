@@ -1,252 +1,260 @@
-# DRF testing: https://www.django-rest-framework.org/api-guide/testing/
-# Django testing: https://docs.djangoproject.com/en/3.2/topics/testing/
-# Unittest: https://docs.python.org/3/library/unittest.html#unittest.TestCase
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase, APITransactionTestCase
 
-from quizzz.common import test_utils
 from quizzz.common.test_mixins import SetupCommunityDataMixin
 
 from quizzz.users.models import CustomUser
 from quizzz.communities.models import Community, Membership
 
 
+MEMBERSHIP_EXPECTED_KEYS = ['user', 'community', 'is_admin', 'is_approved', 'time_created']
+COMMUNITY_EXPECTED_KEYS = ["id", "name", "password", "approval_required", "max_members", "time_created"]
+MEMBER_USER_EXPECTED_KEYS = ['id', 'username', 'first_name', 'last_name', 'last_login']
+
 
 class CommunityListTest(SetupCommunityDataMixin, APITestCase):
-
+    """
+    Superuser only can see all existing communities.
+    """
     def setUp(self):
+        self.num_communities = len(self.COMMUNITIES)
+
         self.url = reverse('communities:community-list')
+        self.expected_keys = COMMUNITY_EXPECTED_KEYS
 
     def test_normal(self):
         """
-        Only superuser sees all existing communities.
+        Superuser only can see get a list of all existing communities.
         """
-        # anonymous users cannot access
-        with self.assertNumQueries(0):
-            response = self.client.get(self.url)
-        test_utils.assert_403_not_authenticated(self, response)
+        get_response = lambda: self.client.get(self.url)
 
-        # regular users cannot access
+        # authentication is required
+        with self.assertNumQueries(0):
+            self.assert_not_authenticated(get_response())
+
+        # regular users have no access
         self.login_as("bob")
         with self.assertNumQueries(2):
-            response = self.client.get(self.url)
-        test_utils.assert_403_not_authorized(self, response)
+            self.assert_not_authorized(get_response())
 
-        # superuser can access
+        # superuser can has access
         self.login_as("admin")
         with self.assertNumQueries(3):
-            response = self.client.get(self.url)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), len(self.communities))
-        self.assertListEqual(
-            list(response.data[0].keys()), 
-            ["id", "name", "password", "approval_required", "max_members", "time_created"]
-        )
+            response = get_response()
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            self.assertEqual(len(response.data), self.num_communities)
+            self.assertListEqual(list(response.data[0].keys()), self.expected_keys)
 
 
 
 class UserCommunitiesTest(SetupCommunityDataMixin, APITestCase):
-    
+    """
+    Each user can get a list of his memberships with nested `community` objects.
+    """
     def setUp(self):
-        # bob's community list:
+        # consider bob's community list:
+        bob = CustomUser.objects.get(username="bob")
+        self.num_bobs_communities = len(bob.communities.all())
+
         self.url = reverse(
             'communities:user-communities',  
-            kwargs={'user_id': self.users["bob"]["id"]}
+            kwargs={'user_id': self.USERS["bob"]["id"]}
         )
+        self.expected_keys = MEMBERSHIP_EXPECTED_KEYS
+        self.community_expected_keys = COMMUNITY_EXPECTED_KEYS
 
     def test_normal(self):
         """
         Only the user himself can see his own list of communities.
         """
-        # Anonymous users cannot see someone's list of communities:
-        with self.assertNumQueries(0):
-            response = self.client.get(self.url)
-        test_utils.assert_403_not_authenticated(self, response)
+        get_response = lambda: self.client.get(self.url)
 
-        # Regular users cannot see someone's list of communities:
+        # Authentication is required:
+        with self.assertNumQueries(0):
+            self.assert_not_authenticated(get_response())
+
+        # Regular users cannot see someone else's list of communities:
         self.login_as("alice")
         with self.assertNumQueries(2):
-            response = self.client.get(self.url)
-        test_utils.assert_403_not_authorized(self, response)
+            self.assert_not_authorized(get_response())
 
         # User can see his list of communities:
         self.login_as("bob")
         with self.assertNumQueries(3):
-            response = self.client.get(self.url)
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        bob = CustomUser.objects.get(username="bob")
-        self.assertEqual(len(response.data), len(bob.communities.all()))
+            response = get_response()
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            self.assertEqual(len(response.data), self.num_bobs_communities)
+            self.assertListEqual(list(response.data[0].keys()), self.expected_keys)
+            self.assertListEqual(list(response.data[0]["community"].keys()), self.community_expected_keys)
 
 
 
 class CreateCommunityTest(SetupCommunityDataMixin, APITestCase):
-    
+    """
+    A registered user can create a new community.
+    The view returns the user's new membership with nested community object.
+    """
     def setUp(self):
+        self.num_communities = len(self.COMMUNITIES)
+
         self.url = reverse('communities:create-community')
-        self.new_community = {"name": "group4"}
+        self.payload = {
+            "name": "group4"
+        }
+        self.expected_keys = MEMBERSHIP_EXPECTED_KEYS
+        self.community_expected_keys = COMMUNITY_EXPECTED_KEYS
 
     def test_normal(self):
         """
-        A registered user can create a new community.
-        The view returns the user's new membership.
+        A regular registered user can create a new community with a unique name.
         """
-        # Anonymous users cannot create communities:
+        get_response = lambda: self.client.post(self.url, self.payload)
+
+        # Authentication is required:
         with self.assertNumQueries(0):
-            response = self.client.post(self.url, self.new_community)
-        test_utils.assert_403_not_authenticated(self, response)
-        self.assertEqual(Community.objects.count(), len(self.communities))
+            self.assert_not_authenticated(get_response())
 
-        # A regular registered user can create communities:
+        self.assertEqual(Community.objects.count(), self.num_communities)
+
+        # Works for bob:
         self.login_as("bob")
-        with self.assertNumQueries(5):  
-            # (1-2) request.user (3) unique check (4-5) com & mem
-            response = self.client.post(self.url, self.new_community)
-
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertListEqual(
-            list(response.data.keys()), 
-            ['user', 'community', 'is_admin', 'is_approved', 'time_created']
-        )
-        self.assertListEqual(
-            list(response.data["community"].keys()), 
-            ["id", "name", "password", "approval_required", "max_members", "time_created"]
-        )
-        self.assertEqual(Community.objects.count(), len(self.communities) + 1)
+        with self.assertNumQueries(5): # (1-2) request.user (3) unique check (4-5) com & mem
+            response = get_response()
+            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+            self.assertListEqual(list(response.data.keys()), self.expected_keys)
+            self.assertListEqual(list(response.data["community"].keys()), self.community_expected_keys)
+        
+        self.assertEqual(Community.objects.count(), self.num_communities + 1)
 
     def test_community_already_exists(self):
         """
         Community name must be unique.
         """
-        new_community = {"name": "group1"}
+        bad_payload = {"name": "group1"}
 
         self.login_as("bob")
-        
         with self.assertNumQueries(3):
-            response = self.client.post(self.url, new_community)
-
-        test_utils.assert_400_validation_failed(self, response,
-            error="Bad request.", 
-            data={"name": ["community with this name already exists."]}
-        )
-        self.assertEqual(Community.objects.count(), len(self.communities))
+            response = self.client.post(self.url, bad_payload)
+            self.assert_validation_failed(response, data={
+                "name": ["community with this name already exists."]
+            })
+        self.assertEqual(Community.objects.count(), self.num_communities)
 
 
 
 class JoinCommunityTest(SetupCommunityDataMixin, APITestCase):
+    """
+    A registered user can join an existing community.
+    The view returns the user's new membership with nested community object.
+    """
     def setUp(self):
-        self.url = reverse('communities:join-community')
-        self.join_data = {
-            "name": "group1", 
-            "password": self.communities["group1"]["password"]
-        }
+        # consider "ben" trying to join "group1":
+        self.USER = "ben"
+        self.USER_ID = self.USERS["ben"]["id"]
+        self.GROUP = "group1"
+        self.GROUP_ID = self.COMMUNITIES[self.GROUP]["id"]
 
-    def test_authentication_required(self):
-        """
-        Anonymous users cannot join communities.
-        """
-        with self.assertNumQueries(0):
-            response = self.client.post(self.url, self.join_data)
-        test_utils.assert_403_not_authenticated(self, response)
-        self.assertEqual(Community.objects.count(), len(self.communities))
+        self.num_memberships = Membership.objects.count()
+
+        self.url = reverse('communities:join-community')
+        self.payload = {
+            "name": self.GROUP, 
+            "password": self.COMMUNITIES[self.GROUP]["password"]
+        }
+        self.expected_keys = MEMBERSHIP_EXPECTED_KEYS
+        self.community_expected_keys = COMMUNITY_EXPECTED_KEYS
     
     def test_normal(self):
         """
-        A registered user can join an existing community.
-        The view returns the user's new membership.
+        A registered user who provides correct credentials becomes a regular group member:
         """
-        USER = "alice"
-        self.login_as(USER)
+        get_response = lambda: self.client.post(self.url, self.payload)
 
+        # Authentication is required:
+        with self.assertNumQueries(0):
+            self.assert_not_authenticated(get_response())
+        
+        self.assertEqual(Membership.objects.count(), self.num_memberships)
+
+        # Works for a regular non-member:
+        self.login_as(self.USER)
         with self.assertNumQueries(5): # (3) get com (4) member count (5) insert
-            response = self.client.post(self.url, self.join_data)
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertListEqual(
-            list(response.data.keys()), 
-            ['user', 'community', 'is_admin', 'is_approved', 'time_created']
-        )
-        self.assertListEqual(
-            list(response.data["community"].keys()), 
-            ["id", "name", "password", "approval_required", "max_members", "time_created"]
-        )
-        self.assertEqual(response.data["user"], self.users[USER]["id"])
-        self.assertEqual(response.data["is_admin"], False)
-        self.assertEqual(response.data["community"]["name"], self.join_data["name"])
-        self.assertEqual(Membership.objects.count(), len(self.communities) + 1)
+            response = get_response()
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            self.assertListEqual(list(response.data.keys()), self.expected_keys)
+            self.assertListEqual(list(response.data["community"].keys()), self.community_expected_keys)
+            self.assertEqual(response.data["user"], self.USER_ID)
+            self.assertEqual(response.data["is_admin"], False)
+            self.assertEqual(response.data["community"]["name"], self.payload["name"])
+        
+        self.assertEqual(Membership.objects.count(), self.num_memberships + 1)
 
     def test_max_members(self):
         """ 
         Can only join a group if max_members limit has not been reached.
         """
-        Community.objects\
-            .filter(pk=self.communities["group1"]["id"])\
-            .update(max_members=1)
+        self.login_as(self.USER)
+
+        group_members = Membership.objects.filter(community_id=self.GROUP_ID).count()
+        Community.objects.filter(pk=self.GROUP_ID).update(max_members=group_members)
         
-        self.login_as("alice")
-
         with self.assertNumQueries(4):
-            response = self.client.post(self.url, self.join_data)
-
-        test_utils.assert_400_validation_failed(self, response, 
-            error="Bad request.", 
-            data={"non_field_errors": ["This group has reached its member limit."]}
-        )
-        self.assertEqual(Membership.objects.count(), len(self.communities))
-
+            response = self.client.post(self.url, self.payload)
+            self.assert_validation_failed(response, data={
+                "non_field_errors": ["This group has reached its member limit."]
+            })
+        self.assertEqual(Membership.objects.count(), self.num_memberships)
 
     def test_wrong_password(self):
         """
         Submitting wrong password returns an error.
         """
-        self.login_as("alice")
+        self.login_as(self.USER)
 
-        bad_credentials = self.join_data.copy()
+        bad_credentials = self.payload.copy()
         bad_credentials["password"] = "wrooooong"
 
         with self.assertNumQueries(3):
             response = self.client.post(self.url, bad_credentials)
-
-        test_utils.assert_400_validation_failed(self, response, 
-            error="Bad request.", 
-            data={"non_field_errors": ["Wrong password."]}
-        )
-        self.assertEqual(Membership.objects.count(), len(self.communities))
+            self.assert_validation_failed(response, data={
+                "non_field_errors": ["Wrong password."]
+            })
+        self.assertEqual(Membership.objects.count(), self.num_memberships)
 
     def test_wrong_group_name(self):
         """
-        Submitting wrong password returns an error.
+        Submitting wrong group name returns an error.
         """
-        self.login_as("alice")
+        self.login_as(self.USER)
 
-        bad_credentials = self.join_data.copy()
+        bad_credentials = self.payload.copy()
         bad_credentials["name"] = "does not exist"
 
         with self.assertNumQueries(3):
             response = self.client.post(self.url, bad_credentials)
-
-        test_utils.assert_400_validation_failed(self, response,
-            error="Bad request.", 
-            data={"non_field_errors": ["No such group."]}
-        )
-        self.assertEqual(Membership.objects.count(), len(self.communities))
+            self.assert_validation_failed(response, data={
+                "non_field_errors": ["No such group."]
+            })
+        self.assertEqual(Membership.objects.count(), self.num_memberships)
 
 
 
 class JoinAlreadyJoinedCommunityTest(SetupCommunityDataMixin, APITransactionTestCase):
-    # Special case requiring 'TransactionTestCase'
+    # Special case requiring 'TransactionTestCase'.
     # Using TransactionTestCase here because in "test_member_already_exists"
     # IntegrityError is raised - TestCase wraps all code in a transaction, and 
     # cannot proceed when a DB query fails: 
-    # "An error occurred in the current transaction.
-    # You can't execute queries until the end of the 'atomic' block."
+    #   "An error occurred in the current transaction.
+    #   You can't execute queries until the end of the 'atomic' block."
     def setUp(self):
         super().setUpTestData()
+        self.num_memberships = Membership.objects.count()
+
         self.url = reverse('communities:join-community')
-        self.join_data = {
+        self.payload = {
             "name": "group1", 
-            "password": self.communities["group1"]["password"]
+            "password": self.COMMUNITIES["group1"]["password"]
         }
 
     def test_member_already_exists(self):
@@ -256,256 +264,268 @@ class JoinAlreadyJoinedCommunityTest(SetupCommunityDataMixin, APITransactionTest
         self.login_as("bob")
 
         with self.assertNumQueries(5):
-            response = self.client.post(self.url, self.join_data)
-
-        test_utils.assert_400_validation_failed(self, response, 
-            error="Bad request.", 
-            data={"non_field_errors": ["You are already a member of this group."]}
-        )
-        self.assertEqual(Membership.objects.count(), len(self.communities))
+            response = self.client.post(self.url, self.payload)
+            self.assert_validation_failed(response, data={
+                "non_field_errors": ["You are already a member of this group."]
+            })
+        self.assertEqual(Membership.objects.count(), self.num_memberships)
 
 
 
 class MembershipListTest(SetupCommunityDataMixin, APITestCase):
-    
+    """
+    A community member can get a list of all group members.
+    """
     def setUp(self):
+        self.GROUP = "group1"
+        self.GROUP_ID = self.COMMUNITIES[self.GROUP]["id"]
+
+        self.num_members = Membership.objects.filter(community_id=self.GROUP_ID).count()
+
         self.url = reverse(
-            'communities:community-members',  
-            kwargs={'community_id': self.communities["group1"]["id"]}
+            'communities:community-members',
+            kwargs={'community_id': self.COMMUNITIES[self.GROUP]["id"]}
         )
-
-    def test_authentication_required(self):
-        """
-        Anonymous users cannot see any community's members.
-        """
-        with self.assertNumQueries(0):
-            response = self.client.get(self.url)
-        test_utils.assert_403_not_authenticated(self, response)
-
-    def test_non_members_cannot_see(self):
-        """
-        Registered user who are non-members of the community cannot see its members.
-        """
-        self.login_as("ben")
-        with self.assertNumQueries(3):  # (3) is member check 
-            response = self.client.get(self.url)
-        test_utils.assert_403_not_authorized(self, response)
+        self.expected_keys = MEMBERSHIP_EXPECTED_KEYS
+        self.user_expected_keys = MEMBER_USER_EXPECTED_KEYS
 
     def test_normal(self):
         """
         Community members can view all its members.
         """
-        self.alice_joins_group1()
+        get_response = lambda: self.client.get(self.url)
 
-        # bob is group admin:
-        self.login_as("bob")
-        with self.assertNumQueries(4):  # (3) is member check (4) member list join on users
-            response = self.client.get(self.url)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 2)
+        # authentication is required
+        with self.assertNumQueries(0):
+            self.assert_not_authenticated(get_response())
 
-        # alice has just joined as a regular member:
+        # membership is required
+        self.login_as("ben")
+        with self.assertNumQueries(3):  # (3) is member check 
+            self.assert_not_authorized(get_response())
+
+        # alice is a regular member:
         self.login_as("alice")
         with self.assertNumQueries(4):
-            response = self.client.get(self.url)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 2)
+            response = get_response()
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            self.assertEqual(len(response.data), self.num_members)
+
+        # bob is group admin - he has access:
+        self.login_as("bob")
+        with self.assertNumQueries(4):  # (3) is member check (4) member list join on users
+            response = get_response()
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            self.assertEqual(len(response.data), self.num_members)
+            self.assertListEqual(list(response.data[0].keys()), self.expected_keys)
+            self.assertListEqual(list(response.data[0]["user"].keys()), self.user_expected_keys)
 
 
 
 class CommunityDetailTest(SetupCommunityDataMixin, APITestCase):
     def setUp(self):
+        self.GROUP = "group1"
+        self.GROUP_ID = self.COMMUNITIES[self.GROUP]["id"]
+
         self.url = reverse(
             'communities:community-detail',  
-            kwargs={'community_id': self.communities["group1"]["id"]}
+            kwargs={'community_id': self.GROUP_ID}
         )
-        self.new_data = self.communities["group1"].copy()
-        self.new_data["password"] = "new-password"
-        self.expected_keys = [
-            "id", "name", "password", "approval_required", "max_members", "time_created"
-        ]
+        self.update_payload = self.COMMUNITIES[self.GROUP].copy()
+        self.new_password = "new-password"
+        self.update_payload["password"] = self.new_password
+        self.expected_keys = COMMUNITY_EXPECTED_KEYS
 
     def test_get_community(self):
-        self.alice_joins_group1()
+        """
+        A group member can get the `community` object.
+        """
+        get_response = lambda: self.client.get(self.url)
 
-        # anonymous users have no access:
+        # authentication is required
         with self.assertNumQueries(0):
-            response = self.client.get(self.url)
-        test_utils.assert_403_not_authenticated(self, response)
+            self.assert_not_authenticated(get_response())
 
-        # bob is group admin, he sees the data:
-        self.login_as("bob")
-
-        with self.assertNumQueries(4):  # (3) member check (4) get data
-            response = self.client.get(self.url)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(list(response.data.keys()), self.expected_keys)
-        self.assertEqual(response.data["name"], "group1")
-
-        # alice is group member, she sees the data:
-        self.login_as("alice")
-
-        with self.assertNumQueries(4):  # (3) member check (4) get data
-            response = self.client.get(self.url)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(list(response.data.keys()), self.expected_keys)
-        self.assertEqual(response.data["name"], "group1")
-
-        # ben is not a group member, he sees nothing:
+        # membership is required
         self.login_as("ben")
+        with self.assertNumQueries(4):  # (3) member check (4) get data
+            self.assert_not_authorized(get_response())
 
-        with self.assertNumQueries(4): # (3) member check (4) get data
-            response = self.client.get(self.url)
-        test_utils.assert_403_not_authorized(self, response)
+        # alice is a regular group member, she sees the data:
+        self.login_as("alice")
+        with self.assertNumQueries(4):  # (3) member check (4) get data
+            response = get_response()
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            self.assertEqual(list(response.data.keys()), self.expected_keys)
+            self.assertEqual(response.data["name"], self.GROUP)
 
     def test_update_community_works_for_group_admins(self):
+        """
+        A group admin can update the corresponding `community` object.
+        """
+        get_response = lambda: self.client.put(self.url, self.update_payload)
+
+        # authentication is required:
+        with self.assertNumQueries(0):
+            self.assert_not_authenticated(get_response())
+
+        # membership is required:
+        self.login_as("ben")
+        with self.assertNumQueries(3):
+            self.assert_not_authorized(get_response())
+
+        # alice is a regular group member, admin rights are required:
+        self.login_as("alice")
+        with self.assertNumQueries(3):  # (3) is admin check
+            self.assert_not_authorized(get_response())
+
+        self.assertNotEqual(Community.objects.get(name=self.GROUP).password, self.new_password)
+
         # bob is group admin, he can update the data:
         self.login_as("bob")
-
         with self.assertNumQueries(6):  
             # (3) is admin check (4) select obj (5) new obj unique check (6) update  
-            response = self.client.put(self.url, self.new_data)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(list(response.data.keys()), self.expected_keys)
-        self.assertEqual(response.data["password"], self.new_data["password"])
-        self.assertEqual(Community.objects.get(name="group1").password, self.new_data["password"])
+            response = get_response()
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            self.assertEqual(list(response.data.keys()), self.expected_keys)
+            self.assertEqual(response.data["password"], self.new_password)
+
+        self.assertEqual(Community.objects.get(name=self.GROUP).password, self.new_password)
 
     def test_update_community_name_to_an_existing_one_fails(self):
+        """
+        New community name must stay unique.
+        """
         self.login_as("bob")
 
-        new_data = self.communities["group1"].copy()
-        new_data["name"] = "group2"
+        bad_payload = self.update_payload.copy()
+        bad_payload["name"] = "group2"
 
         with self.assertNumQueries(5):
-            response = self.client.put(self.url, new_data)
-        test_utils.assert_400_validation_failed(self, response, 
-            error="Bad request.", 
-            data={"name": ["community with this name already exists."]}
-        )
+            response = self.client.put(self.url, bad_payload)
+        self.assert_validation_failed(response, data={
+            "name": ["community with this name already exists."]
+        })
         self.assertEqual(Community.objects.filter(name="group2").count(), 1)
 
-    def test_update_community_for_non_admins_should_fail(self):
-        self.alice_joins_group1()
-
-        # anonymous users have no access:
-        with self.assertNumQueries(0):
-            response = self.client.put(self.url)
-        test_utils.assert_403_not_authenticated(self, response)
-
-        # alice is now regular group member, she cannot update the data:
-        self.login_as("alice")
-
-        with self.assertNumQueries(3):  # (3) is admin check
-            response = self.client.put(self.url, self.new_data)
-        test_utils.assert_403_not_authorized(self, response)
-
-        # ben is not a group member at all, he cannot update the data either:
-        self.login_as("ben")
-
-        with self.assertNumQueries(3):
-            response = self.client.put(self.url, self.new_data)
-        test_utils.assert_403_not_authorized(self, response)
-
-        self.assertNotEqual(Community.objects.get(name="group1").password, self.new_data["password"])
-
-
     def test_delete_community_works_for_group_admins(self):
+        """
+        A group admin can delete the corresponding `community` object.
+        """
+        get_response = lambda: self.client.delete(self.url)
+
+        # authentication is required
+        with self.assertNumQueries(0):
+            self.assert_not_authenticated(get_response())
+
+        # membership is required:
+        self.login_as("ben")
+        with self.assertNumQueries(3):
+            self.assert_not_authorized(get_response())
+
+        # alice is a regular group member, admin rights are required:
+        self.login_as("alice")
+        with self.assertNumQueries(3):
+            self.assert_not_authorized(get_response())
+
+        self.assertEqual(Community.objects.filter(name=self.GROUP).count(), 1)
+
         # bob is group admin, he can delete the group:
         self.login_as("bob")
-
         with self.assertNumQueries(9):
             # (5) select quizzes (6) del members (7) del chat (8) del tournaments (9) del com 
-            response = self.client.delete(self.url)
-        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-        self.assertEqual(response.data, None)
-        self.assertEqual(Community.objects.filter(name="group1").count(), 0)
+            response = get_response()
+            self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+            self.assertEqual(response.data, None)
 
-    def test_delete_community_for_non_admins_should_fail(self):
-        self.alice_joins_group1()
-
-        # anonymous users have no access
-        with self.assertNumQueries(0):
-            response = self.client.delete(self.url)
-        test_utils.assert_403_not_authenticated(self, response)
-
-        # alice is now regular group member, she cannot update the data:
-        self.login_as("alice")
-        with self.assertNumQueries(3):
-            response = self.client.delete(self.url)
-        test_utils.assert_403_not_authorized(self, response)
-
-        # ben is not a group member at all, he cannot update the data either:
-        self.login_as("ben")
-        with self.assertNumQueries(3):
-            response = self.client.delete(self.url)
-        test_utils.assert_403_not_authorized(self, response)
-
-        self.assertEqual(Community.objects.filter(name="group1").count(), 1)
+        self.assertEqual(Community.objects.filter(name=self.GROUP).count(), 0)
 
 
 
 class MembershipDetailTest(SetupCommunityDataMixin, APITestCase):
     def setUp(self):
-        self.COMMUNITY = self.communities["group1"]["id"]
-        self.USER = self.users["bob"]["id"]
+        # consider bob's membership in group1:
+        self.USER = "bob"
+        self.USER_ID = self.USERS["bob"]["id"]
+
+        self.GROUP = "group1"
+        self.GROUP_ID = self.COMMUNITIES[self.GROUP]["id"]
+        
         self.url = reverse(
             'communities:membership-detail',  
             kwargs={
-                'community_id': self.COMMUNITY,
-                'user_id': self.USER,
+                'community_id': self.GROUP_ID,
+                'user_id': self.USER_ID,
             }
         )
         # let's try making bob not an admin:
-        self.new_data = {"is_admin": False}
-        self.expected_keys = [
-            'user', 'community', 'is_admin', 'is_approved', 'time_created'
-        ]
+        self.update_payload = {"is_admin": False}
+        self.expected_keys = MEMBERSHIP_EXPECTED_KEYS
 
     def test_get_membership(self):
-        self.alice_joins_group1()
+        """
+        A group member can get the `membership` object of any group member.
+        """
+        get_response = lambda: self.client.get(self.url)
 
-        # anonymous users have no access:
+        # aauthentication is required:
         with self.assertNumQueries(0):
-            response = self.client.get(self.url)
-        test_utils.assert_403_not_authenticated(self, response)
+            self.assert_not_authenticated(get_response())
 
-        # bob is group admin and it's his data, he sees the data:
-        self.login_as("bob")
-        with self.assertNumQueries(5):  # (3) check membership (4) get mem (5) get com (?)
-            response = self.client.get(self.url)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(list(response.data.keys()), self.expected_keys)
-        self.assertEqual(response.data["user"]["id"], self.USER)
-
-        # alice is group member, she sees the data:
-        self.login_as("alice")
-        with self.assertNumQueries(5):
-            response = self.client.get(self.url)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(list(response.data.keys()), self.expected_keys)
-        self.assertEqual(response.data["user"]["id"], self.USER)
-
-        # ben is not a group member, he sees nothing:
+        # membership is required:
         self.login_as("ben")
         with self.assertNumQueries(4):
-            response = self.client.get(self.url)
-        test_utils.assert_403_not_authorized(self, response)
+            self.assert_not_authorized(get_response())
 
+        # alice is a regular group member, works for her:
+        self.login_as("alice")
+        with self.assertNumQueries(5): # (3) check membership (4) get mem (5) get com
+            response = get_response()
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            self.assertEqual(list(response.data.keys()), self.expected_keys)
+            self.assertEqual(response.data["user"]["id"], self.USER_ID)
+
+        # bob is group admin and it's his data, works for him:
+        self.login_as("bob")
+        with self.assertNumQueries(5):
+            response = get_response()
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            self.assertEqual(list(response.data.keys()), self.expected_keys)
+            self.assertEqual(response.data["user"]["id"], self.USER_ID)
 
     def test_update_membership_works_for_group_admins(self):
+        """
+        A group admin can update each member's `membership` object.
+        """
+        get_response = lambda: self.client.put(self.url, self.update_payload)
+
+        # authentication is required:
+        with self.assertNumQueries(0):
+            self.assert_not_authenticated(get_response())
+
+        # membership is required:
+        self.login_as("ben")
+        with self.assertNumQueries(3):
+            self.assert_not_authorized(get_response())
+
+        # alice is a regular group member, admin rights are required:
+        self.login_as("alice")
+        with self.assertNumQueries(3):
+            self.assert_not_authorized(get_response())
+
+        self.assertTrue(Membership.objects.get(
+            community_id=self.GROUP_ID, user_id=self.USER_ID).is_admin)
+
         # bob is group admin, he can update the data:
         self.login_as("bob")
-
         with self.assertNumQueries(6): # (3) is admin check (4) get mem (5) update mem (6) get com (?)
-            response = self.client.put(self.url, self.new_data)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(
-            list(response.data.keys()),
-            ['user', 'community', 'is_admin', 'is_approved', 'time_created']
-        )
-        self.assertEqual(response.data["is_admin"], False)
+            response = get_response()
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            self.assertEqual(list(response.data.keys()), self.expected_keys)
+            self.assertEqual(response.data["is_admin"], False)
+
         self.assertFalse(Membership.objects.get(
-            community_id=self.COMMUNITY, user_id=self.USER).is_admin)
+            community_id=self.GROUP_ID, user_id=self.USER_ID).is_admin)
 
     def test_submit_bad_data_when_updating_membership(self):
         """
@@ -516,126 +536,95 @@ class MembershipDetailTest(SetupCommunityDataMixin, APITestCase):
 
         # let's try to change bob's membership to ben
         # user is a read-only field so it is simply ignored:
-        new_data = {"user": {"id": self.users["ben"]["id"]}}
-        with self.assertNumQueries(6): # as normal
-            response = self.client.put(self.url, new_data)
+        payload = {"user": {"id": self.USERS["ben"]["id"]}}
+        with self.assertNumQueries(6):
+            response = self.client.put(self.url, payload)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["user"]["id"], self.users["bob"]["id"])
+        self.assertEqual(response.data["user"]["id"], self.USER_ID)
 
         # now, let's try to move bob's membership to another community
         # community is a read-only field so it is also ignored:
-        new_data = {"community": 2}
-        with self.assertNumQueries(6): # as normal
-            response = self.client.put(self.url, new_data)
+        payload = {"community": self.COMMUNITIES["group2"]["id"]}
+        with self.assertNumQueries(6):
+            response = self.client.put(self.url, payload)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["community"], self.COMMUNITY)
+        self.assertEqual(response.data["community"], self.GROUP_ID)
 
         # now, let's try to submit bad value:
-        new_data = {"is_admin": "Of course!"}
+        payload = {"is_admin": "Of course!"}
         with self.assertNumQueries(4):
-            response = self.client.put(self.url, new_data)
-
-        test_utils.assert_400_validation_failed(self, response, 
-            error="Bad request.", 
-            data={"is_admin": ["Must be a valid boolean."]}
-        )
+            response = self.client.put(self.url, payload)
+        self.assert_validation_failed(response, data={
+            "is_admin": ["Must be a valid boolean."]
+        })
         self.assertTrue(Membership.objects.get(
-            user__username="bob", community_id=self.COMMUNITY).is_admin)
-
-
-    def test_update_community_for_non_admins_should_fail(self):
-        self.alice_joins_group1()
-
-        # anonymous users have no access:
-        with self.assertNumQueries(0):
-            response = self.client.put(self.url, self.new_data)
-        test_utils.assert_403_not_authenticated(self, response)
-
-        # alice is a regular group member, she cannot update the data:
-        self.login_as("alice")
-        with self.assertNumQueries(3):
-            response = self.client.put(self.url, self.new_data)
-        test_utils.assert_403_not_authorized(self, response)
-
-        # ben is not a group member at all, he cannot update the data either:
-        self.login_as("ben")
-        with self.assertNumQueries(3):
-            response = self.client.put(self.url, self.new_data)
-        test_utils.assert_403_not_authorized(self, response)
-        self.assertTrue(Membership.objects.get(
-            community_id=self.COMMUNITY, user_id=self.USER).is_admin)
-
+            community_id=self.GROUP_ID, user_id=self.USER_ID).is_admin)
 
     def test_delete_membership_works_for_group_admins(self):
-        self.alice_joins_group1()
-        ALICE_ID = 2
+        """
+        Only group admin can delete other user's memberships.
+        Group admin cannot delete his own membership.
+        """
+        get_response = lambda: self.client.delete(self.url)
 
-        url = reverse(
-            'communities:membership-detail',  
-            kwargs={
-                'community_id': self.COMMUNITY,
-                'user_id': ALICE_ID,
-            }
-        )
-        # bob is group admin, he can delete alice:
-        self.login_as("bob")
-
-        with self.assertNumQueries(5):
-            response = self.client.delete(url)
-        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-        self.assertEqual(response.data, None)
-        self.assertEqual(Membership.objects.filter(
-            community_id=self.COMMUNITY, user_id=ALICE_ID).count(), 0)
-
-        # but he cannot delete himself because he is an admin:
-        with self.assertNumQueries(3):
-            response = self.client.delete(self.url)
-        test_utils.assert_403_not_authorized(self, response)
-        self.assertEqual(Membership.objects.filter(
-            community_id=self.COMMUNITY, user_id=self.USER).count(), 1)
-
-
-    def test_users_can_leave_a_group(self):
-        self.alice_joins_group1()
-        ALICE_ID = 2
-
-        url = reverse(
-            'communities:membership-detail',  
-            kwargs={
-                'community_id': self.COMMUNITY,
-                'user_id': ALICE_ID,
-            }
-        )
-        # alice can leave the community:
-        self.login_as("alice")
-        with self.assertNumQueries(5):
-            response = self.client.delete(url)
-        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-        self.assertEqual(response.data, None)
-
-        self.assertEqual(Membership.objects.filter(
-            community_id=self.COMMUNITY, user_id=ALICE_ID).count(), 0)
-
-
-    def test_delete_membership_for_non_admins_should_fail(self):
-        self.alice_joins_group1()
-
-        # anonymous users have no access
+        # authentication is required:
         with self.assertNumQueries(0):
-            response = self.client.delete(self.url)
-        test_utils.assert_403_not_authenticated(self, response)
+            self.assert_not_authenticated(get_response())
 
-        # alice is a regular community member, she cannot delete a member:
-        self.login_as("alice")
-        with self.assertNumQueries(3):
-            response = self.client.delete(self.url)
-        test_utils.assert_403_not_authorized(self, response)
-
-        # ben is not a group member at all, he cannot delete the data either:
+        # membership is required:
         self.login_as("ben")
         with self.assertNumQueries(3):
-            response = self.client.delete(self.url)
-        test_utils.assert_403_not_authorized(self, response)
+            self.assert_not_authorized(get_response())
+
+        # alice is a regular community member, admin rights are required:
+        self.login_as("alice")
+        with self.assertNumQueries(3):
+            self.assert_not_authorized(get_response())
+
+        # bob is group admin, but he cannot delete himself:
+        self.login_as("bob")
+        with self.assertNumQueries(3):
+            self.assert_not_authorized(get_response())
 
         self.assertEqual(Membership.objects.filter(
-            community_id=self.COMMUNITY, user_id=self.USER).count(), 1)
+            community_id=self.GROUP_ID, user_id=self.USER_ID).count(), 1)
+
+        # bob is group admin, he can delete regular group members:
+        USER = "alice"
+        USER_ID = self.USERS[USER]["id"]
+        url = reverse(
+            'communities:membership-detail',
+            kwargs={
+                'community_id': self.GROUP_ID,
+                'user_id': USER_ID,
+            }
+        )
+        with self.assertNumQueries(5):
+            response = self.client.delete(url)
+            self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+            self.assertEqual(response.data, None)
+
+        self.assertEqual(Membership.objects.filter(
+            community_id=self.GROUP_ID, user_id=USER_ID).count(), 0)
+
+    def test_users_can_leave_a_group(self):
+        """
+        A regular group member can delete his membership (i.e. leave the group).
+        """
+        USER = "alice"
+        USER_ID = self.USERS[USER]["id"]
+        url = reverse(
+            'communities:membership-detail',
+            kwargs={
+                'community_id': self.GROUP_ID,
+                'user_id': USER_ID,
+            }
+        )
+        self.login_as("alice")
+        with self.assertNumQueries(5):
+            response = self.client.delete(url)
+            self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+            self.assertEqual(response.data, None)
+            
+        self.assertEqual(Membership.objects.filter(
+            community_id=self.GROUP_ID, user_id=USER_ID).count(), 0)

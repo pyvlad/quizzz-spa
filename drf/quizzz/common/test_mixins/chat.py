@@ -1,9 +1,6 @@
-from quizzz.common.test_utils import update_pk_sequence
-from quizzz.common.testdata import EXTRA_MEMBERSHIPS, MESSAGES
-
-from quizzz.communities.models import Membership
 from quizzz.chat.models import ChatMessage
 
+from .data import MESSAGES
 from . import SetupCommunityDataMixin
 
 
@@ -17,12 +14,7 @@ class SetupChatDataMixin(SetupCommunityDataMixin):
 
     @classmethod
     def set_up_chat_data(cls):
-        for membership in EXTRA_MEMBERSHIPS:
-            Membership.objects.create(**membership)
-
         for message in MESSAGES:
             ChatMessage.objects.create(**message)
-
-        update_pk_sequence(ChatMessage)
-
-        cls.messages = MESSAGES
+        cls.update_pk_sequence(ChatMessage)
+        cls.MESSAGES = MESSAGES

@@ -8,7 +8,6 @@ urlpatterns = [
     path('register/', views.UserCreate.as_view(), name="register"),
     path('login/', views.Login.as_view(), name="login"),
     path('logout/', views.Logout.as_view(), name="logout"),
-    path('time/', views.CurrentTime.as_view(), name="time"),
 
     path('confirm-email/<token>/', views.ConfirmEmailLink.as_view(), name="confirm-email-link"),
     path('resend-confirm-email/', views.ResendConfirmEmail.as_view(), name='resend-confirm-email'),

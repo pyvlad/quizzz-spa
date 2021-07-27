@@ -1,10 +1,8 @@
-import collections
-
-from quizzz.common.test_utils import update_pk_sequence
-from quizzz.common.testdata import QUIZZES, QUIZ_QUESTIONS, QUESTION_OPTIONS
+import copy
 
 from quizzz.quizzes.models import Quiz, Question, Option
 
+from .data import QUIZZES
 from . import SetupCommunityDataMixin
 
 
@@ -18,20 +16,20 @@ class SetupQuizDataMixin(SetupCommunityDataMixin):
 
     @classmethod
     def set_up_quiz_data(cls):
-        Quiz.objects.create(**QUIZZES["quiz1"])
-        update_pk_sequence(Quiz)
+        for quasi_quiz in QUIZZES.values():
+            quiz = copy.deepcopy(quasi_quiz)
 
-        for question in QUIZ_QUESTIONS.values():
-            Question.objects.create(**question)
-        update_pk_sequence(Question)
-            
-        for option in QUESTION_OPTIONS:
-            Option.objects.create(**option)
-        update_pk_sequence(Option)
+            question_data = quiz.pop("question_data")
+            orm_quiz = Quiz.objects.create(**quiz)
+            cls.update_pk_sequence(Quiz)
 
-        cls.quiz = QUIZZES["quiz1"]
-        cls.quiz_questions = QUIZ_QUESTIONS
-        cls.quiz_options = QUESTION_OPTIONS
-        cls.quiz_options_by_question_id = collections.defaultdict(list)
-        for option in QUESTION_OPTIONS:
-            cls.quiz_options_by_question_id[option["question_id"]] += [option]
+            for question in question_data:
+                option_data = question.pop("option_data")
+                question_obj = Question.objects.create(**question, quiz_id=orm_quiz.id)
+                cls.update_pk_sequence(Question)
+
+                for option in option_data:
+                    Option.objects.create(**option, question_id=question_obj.id)
+                    cls.update_pk_sequence(Option)
+
+        cls.QUIZZES = QUIZZES

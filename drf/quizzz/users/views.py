@@ -163,14 +163,3 @@ class UserList(APIView):
         users = CustomUser.objects.all()
         serializer = UserSerializer(users, many=True)
         return Response(serializer.data)
-
-
-class CurrentTime(APIView):
-    """
-    View that returns current time for authenticated users.
-    """
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request):
-        import time
-        return Response({'time': time.time()*1000})

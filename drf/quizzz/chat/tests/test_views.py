@@ -2,57 +2,71 @@ from django.urls import reverse
 from rest_framework.test import APITestCase
 from rest_framework import status
 
-from quizzz.common import test_utils
 from quizzz.common.test_mixins import SetupChatDataMixin
 
 from ..models import ChatMessage
 from ..views import ChatMessageList
 
 
+CHAT_PAGE_EXPECTED_KEYS = ['count', 'next', 'previous', 'results']
+MESSAGE_EXPECTED_KEYS = ['id', 'text', 'time_created', 'time_updated', 'user', "community"]
+
+
 class ChatMessageListTest(SetupChatDataMixin, APITestCase):
 
-    def setUp(self):
-        self.community_id = self.communities["group1"]["id"]
-        self.community_messages = [
-            m for m in self.messages 
-            if m["community_id"]==self.community_id
-        ]
-        self.url = reverse('chat:community-chat', kwargs={"community_id": self.community_id})
-        
-        self.expected_keys = ['id', 'text', 'time_created', 'time_updated', 'user', "community"]
+    def _load_group_messages(self):
+        return ChatMessage.objects.filter(community_id=self.GROUP_ID).all()
 
-        self.new_message = {"text": "new message"}
+    def setUp(self):
+        self.GROUP = "group1"
+        self.GROUP_ID = self.COMMUNITIES[self.GROUP]["id"]
+
+        self.num_messages = len(self._load_group_messages())
+        # pagination and deletion below assume self.num_messages is 2 and pk = [1,2]
+          
+        self.url = reverse('chat:community-chat', 
+            kwargs={ "community_id": self.GROUP_ID }
+        )
+        self.payload = {"text": "new message"}
+        self.chat_page_expected_keys = CHAT_PAGE_EXPECTED_KEYS
+        self.message_expected_keys = MESSAGE_EXPECTED_KEYS
 
 
     def test_normal(self):
         """
         Group members can see group chat.
         """
-        # anonymous users cannot access
-        with self.assertNumQueries(0):
-            response = self.client.get(self.url)
-        test_utils.assert_403_not_authenticated(self, response)
+        get_response = lambda: self.client.get(self.url)
 
-        # non-group members cannot access
+        # authentication is required:
+        with self.assertNumQueries(0):
+            self.assert_not_authenticated(get_response())
+
+        # membership is required:
         self.login_as("ben")
         with self.assertNumQueries(3):
-            response = self.client.get(self.url)
-        test_utils.assert_403_not_authorized(self, response)
+            self.assert_not_authorized(get_response())
 
-        # group-members can access
+        # works for a regular group member
         self.login_as("alice")
         with self.assertNumQueries(5):  
             # (1-2) request.user (3) member check (4) count(*) for pagination (5) select page 1
             response = self.client.get(self.url)
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["count"], len(self.community_messages))
-        self.assertEqual(response.data["next"], None)
-        self.assertEqual(response.data["previous"], None)
-        self.assertEqual(len(response.data["results"]), len(self.community_messages))
-        self.assertListEqual(list(response.data["results"][0].keys()), self.expected_keys)
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            self.assertEqual(response.data["next"], None)
+            self.assertEqual(response.data["previous"], None)
+            self.assertEqual(response.data["count"], self.num_messages)
+            self.assertEqual(len(response.data["results"]), self.num_messages)
+            self.assertListEqual(list(response.data.keys()), self.chat_page_expected_keys)
+            self.assertListEqual(list(response.data["results"][0].keys()), self.message_expected_keys)
 
     def test_pagination(self):
+        """
+        Test how pagination works:
+        - `count` shows total number of messages in group chat;
+        - `next` and `previous` are either None or a absolute URL with next/previous page;
+        - `results` contains list of paginated objects.
+        """
         self.login_as("alice")
         
         TEMP_PAGE_SIZE = 1
@@ -63,8 +77,8 @@ class ChatMessageListTest(SetupChatDataMixin, APITestCase):
         
         # 1st page
         response = self.client.get(self.url)
-        
-        self.assertEqual(response.data["count"], len(self.community_messages))
+
+        self.assertEqual(response.data["count"], self.num_messages)
         self.assertEqual(response.data["next"], "http://testserver" + self.url + "?page=2")
         self.assertEqual(response.data["previous"], None)
         self.assertEqual(len(response.data["results"]), TEMP_PAGE_SIZE)
@@ -72,7 +86,7 @@ class ChatMessageListTest(SetupChatDataMixin, APITestCase):
         # 2nd page
         response = self.client.get(response.data["next"])
         
-        self.assertEqual(response.data["count"], len(self.community_messages))
+        self.assertEqual(response.data["count"], self.num_messages)
         self.assertEqual(response.data["next"], None)
         self.assertEqual(response.data["previous"], "http://testserver" + self.url)
         self.assertEqual(len(response.data["results"]), TEMP_PAGE_SIZE)
@@ -86,67 +100,64 @@ class ChatMessageListTest(SetupChatDataMixin, APITestCase):
         A group member can post a new chat message.
         It returns a new message's serialized representation.
         """
-        # Anonymous users cannot post messages:
+        get_response = lambda: self.client.post(self.url, self.payload)
+        
+        # authentication is required:
         with self.assertNumQueries(0):
-            response = self.client.post(self.url, self.new_message)
-        test_utils.assert_403_not_authenticated(self, response)
+            self.assert_not_authenticated(get_response())
 
-        # Non-group members cannot leave messages:
+        # Membership is required:
         self.login_as("ben")
         with self.assertNumQueries(3):  # (1-2) request.user (3) membership check
-            response = self.client.post(self.url, self.new_message)
-        test_utils.assert_403_not_authorized(self, response)
+            self.assert_not_authorized(get_response())
 
-        # make sure no messages have been inserted into DB:
-        self.assertEqual(ChatMessage.objects.count(), len(self.messages))
+        self.assertEqual(len(self._load_group_messages()), self.num_messages)
 
-        # Group members can leave new messages:
-        self.login_as("bob")
+        # A regular group member can leave a new message:
+        self.login_as("alice")
         with self.assertNumQueries(4):  # (1-2) request.user (3) membership check (4) insert
-            response = self.client.post(self.url, self.new_message)
-
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertListEqual(list(response.data.keys()), self.expected_keys)
-        self.assertEqual(ChatMessage.objects.count(), len(self.messages) + 1)
+            response = get_response()
+            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+            self.assertListEqual(list(response.data.keys()), self.message_expected_keys)
+        
+        self.assertEqual(len(self._load_group_messages()), self.num_messages + 1)
 
 
     def test_delete_message_works_for_group_admins(self):
         def get_message_url(pk):
             return reverse(
                 'chat:community-chat-message', 
-                kwargs={"community_id": self.community_id, "message_id": pk}
+                kwargs={"community_id": self.GROUP_ID, "message_id": pk}
             )
 
-        # anonymous users cannot delete messages
+        get_response = lambda pk: self.client.delete(get_message_url(pk))
+
+        # authentication is required:
         with self.assertNumQueries(0):
-            response = self.client.delete(get_message_url(1))
-        test_utils.assert_403_not_authenticated(self, response)
+            self.assert_not_authenticated(get_response(1))
 
-        # alice a regular group1 member, she cannot delete neither her nor bob's message:
-        self.login_as("alice")
-        for pk in [1,2]:
-            with self.assertNumQueries(3):
-                response = self.client.delete(get_message_url(pk))
-            test_utils.assert_403_not_authorized(self, response)
-
-        # ben is not a group member at all, he cannot delete the data either:
+        # membership is required:
         self.login_as("ben")
         for pk in [1,2]:
             with self.assertNumQueries(3):
-                response = self.client.delete(get_message_url(pk))
-            test_utils.assert_403_not_authorized(self, response)
+                self.assert_not_authorized(get_response(pk))
 
-        # make sure no messages have been deleted from the DB:
-        self.assertEqual(ChatMessage.objects.count(), len(self.messages))
+        # alice a regular group1 member, admin rights are required to delete messages (even own):
+        self.login_as("alice")
+        for pk in [1,2]:
+            with self.assertNumQueries(3):
+                self.assert_not_authorized(get_response(pk))
+
+        self.assertEqual(len(self._load_group_messages()), self.num_messages)
 
         # bob is group admin, he can delete messages:
         self.login_as("bob")
 
         for pk in [1,2]:
             with self.assertNumQueries(5):
-                response = self.client.delete(get_message_url(pk))
-            self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-            self.assertEqual(response.data, None)
+                response = get_response(pk)
+                self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+                self.assertEqual(response.data, None)
 
         # both group1 messages are no longer in the DB:
-        self.assertEqual(ChatMessage.objects.filter(community__name="group1").count(), 0)
+        self.assertEqual(len(self._load_group_messages()), self.num_messages - 2)

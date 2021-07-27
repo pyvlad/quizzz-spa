@@ -2,26 +2,42 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 from django.urls import reverse
 
-from quizzz.common import test_utils
 from quizzz.common.test_mixins import SetupRoundsMixin
+from quizzz.quizzes.tests.test_views import QUIZ_EXPECTED_KEYS
 
+from quizzz.quizzes.models import Quiz
 from ..models import Play, PlayAnswer
 
+
+QUIZ_EXPECTED_KEYS = ['name', 'introduction', 'questions']
+REVIEWED_ROUND_EXPECTED_KEYS = [
+    'play','play_answers','quiz','author','play_count','choices_by_question_id'
+]
+REVIEWED_PLAY_EXPECTED_KEYS = [
+    'round','result','start_time','finish_time', 'client_start_time','client_finish_time'
+]
 
 
 class StartRoundTest(SetupRoundsMixin, APITestCase):
     def setUp(self):
-        self.alice_joins_group1()
+        self.GROUP = "group1"
+        self.GROUP_ID = self.COMMUNITIES[self.GROUP]["id"]
 
-        self.community_id = self.communities["group1"]["id"]
+        self.ROUND = "round1"
+        self.ROUND_ID = self.ROUNDS[self.ROUND]["id"]
+        self.QUIZ_ID = self.ROUNDS[self.ROUND]["quiz_id"]
+
+        quiz = Quiz.objects.get(pk=self.QUIZ_ID)
+        self.num_questions = quiz.questions.count()
 
         self.url = reverse(
             'plays:start-round', 
             kwargs={
-                "community_id": self.community_id,
-                "round_id": self.round["id"],
+                "community_id": self.GROUP_ID,
+                "round_id": self.ROUND_ID,
             }
         )
+        self.expected_keys = QUIZ_EXPECTED_KEYS
     
     def test_normal(self):
         """
@@ -30,47 +46,44 @@ class StartRoundTest(SetupRoundsMixin, APITestCase):
         """
         init_count = Play.objects.count()
 
-        # Non-admins cannot create rounds:
-        with self.assertNumQueries(0):
-            response = self.client.post(self.url, {})
-        test_utils.assert_403_not_authenticated(self, response)
+        get_response = lambda: self.client.post(self.url, {})
 
+        # authentication is required
+        with self.assertNumQueries(0):
+            self.assert_not_authenticated(get_response())
+
+        # membership is required
         self.login_as("ben")
         with self.assertNumQueries(3):
-            response = self.client.post(self.url, {})
-        test_utils.assert_403_not_authorized(self, response)
+            self.assert_not_authorized(get_response())
 
         self.assertEqual(Play.objects.count(), init_count)
 
-        # Alice is a group member, she can play the round:
+        # a regular group member can start the round
         self.login_as("alice")
         with self.assertNumQueries(12):
-            response = self.client.post(self.url, {})
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertListEqual(
-            list(response.data.keys()), 
-            ['name', 'introduction', 'questions']
-        )
-        self.assertEqual(len(response.data["questions"]), len(self.quiz_questions))
+            response = get_response()
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            self.assertListEqual(list(response.data.keys()), self.expected_keys)
+            self.assertEqual(len(response.data["questions"]), self.num_questions)
+
         self.assertEqual(Play.objects.count(), init_count + 1)
 
-        # Reloading page returns the quiz again, but returns same Play:
+        # reloading page returns the quiz again, but returns same Play:
         with self.assertNumQueries(9):
-            response = self.client.post(self.url, {})
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertListEqual(
-            list(response.data.keys()), 
-            ['name', 'introduction', 'questions']
-        )
-        self.assertEqual(len(response.data["questions"]), len(self.quiz_questions))
+            response = get_response()
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            self.assertListEqual(list(response.data.keys()), self.expected_keys)
+            self.assertEqual(len(response.data["questions"]), self.num_questions)
+
         self.assertEqual(Play.objects.count(), init_count + 1)
 
         # Bob is quiz author, he cannot play it:
         self.login_as("bob")
         with self.assertNumQueries(5):
-            response = self.client.post(self.url, {})
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.data["form_errors"][0], "You cannot play your own quiz.")
+            response = get_response()
+            self.assert_validation_failed(response, data=["You cannot play your own quiz."])
+
         self.assertEqual(Play.objects.count(), init_count + 1)
 
 
@@ -78,22 +91,25 @@ class StartRoundTest(SetupRoundsMixin, APITestCase):
 
 class SubmitRoundTest(SetupRoundsMixin, APITestCase):
     def setUp(self):
-        self.alice_joins_group1()
+        self.GROUP = "group1"
+        self.GROUP_ID = self.COMMUNITIES[self.GROUP]["id"]
 
-        self.community_id = self.communities["group1"]["id"]
+        self.ROUND = "round1"
+        self.ROUND_ID = self.ROUNDS[self.ROUND]["id"]
+        self.QUIZ_ID = self.ROUNDS[self.ROUND]["quiz_id"]
 
         self.start_url = reverse(
             'plays:start-round', 
             kwargs={
-                "community_id": self.community_id,
-                "round_id": self.round["id"],
+                "community_id": self.GROUP_ID,
+                "round_id": self.ROUND_ID,
             }
         )
         self.url = reverse(
             'plays:submit-round', 
             kwargs={
-                "community_id": self.community_id,
-                "round_id": self.round["id"],
+                "community_id": self.GROUP_ID,
+                "round_id": self.ROUND_ID,
             }
         )
         self.payload = {
@@ -111,52 +127,52 @@ class SubmitRoundTest(SetupRoundsMixin, APITestCase):
         init_play_count = Play.objects.count()
         init_answer_count = PlayAnswer.objects.count()
 
-        # Non-members cannot start rounds:
-        with self.assertNumQueries(0):
-            response = self.client.post(self.url, self.payload)
-        test_utils.assert_403_not_authenticated(self, response)
+        get_response = lambda: self.client.post(self.url, self.payload)
 
+        # authentication is required
+        with self.assertNumQueries(0):
+            self.assert_not_authenticated(get_response())
+
+        # membership is required
         self.login_as("ben")
         with self.assertNumQueries(3):
-            response = self.client.post(self.url, self.payload)
-        test_utils.assert_403_not_authorized(self, response)
+            self.assert_not_authorized(get_response())
 
         self.assertEqual(Play.objects.count(), init_play_count)
         self.assertEqual(PlayAnswer.objects.count(), init_answer_count)
 
-        # Alice is a group member, she can play the round:
+        # a regular group member can submit the round
         self.login_as("alice")
-        response = self.client.post(self.start_url, {})
+        self.client.post(self.start_url, {})    # (must start the round first)
         with self.assertNumQueries(14):
             response = self.client.post(self.url, self.payload)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        play = Play.objects.get(user_id=self.users["alice"]["id"], round_id=self.round["id"])
+        play = Play.objects.get(user_id=self.USERS["alice"]["id"], round_id=self.ROUND_ID)
         self.assertTrue(play.is_submitted)
         self.assertEqual(play.result, 2)
         self.assertIsNotNone(play.finish_time)
         self.assertEqual(PlayAnswer.objects.count(), init_answer_count + 2)
+
+    def test_submit_without_starting_raises_404(self):
+        """
+        Submit without starting a round raises 404.
+        """
+        self.login_as("alice")
+        with self.assertNumQueries(5):
+            response = self.client.post(self.url, self.payload)
+            self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_empty_payload_raises_400(self):
         """
         List of "answers" must be in the payload.
         """
         self.login_as("alice")
-
-        # submit without starting a round raises 404:
-        response = self.client.post(self.url, self.payload)
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-
-        # start round
         self.client.post(self.start_url, {})
-
-        # empty payload raises 400:
         response = self.client.post(self.url, {})
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(
-            str(response.data["form_errors"]["answers"][0]), 
-            'This field is required.'
-        )
+        self.assert_validation_failed(response, data={
+            "answers": ["This field is required."]
+        })
 
     def test_multiple_options_for_one_question(self):
         """
@@ -176,7 +192,7 @@ class SubmitRoundTest(SetupRoundsMixin, APITestCase):
             ]
         })
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        play = Play.objects.get(user_id=self.users["alice"]["id"], round_id=self.round["id"])
+        play = Play.objects.get(user_id=self.USERS["alice"]["id"], round_id=self.ROUND_ID)
         self.assertEqual(play.result, 1)
 
     def test_incomplete_answers(self):
@@ -192,7 +208,7 @@ class SubmitRoundTest(SetupRoundsMixin, APITestCase):
             ]
         })
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        play = Play.objects.get(user_id=self.users["alice"]["id"], round_id=self.round["id"])
+        play = Play.objects.get(user_id=self.USERS["alice"]["id"], round_id=self.ROUND_ID)
         self.assertEqual(play.result, 1)
         self.assertEqual(PlayAnswer.objects.count(), 2)
 
@@ -211,7 +227,7 @@ class SubmitRoundTest(SetupRoundsMixin, APITestCase):
         })
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         
-        play = Play.objects.get(user_id=self.users["alice"]["id"], round_id=self.round["id"])
+        play = Play.objects.get(user_id=self.USERS["alice"]["id"], round_id=self.ROUND_ID)
         finish_time = play.finish_time
         selected_option_one = PlayAnswer.objects.get(play_id=play.id, question_id=1)
         selected_option_two = PlayAnswer.objects.get(play_id=play.id, question_id=2)
@@ -226,10 +242,9 @@ class SubmitRoundTest(SetupRoundsMixin, APITestCase):
                 {"question_id": 1, "option_id": 4},
             ]
         })
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.data["form_errors"][0], "You have already played this round.")
+        self.assert_validation_failed(response, data=["You have already played this round."])
         
-        play = Play.objects.get(user_id=self.users["alice"]["id"], round_id=self.round["id"])
+        play = Play.objects.get(user_id=self.USERS["alice"]["id"], round_id=self.ROUND_ID)
         self.assertEqual(play.result, 1)
         self.assertEqual(finish_time, play.finish_time)
         self.assertEqual(selected_option_one.option_id, PlayAnswer.objects.get(play_id=play.id, question_id=1).option_id)
@@ -242,80 +257,82 @@ class SubmitRoundTest(SetupRoundsMixin, APITestCase):
 
 class ReviewRoundTest(SetupRoundsMixin, APITestCase):
     def setUp(self):
-        self.alice_joins_group1()
+        self.GROUP = "group1"
+        self.GROUP_ID = self.COMMUNITIES[self.GROUP]["id"]
 
-        self.community_id = self.communities["group1"]["id"]
+        self.ROUND = "round1"
+        self.ROUND_ID = self.ROUNDS[self.ROUND]["id"]
+        self.QUIZ_ID = self.ROUNDS[self.ROUND]["quiz_id"]
 
+        self.url = reverse(
+            'plays:review-round', 
+            kwargs={
+                "community_id": self.GROUP_ID,
+                "round_id": self.ROUND_ID,
+            }
+        )
         self.start_url = reverse(
             'plays:start-round', 
             kwargs={
-                "community_id": self.community_id,
-                "round_id": self.round["id"],
+                "community_id": self.GROUP_ID,
+                "round_id": self.ROUND_ID,
             }
         )
         self.submit_url = reverse(
             'plays:submit-round', 
             kwargs={
-                "community_id": self.community_id,
-                "round_id": self.round["id"],
+                "community_id": self.GROUP_ID,
+                "round_id": self.ROUND_ID,
             }
         )
-        self.payload = {
+        self.submit_payload = {
             "answers": [
                 {"question_id": 1, "option_id": 4}, # right
                 {"question_id": 2, "option_id": 7}, # wrong
             ]
         }
-        self.url = reverse(
-            'plays:review-round', 
-            kwargs={
-                "community_id": self.community_id,
-                "round_id": self.round["id"],
-            }
-        )
     
     def test_normal(self):
         """
         Group member can review a round after he played it.
         """
-        # Check permissions:
-        with self.assertNumQueries(0):
-            response = self.client.get(self.url)
-        test_utils.assert_403_not_authenticated(self, response)
+        get_response = lambda: self.client.get(self.url)
 
+        # authentication is required
+        with self.assertNumQueries(0):
+            self.assert_not_authenticated(get_response())
+
+        # membership is required
         self.login_as("ben")
         with self.assertNumQueries(3):
-            response = self.client.get(self.url)
-        test_utils.assert_403_not_authorized(self, response)
+            self.assert_not_authorized(get_response())
 
         self.login_as("alice")
-        with self.assertNumQueries(8):
-            response = self.client.get(self.url)
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-
-        # start round
-        response = self.client.post(self.start_url, {})
-
-        with self.assertNumQueries(8):
-            response = self.client.get(self.url)
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.data["form_errors"][0], "You have not finished this round yet.")
-        
-        # submit round
-        response = self.client.post(self.submit_url, self.payload)
+        self.client.post(self.start_url, {}) # start round
+        self.client.post(self.submit_url, self.submit_payload) # submit round
 
         with self.assertNumQueries(11):
-            response = self.client.get(self.url)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertListEqual(
-            list(response.data.keys()),
-            ['play','play_answers','quiz','author','play_count','choices_by_question_id']
-        )
-        self.assertListEqual(
-            list(response.data["play"].keys()),
-            ['round','result','start_time','finish_time',
-             'client_start_time','client_finish_time']
-        )
+            response = get_response()
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            self.assertListEqual(list(response.data.keys()), REVIEWED_ROUND_EXPECTED_KEYS)
+            self.assertListEqual(list(response.data["play"].keys()), REVIEWED_PLAY_EXPECTED_KEYS)
+
+
+    def test_cannot_review_non_submitted_round(self):
+        get_response = lambda: self.client.get(self.url)
+
+        self.login_as("alice")
+
+        # try reviewing before starting:
+        with self.assertNumQueries(8):
+            response = get_response()
+            self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+        # try reviewing after starting but before submitting:
+        self.client.post(self.start_url, {}) # start round
+        with self.assertNumQueries(8):
+            response = get_response()
+            self.assert_validation_failed(response, ["You have not finished this round yet."])
 
     def test_author_can_review_round(self):
         """
@@ -324,10 +341,7 @@ class ReviewRoundTest(SetupRoundsMixin, APITestCase):
         self.login_as("bob")
         with self.assertNumQueries(9):
             response = self.client.get(self.url)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertListEqual(
-            list(response.data.keys()),
-            ['play','play_answers','quiz','author','play_count','choices_by_question_id']
-        )
-        self.assertDictEqual(response.data["play"], {})
-        self.assertListEqual(response.data["play_answers"], [])
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            self.assertListEqual(list(response.data.keys()), REVIEWED_ROUND_EXPECTED_KEYS)
+            self.assertDictEqual(response.data["play"], {})
+            self.assertListEqual(response.data["play_answers"], [])

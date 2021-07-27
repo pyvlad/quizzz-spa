@@ -3,106 +3,106 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from quizzz.common import test_utils
 from quizzz.common.test_mixins import SetupCommunityDataMixin, SetupQuizDataMixin
 
 from ..models import Quiz, Question, Option
 
 
+QUIZ_EXPECTED_KEYS = [
+    'id', 'name', 'description', 'is_finalized', 
+    'time_created', 'time_updated', 'user'
+]
+
+
 class CreateQuizTest(SetupCommunityDataMixin, APITestCase):
     
     def setUp(self):
-        self.community_id = self.communities["group1"]["id"]
+        self.GROUP = "group1"
+        self.GROUP_ID = self.COMMUNITIES[self.GROUP]["id"]
+
         self.url = reverse(
             'quizzes:quiz-list-create', 
-            kwargs={"community_id": self.community_id}
+            kwargs={"community_id": self.GROUP_ID}
         )
+        self.expected_keys = QUIZ_EXPECTED_KEYS
 
     def test_normal(self):
         """
         A registered user can create a new quiz.
         The view returns serialized new quiz without any nested objects.
         """
-        # Anonymous users cannot create quizzes:
-        with self.assertNumQueries(0):
-            response = self.client.post(self.url, {})
-        test_utils.assert_403_not_authenticated(self, response)
+        get_response = lambda: self.client.post(self.url, {})
 
-        # Non-members cannot create quizzes:
-        self.login_as("alice")
+        # Authentication is required:
+        with self.assertNumQueries(0):
+            self.assert_not_authenticated(get_response())
+
+        # Membership is required:
+        self.login_as("ben")
         with self.assertNumQueries(3):
-            response = self.client.post(self.url, {})
-        test_utils.assert_403_not_authorized(self, response)
+            self.assert_not_authorized(get_response())
 
         self.assertEqual(Quiz.objects.count(), 0)
 
         # A regular registered group member can create a new quiz:
-        self.login_as("bob")
+        self.login_as("alice")
         with self.assertNumQueries(16):  
             # (1-2) request.user (3) membership (4,16) transaction (5) insert quiz (6-15) questions & options
-            response = self.client.post(self.url, {})
+            response = get_response()
+            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+            self.assertListEqual(list(response.data.keys()), self.expected_keys)
+            self.assertEqual(response.data["name"], "Anonymous Quiz")
 
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertListEqual(
-            list(response.data.keys()), 
-            ['id', 'name', 'description', 'is_finalized', 'time_created', 'time_updated', 'user']
-        )
-        self.assertEqual(response.data["name"], "Anonymous Quiz")
         self.assertEqual(Quiz.objects.count(), 1)
 
 
 
 class QuizListTest(SetupQuizDataMixin, APITestCase):
+    
     def setUp(self):
-        self.alice_joins_group1()
+        self.GROUP = "group1"
+        self.GROUP_ID = self.COMMUNITIES[self.GROUP]["id"]
 
-        self.community_id = self.communities["group1"]["id"]
         self.url = reverse(
             'quizzes:quiz-list-create', 
-            kwargs={"community_id": self.community_id}
+            kwargs={"community_id": self.GROUP_ID}
         )
+        self.expected_keys = QUIZ_EXPECTED_KEYS
 
     def test_normal(self):
         """
         A group member can see his list of quizzes in a selected group.
         """
-        # Anonymous user cannot see quiz list:
-        with self.assertNumQueries(0):
-            response = self.client.get(self.url)
-        test_utils.assert_403_not_authenticated(self, response)
+        get_response = lambda: self.client.get(self.url)
 
-        # Non-members cannot see quiz list:
+        # Authentication is required:
+        with self.assertNumQueries(0):
+            self.assert_not_authenticated(get_response())
+
+        # Membership is required:
         self.login_as("ben")
         with self.assertNumQueries(3):
-            response = self.client.get(self.url)
-        test_utils.assert_403_not_authorized(self, response)
+            self.assert_not_authorized(get_response())
 
         # Alice does not have any quizzes:
         self.login_as("alice")
         with self.assertNumQueries(4):
-            response = self.client.get(self.url)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data, [])
+            response = get_response()
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            self.assertEqual(response.data, [])
 
         # Bob has one quiz:
         self.login_as("bob")
         with self.assertNumQueries(4):
-            response = self.client.get(self.url)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 1)
-        self.assertListEqual(
-            list(response.data[0].keys()), 
-            ['id', 'name', 'description', 'is_finalized', 'time_created', 'time_updated', 'user']
-        )
+            response = get_response()
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            self.assertEqual(len(response.data), 1)
+            self.assertListEqual(list(response.data[0].keys()), self.expected_keys)
 
-        # quizzes are filtered by community, in group 2 bob get an empty list:
+        # quizzes are filtered by community, in group2 bob gets an empty list:
         self.bob_joins_group2()
-        response = self.client.get(
-            reverse(
-                'quizzes:quiz-list-create', 
-                kwargs={"community_id": 2}
-            )
-        )
+        url = reverse('quizzes:quiz-list-create', kwargs={"community_id": 2})
+        response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 0)
 
@@ -111,35 +111,46 @@ class QuizListTest(SetupQuizDataMixin, APITestCase):
 class QuizDetailTest(SetupQuizDataMixin, APITestCase):
     
     def setUp(self):
-        self.alice_joins_group1()
+        self.GROUP = "group1"
+        self.GROUP_ID = self.COMMUNITIES[self.GROUP]["id"]
 
-        self.community_id = self.communities["group1"]["id"]
+        quasi_quiz = self.QUIZZES["quiz1"]
+        quiz = Quiz.objects.get(pk=quasi_quiz["id"])
+        questions = {q.id: q for q in quiz.questions.all()}
+        options_by_question_id = {q.id: list(q.options.all()) for q in questions.values()}
+        
+        self.options_by_question_id = options_by_question_id
+        self.num_questions = len(questions)
+        self.num_options = sum(len(options) for options in options_by_question_id.values())
+
         self.url = reverse(
             'quizzes:quiz-detail', 
-            kwargs={"community_id": self.community_id, "quiz_id": self.quiz["id"]}
+            kwargs={"community_id": self.GROUP_ID, "quiz_id": quiz.id}
         )
         self.data = {
-            "name": self.quiz["name"],
-            "description": self.quiz["description"],
-            "introduction": self.quiz["introduction"],
-            "is_finalized": self.quiz["is_finalized"],
+            "name": quiz.name,
+            "description": quiz.description,
+            "introduction": quiz.introduction,
+            "is_finalized": quiz.is_finalized,
             "questions": [
                 {
-                    'id': q["id"],
-                    'text': q["text"],
-                    'explanation': q["explanation"],
+                    'id': q.id,
+                    'text': q.text,
+                    'explanation': q.explanation,
                     'options': [
                         {
-                            "id": opt["id"],
-                            "text": opt["text"],
-                            "is_correct": opt.get("is_correct", False),
+                            "id": opt.id,
+                            "text": opt.text,
+                            "is_correct": opt.is_correct,
                         }
-                        for opt in self.quiz_options_by_question_id[q["id"]]
+                        for opt in options_by_question_id[q.id]
                     ],
-                } for q in self.quiz_questions.values()
+                } for q in questions.values()
             ]
         }
-
+        self.expected_keys = ['name', 'description', 'introduction', 'is_finalized', 'questions']
+        self.question_expected_keys = ['id', 'text', 'explanation', 'options']
+        self.option_expected_keys = ['id', 'text', 'is_correct']
 
     def _test_permissions(
             self, method, body=None, 
@@ -153,19 +164,19 @@ class QuizDetailTest(SetupQuizDataMixin, APITestCase):
         self.logout()
         with self.assertNumQueries(non_auth_queries):
             response = getattr(self.client, method)(self.url, body)
-        test_utils.assert_403_not_authenticated(self, response)
+            self.assert_not_authenticated(response)
 
         # Non-member cannot see the quiz:
         self.login_as("ben")
         with self.assertNumQueries(non_member_queries):
             response = getattr(self.client, method)(self.url, body)
-        test_utils.assert_403_not_authorized(self, response)
+            self.assert_not_authorized(response)
 
         # Non-owner cannot see the quiz:
         self.login_as("alice")
         with self.assertNumQueries(non_owner_queries):
             response = getattr(self.client, method)(self.url, body)
-        test_utils.assert_403_not_authorized(self, response)
+            self.assert_not_authorized(response)
 
 
     def test_get_quiz(self):
@@ -179,29 +190,15 @@ class QuizDetailTest(SetupQuizDataMixin, APITestCase):
         self.login_as("bob")
         with self.assertNumQueries(6): 
             response = self.client.get(self.url)
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            self.assertListEqual(list(response.data.keys()), self.expected_keys)
+            self.assertEqual(len(response.data["questions"]), self.num_questions)
 
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-        # response body is expected:
-        self.assertListEqual(
-            list(response.data.keys()), 
-            ['name', 'description', 'introduction', 'is_finalized', 'questions']
-        )
-        self.assertEqual(len(response.data["questions"]), len(self.quiz_questions))
-
-        question1 = response.data["questions"][0]
-        self.assertEqual(
-            list(question1.keys()), 
-            ['id', 'text', 'explanation', 'options']
-        )
-        self.assertEqual(
-            len(question1["options"]), 
-            len(self.quiz_options_by_question_id[question1["id"]])
-        )
-        self.assertEqual(
-            list(question1["options"][0].keys()), 
-            ['id', 'text', 'is_correct']
-        )
+            question1 = response.data["questions"][0]
+            self.assertListEqual(list(question1.keys()), self.question_expected_keys)
+            
+            self.assertEqual(len(question1["options"]), len(self.options_by_question_id[question1["id"]]))
+            self.assertListEqual(list(question1["options"][0].keys()), self.option_expected_keys)
 
 
     def test_put_quiz(self):
@@ -215,99 +212,96 @@ class QuizDetailTest(SetupQuizDataMixin, APITestCase):
         self.login_as("bob")
         with self.assertNumQueries(19):
             response = self.client.put(self.url, self.data)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         # Fields "is_finalized", "name", "questions" are required:
         with self.assertNumQueries(6):
             response = self.client.put(self.url, {})
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(str(response.data["form_errors"]["questions"][0]), "This field is required.")
-        self.assertEqual(str(response.data["form_errors"]["is_finalized"][0]), "This field is required.")
-        self.assertEqual(str(response.data["form_errors"]["name"][0]), "This field is required.")
+            self.assert_validation_failed(response, data={
+                "questions": ["This field is required."],
+                "is_finalized": ["This field is required."],
+                "name": ["This field is required."]
+            })
 
         # Not expected fields are simply ignored:
+        init_quiz = Quiz.objects.get(pk=1)
+        init_quiz_data = {
+            'id': init_quiz.id,
+            'user_id': init_quiz.user_id,
+            'community_id': init_quiz.community_id,
+        }
+
         bad_data = self.data.copy()
         bad_data.update({ "id": 2, "user": 2, "user_id": 2, "community": 2, "community_id": 2, "abra": "kadabra"})
         response = self.client.put(self.url, bad_data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
         self.assertEqual(Quiz.objects.count(), 1)
         quiz = Quiz.objects.get(pk=1)
-        self.assertEqual(quiz.id, 1)
-        self.assertEqual(quiz.user_id, 1)
-        self.assertEqual(quiz.community_id, 1)
+        self.assertEqual(quiz.id, init_quiz_data["id"])
+        self.assertEqual(quiz.user_id, init_quiz_data["user_id"])
+        self.assertEqual(quiz.community_id, init_quiz_data["community_id"])
 
         # Messing with question IDs causes errors:
         # a. no questions submitted (or incomplete set):
         bad_data = deepcopy(self.data)
         bad_data["questions"] = []
         response = self.client.put(self.url, bad_data)
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(
-            str(response.data["form_errors"]["questions"][0]), 
-            "This quiz has other question ids."
-        )
+        self.assert_validation_failed(response, data={
+            "questions": ["This quiz has other question ids."] 
+        })
         # b. questions with same id submitted => wrong set of options:
         bad_data = deepcopy(self.data)
         bad_data["questions"][0]["id"] = self.data["questions"][1]["id"]
         response = self.client.put(self.url, bad_data)
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(
-            str(response.data["form_errors"]["questions"][0]["non_field_errors"][0]), 
-            "This question has other option ids."
-        )
+        self.assert_validation_failed(response, data={
+            "questions": [{"non_field_errors": ["This question has other option ids."]}, {}],
+        })
         # c. question with a bad id is not validated:
         bad_data = deepcopy(self.data)
         bad_data["questions"][0]["id"] = 100
         response = self.client.put(self.url, bad_data)
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(
-            str(response.data["form_errors"]["questions"][0]["non_field_errors"][0]), 
-            "This question does not belong to this quiz."
-        )
+        self.assert_validation_failed(response, data={
+            "questions": [{"non_field_errors": ["This question does not belong to this quiz."]}, {}],
+        })
         # d. fields "id" and "options" are required
         bad_data = deepcopy(self.data)
         bad_data["questions"][0].pop("options")
         bad_data["questions"][0].pop("id")
         response = self.client.put(self.url, bad_data)
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(
-            str(response.data["form_errors"]["questions"][0]["id"][0]), 
-            "This field is required."
-        )
-        self.assertEqual(
-            str(response.data["form_errors"]["questions"][0]["options"][0]), 
-            "This field is required."
-        )
+        self.assert_validation_failed(response, data={
+            "questions": [
+                {
+                    "id": ["This field is required."], 
+                    "options": ["This field is required."]
+                }, 
+                {}
+            ],
+        })
 
         # Messing with options causes errors:
         # a. no options submitted (incomplete set)
         bad_data = deepcopy(self.data)
         bad_data["questions"][0]["options"] = []
         response = self.client.put(self.url, bad_data)
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(
-            str(response.data["form_errors"]["questions"][0]["non_field_errors"][0]), 
-            "This question has other option ids."
-        )
+        self.assert_validation_failed(response, data={
+            "questions": [{"non_field_errors": ["This question has other option ids."]}, {}],
+        })
         # b. question with a bad option id is not validated:
         bad_data = deepcopy(self.data)
         bad_data["questions"][0]["options"][0]["id"] = 5
         response = self.client.put(self.url, bad_data)
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(
-            str(response.data["form_errors"]["questions"][0]["non_field_errors"][0]), 
-            "This question has other option ids."
-        )
+        self.assert_validation_failed(response, data={
+            "questions": [{"non_field_errors": ["This question has other option ids."]}, {}],
+        })
         # c. multiple correct options not allowed:
         bad_data = deepcopy(self.data)
         for opt in bad_data["questions"][0]["options"]:
             opt["is_correct"] = True
         response = self.client.put(self.url, bad_data)
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(
-            str(response.data["form_errors"]["questions"][0]["non_field_errors"][0]), 
-            "Multiple answers not allowed."
-        )
+        self.assert_validation_failed(response, data={
+            "questions": [{"non_field_errors": ["Multiple answers not allowed."]}, {}],
+        })
 
         # Extra requirements when finalizing quiz:
         # a. must have one correct answer per question:
@@ -316,33 +310,30 @@ class QuizDetailTest(SetupQuizDataMixin, APITestCase):
         for opt in bad_data["questions"][0]["options"]:
             opt["is_correct"] = False
         response = self.client.put(self.url, bad_data)
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(
-            str(response.data["form_errors"]["questions"][0]["non_field_errors"][0]), 
-            "No correct answer selected."
-        )
+        self.assert_validation_failed(response, data={
+            "questions": [{"non_field_errors": ["No correct answer selected."]}, {}],
+        })
 
         # b. empty question text not allowed
         bad_data = deepcopy(self.data)
         bad_data["is_finalized"] = True
         bad_data["questions"][0]["text"] = ""
         response = self.client.put(self.url, bad_data)
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(
-            str(response.data["form_errors"]["questions"][0]["text"][0]), 
-            "This field is required."
-        )
+        self.assert_validation_failed(response, data={
+            "questions": [{"text": ["This field is required."]}, {}],
+        })
 
         # c. empty option text not allowed
         bad_data = deepcopy(self.data)
         bad_data["is_finalized"] = True
         bad_data["questions"][0]["options"][0]["text"] = ""
         response = self.client.put(self.url, bad_data)
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(
-            str(response.data["form_errors"]["questions"][0]["options"][0]["text"][0]), 
-            "This field is required."
-        )
+        self.assert_validation_failed(response, data={
+            "questions": [
+                { "options": [{"text": ["This field is required."]},{},{},{}] }, 
+                {}
+            ],
+        })
 
     def test_update_finalized_quiz(self):
         """
@@ -355,9 +346,7 @@ class QuizDetailTest(SetupQuizDataMixin, APITestCase):
         self.login_as("bob")
         with self.assertNumQueries(6):
             response = self.client.put(self.url, self.data)
-
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(str(response.data["form_errors"][0]), "Submitted quiz cannot be updated.")
+            self.assert_validation_failed(response, ["Submitted quiz cannot be updated."])
 
 
     def test_delete_quiz(self):
@@ -365,9 +354,10 @@ class QuizDetailTest(SetupQuizDataMixin, APITestCase):
         Quiz author can delete the quiz.
         """
         self._test_permissions("delete", non_owner_queries=4)
+
         self.assertEqual(Quiz.objects.count(), 1)
-        self.assertEqual(Question.objects.count(), len(self.quiz_questions))
-        self.assertEqual(Option.objects.count(), len(self.quiz_options))
+        self.assertEqual(Question.objects.count(), self.num_questions)
+        self.assertEqual(Option.objects.count(), self.num_options)
 
         # Owner can delete the quiz:
         self.login_as("bob")
@@ -375,8 +365,8 @@ class QuizDetailTest(SetupQuizDataMixin, APITestCase):
             # (4) select quiz (5) select quiz questions (6) select options (7) select round
             # (8-12) del quiz, questions, options, answers[2]
             response = self.client.delete(self.url)
+            self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
-        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(Quiz.objects.count(), 0)
         self.assertEqual(Question.objects.count(), 0)
         self.assertEqual(Option.objects.count(), 0)
@@ -392,6 +382,4 @@ class QuizDetailTest(SetupQuizDataMixin, APITestCase):
         self.login_as("bob")
         with self.assertNumQueries(4):
             response = self.client.delete(self.url)
-
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(str(response.data["form_errors"][0]), "Submitted quiz cannot be deleted.")
+            self.assert_validation_failed(response, ["Submitted quiz cannot be deleted."])

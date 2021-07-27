@@ -1,10 +1,10 @@
-from quizzz.common.test_utils import update_pk_sequence
-from quizzz.common.testdata import USERS
-
 from quizzz.users.models import CustomUser
 
+from .data import USERS
+from . import BaseTestUtils
 
-class SetupUsersMixin:
+
+class SetupUsersMixin(BaseTestUtils):
     """
     Mixin with user data and methods for login/logout.
     """
@@ -16,8 +16,8 @@ class SetupUsersMixin:
     def set_up_users(cls):
         for user_obj in USERS.values():
             CustomUser.objects.create_user(**user_obj)
-        update_pk_sequence(CustomUser)
-        cls.users = USERS
+        cls.update_pk_sequence(CustomUser)
+        cls.USERS = USERS
 
     def login(self, username, password):
         """
@@ -41,4 +41,4 @@ class SetupUsersMixin:
 
     def login_as(self, username):
         self.logout()
-        return self.login(username, self.users[username]["password"])
+        return self.login(username, self.USERS[username]["password"])

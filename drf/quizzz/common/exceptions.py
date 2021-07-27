@@ -37,7 +37,6 @@ def custom_exception_handler(exc, context):
         payload = {'status_code': exc.status_code}
 
         if isinstance(exc.detail, (list, dict)):
-            # TODO docs say it can be a list, but I can't think of an example
             payload = {
                 'detail': 'Bad request.',
                 'form_errors': exc.detail,

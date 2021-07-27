@@ -1,8 +1,6 @@
-from quizzz.common.test_utils import update_pk_sequence
-from quizzz.common.testdata import ROUNDS
-
 from quizzz.tournaments.models import Round
 
+from .data import ROUNDS
 from . import SetupTournamentsMixin
 
 
@@ -19,5 +17,5 @@ class SetupRoundsMixin(SetupTournamentsMixin):
     @classmethod
     def set_up_rounds(cls):
         Round.objects.create(**ROUNDS["round1"])
-        update_pk_sequence(Round)
-        cls.round = ROUNDS["round1"]
+        cls.update_pk_sequence(Round)
+        cls.ROUNDS = ROUNDS

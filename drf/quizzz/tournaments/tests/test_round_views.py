@@ -4,26 +4,34 @@ from rest_framework.test import APITestCase
 from django.utils import timezone
 from django.urls import reverse
 
-from quizzz.common import test_utils
-from quizzz.common.testdata import QUIZZES
 from quizzz.common.test_mixins import SetupTournamentsMixin, SetupRoundsMixin
 
 from quizzz.quizzes.models import Quiz
 from ..models import Round
 
 
+ROUND_EXPECTED_KEYS = [
+    'id', 'start_time', 'finish_time', 'tournament', 
+    'quiz', 'status', 'user_play_id', 'user_play_is_submitted', 'is_author'
+]
+
 
 class CreateRoundTest(SetupTournamentsMixin, APITestCase):
     def setUp(self):
-        self.alice_joins_group1()
+        self.GROUP = "group1"
+        self.GROUP_ID = self.COMMUNITIES[self.GROUP]["id"]
 
-        self.community_id = self.communities["group1"]["id"]
+        self.TOURNAMENT = "tournament1"
+        self.TOURNAMENT_ID = self.TOURNAMENTS[self.TOURNAMENT]["id"]
+
+        self.QUIZ = "quiz1"
+        self.QUIZ_ID = self.QUIZZES[self.QUIZ]["id"]
 
         self.url = reverse(
             'tournaments:round-list-create', 
             kwargs={
-                "community_id": self.community_id,
-                "tournament_id": self.tournament["id"],
+                "community_id": self.GROUP_ID,
+                "tournament_id": self.TOURNAMENT_ID,
             }
         )
         now = timezone.now()
@@ -31,9 +39,9 @@ class CreateRoundTest(SetupTournamentsMixin, APITestCase):
         self.payload = {
             "start_time": now,
             "finish_time": now + datetime.timedelta(minutes=60),
-            "quiz": QUIZZES["quiz1"]["id"],
+            "quiz": self.QUIZ_ID,
         }
-
+        self.expected_keys = ROUND_EXPECTED_KEYS
 
     def test_normal(self):
         """
@@ -42,29 +50,31 @@ class CreateRoundTest(SetupTournamentsMixin, APITestCase):
         """
         init_count = Round.objects.count()
 
-        # Non-admins cannot create rounds:
-        with self.assertNumQueries(0):
-            response = self.client.post(self.url, self.payload)
-        test_utils.assert_403_not_authenticated(self, response)
+        get_response = lambda: self.client.post(self.url, self.payload)
 
+        # authentication is required
+        with self.assertNumQueries(0):
+            self.assert_not_authenticated(get_response())
+
+        # membership is required
         self.login_as("ben")
         with self.assertNumQueries(3):
-            response = self.client.post(self.url, self.payload)
-        test_utils.assert_403_not_authorized(self, response)
+            self.assert_not_authorized(get_response())
 
+        # group admin rights are required
         self.login_as("alice")
         with self.assertNumQueries(3):
-            response = self.client.post(self.url, self.payload)
-        test_utils.assert_403_not_authorized(self, response)
+            self.assert_not_authorized(get_response())
 
         self.assertEqual(Round.objects.count(), init_count)
 
         # Group admin can create a new round, but need to finalize the quiz first:
         self.login_as("bob")
         with self.assertNumQueries(6):
-            response = self.client.post(self.url, self.payload)
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.data["form_errors"]["quiz"][0], "Quiz has not been submitted yet.")
+            response = get_response()
+            self.assert_validation_failed(response, data={
+                "quiz": ["Quiz has not been submitted yet."]
+            })
 
         # finalize quiz
         quiz = Quiz.objects.get(pk=self.payload["quiz"])
@@ -73,13 +83,10 @@ class CreateRoundTest(SetupTournamentsMixin, APITestCase):
 
         # now it works:
         with self.assertNumQueries(9):
-            response = self.client.post(self.url, self.payload)
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertListEqual(
-            list(response.data.keys()), 
-            ['id', 'start_time', 'finish_time', 'tournament', 
-             'quiz', 'status', 'user_play_id', 'user_play_is_submitted', 'is_author']
-        )
+            response = get_response()
+            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+            self.assertListEqual(list(response.data.keys()), self.expected_keys)
+
         self.assertEqual(Round.objects.count(), init_count + 1)
 
 
@@ -88,173 +95,175 @@ class CreateRoundTest(SetupTournamentsMixin, APITestCase):
         'start_time', 'finish_time', 'quiz' are required fields.
         The view returns serialized new round.
         """
-        self.login_as("bob")
-
         bad_payload = {}
+
+        self.login_as("bob")
         response = self.client.post(self.url, bad_payload)
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.data["detail"], 'Bad request.')
-        errors = response.data["form_errors"]
-        self.assertEqual(str(errors['start_time'][0]), 'This field is required.')
-        self.assertEqual(str(errors['finish_time'][0]), 'This field is required.')
-        self.assertEqual(str(errors['quiz'][0]), 'This field is required.')
+        self.assert_validation_failed(response, data={
+            "start_time": ["This field is required."],
+            "finish_time": ["This field is required."],
+            "quiz": ["This field is required."],
+        })
 
 
 
 class RoundListTest(SetupRoundsMixin, APITestCase):
     def setUp(self):
-        self.alice_joins_group1()
+        self.GROUP = "group1"
+        self.GROUP_ID = self.COMMUNITIES[self.GROUP]["id"]
 
-        self.community_id = self.communities["group1"]["id"]
+        self.TOURNAMENT = "tournament1"
+        self.TOURNAMENT_ID = self.TOURNAMENTS[self.TOURNAMENT]["id"]
+
         self.url = reverse(
             'tournaments:round-list-create', 
             kwargs={
-                "community_id": self.community_id,
-                "tournament_id": self.tournament["id"],
+                "community_id": self.GROUP_ID,
+                "tournament_id": self.TOURNAMENT_ID,
             }
         )
+        self.expected_keys = ROUND_EXPECTED_KEYS
 
     def test_normal(self):
         """
         A group member can see list of rounds for a tournament.
         """
-        # Anonymous user cannot see round list:
-        with self.assertNumQueries(0):
-            response = self.client.get(self.url)
-        test_utils.assert_403_not_authenticated(self, response)
+        get_response = lambda: self.client.get(self.url)
 
-        # Non-members cannot see round list:
+        # authentication is required
+        with self.assertNumQueries(0):
+            self.assert_not_authenticated(get_response())
+
+        # membership is required
         self.login_as("ben")
         with self.assertNumQueries(4):
-            response = self.client.get(self.url)
-        test_utils.assert_403_not_authorized(self, response)
+            self.assert_not_authorized(get_response())
 
-        # Members see tournament rounds:
+        # a regular member sees the data
         self.login_as("alice")
-        with self.assertNumQueries(7): # (3) member (4) round (5) plays (6) quiz (7) users 
-            # TODO: N+1 (users)
-            response = self.client.get(self.url)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 1)
-        self.assertListEqual(
-            list(response.data[0].keys()), 
-            ['id', 'start_time', 'finish_time', 'tournament', 
-             'quiz', 'status', 'user_play_id', 'user_play_is_submitted', 'is_author']
-        )
+        with self.assertNumQueries(7): # (3) member (4) round (5) plays (6) quiz (7) users # TODO: N+1 (users)
+            response = get_response()
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            self.assertEqual(len(response.data), 1)
+            self.assertListEqual(list(response.data[0].keys()), self.expected_keys)
 
 
 
 class RoundDetailTest(SetupRoundsMixin, APITestCase):
     def setUp(self):
-        self.alice_joins_group1()
+        self.GROUP = "group1"
+        self.GROUP_ID = self.COMMUNITIES[self.GROUP]["id"]
+
+        self.ROUND = "round1"
+        self.ROUND_ID = self.ROUNDS[self.ROUND]["id"]
+        self.QUIZ_ID = self.ROUNDS[self.ROUND]["quiz_id"]
 
         # finalize quiz
-        quiz = Quiz.objects.get(pk=self.round["quiz_id"])
+        quiz = Quiz.objects.get(pk=self.QUIZ_ID)
         quiz.is_finalized = True
         quiz.save()
 
-        self.community_id = self.communities["group1"]["id"]
         self.url = reverse(
             'tournaments:round-detail',  
             kwargs={
-                'community_id': self.communities["group1"]["id"],
-                'round_id': self.round["id"],
+                'community_id': self.GROUP_ID,
+                'round_id': self.ROUND_ID,
             }
         )
-        self.new_data = self.round.copy()
+
+        self.update_payload = self.ROUNDS[self.ROUND].copy()
         now = timezone.now()
         now = now.replace(second=0, microsecond=0)
-        self.new_data["start_time"] = now + datetime.timedelta(minutes=60)
-        self.new_data["finish_time"] = now + datetime.timedelta(minutes=120)
-        self.new_data["quiz"] = self.round["quiz_id"]
-        self.expected_keys = [
-            'id', 'start_time', 'finish_time', 'tournament', 
-            'quiz', 'status', 'user_play_id', 'user_play_is_submitted', 'is_author'
-        ]
+        self.update_payload["start_time"] = now + datetime.timedelta(minutes=60)
+        self.update_payload["finish_time"] = now + datetime.timedelta(minutes=120)
+        self.update_payload["quiz"] = self.QUIZ_ID
+
+        self.expected_keys = ROUND_EXPECTED_KEYS
+
 
     def test_get_round(self):
-        # anonymous users have no access:
-        with self.assertNumQueries(0):
-            response = self.client.get(self.url)
-        test_utils.assert_403_not_authenticated(self, response)
+        get_response = lambda: self.client.get(self.url)
 
-        # ben is not a group member, he sees nothing:
+        # authentication is required
+        with self.assertNumQueries(0):
+            self.assert_not_authenticated(get_response())
+
+        # membership is required
         self.login_as("ben")
         with self.assertNumQueries(4):
-            response = self.client.get(self.url)
-        test_utils.assert_403_not_authorized(self, response)
+            self.assert_not_authorized(get_response())
 
         # alice is a group member, she sees the data:
         self.login_as("alice")
         with self.assertNumQueries(8):  # (3) member check (4) round (5) plays (6) quiz (7) user
-            response = self.client.get(self.url)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(
-            list(response.data.keys()), 
-            ["round", "standings"] # ["id", "user", "user_id", "result", "time", "score"]
-        )
-        self.assertEqual(
-            list(response.data["round"].keys()), 
-            self.expected_keys
-        )
-        self.assertEqual(response.data["round"]["id"], self.round['id'])
+            response = get_response()
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            self.assertEqual(
+                list(response.data.keys()), 
+                ["round", "standings"] # ["id", "user", "user_id", "result", "time", "score"]
+            )
+            self.assertEqual(list(response.data["round"].keys()), self.expected_keys)
+            self.assertEqual(response.data["round"]["id"], self.ROUND_ID)
 
 
     def test_update_round_works_for_group_admins(self):
-        # non-admins have no access:
-        with self.assertNumQueries(0):
-            response = self.client.put(self.url, self.new_data)
-        test_utils.assert_403_not_authenticated(self, response)
+        get_response = lambda: self.client.put(self.url, self.update_payload)
 
+        # authentication is required
+        with self.assertNumQueries(0):
+            self.assert_not_authenticated(get_response())
+
+        # membership is required
         self.login_as("ben")
         with self.assertNumQueries(3):
-            response = self.client.put(self.url, self.new_data)
-        test_utils.assert_403_not_authorized(self, response)
+            self.assert_not_authorized(get_response())
 
+        # group admin rights are required
         self.login_as("alice")
         with self.assertNumQueries(3):
-            response = self.client.put(self.url, self.new_data)
-        test_utils.assert_403_not_authorized(self, response)     
+            self.assert_not_authorized(get_response())   
 
-        round = Round.objects.get(pk=self.round["id"])
-        self.assertNotEqual(round.start_time, self.new_data["start_time"])
-        self.assertNotEqual(round.finish_time, self.new_data["finish_time"])
+        round = Round.objects.get(pk=self.ROUND_ID)
+        self.assertNotEqual(round.start_time, self.update_payload["start_time"])
+        self.assertNotEqual(round.finish_time, self.update_payload["finish_time"])
 
         # bob is a group admin, he can update the data:
         self.login_as("bob")
         with self.assertNumQueries(10):  
-            response = self.client.put(self.url, self.new_data)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(list(response.data.keys()), self.expected_keys)
+            response = get_response()
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            self.assertEqual(list(response.data.keys()), self.expected_keys)
         
-        round = Round.objects.get(pk=1)
-        self.assertEqual(round.start_time, self.new_data["start_time"])
-        self.assertEqual(round.finish_time, self.new_data["finish_time"])
+        round = Round.objects.get(pk=self.ROUND_ID)
+        self.assertEqual(round.start_time, self.update_payload["start_time"])
+        self.assertEqual(round.finish_time, self.update_payload["finish_time"])
 
 
     def test_delete_round_works_for_group_admins(self):
-        # non-admins have no access:
-        with self.assertNumQueries(0):
-            response = self.client.delete(self.url)
-        test_utils.assert_403_not_authenticated(self, response)
+        get_response = lambda: self.client.delete(self.url)
 
+        # authentication is required
+        with self.assertNumQueries(0):
+            self.assert_not_authenticated(get_response())
+
+        # membership is required
         self.login_as("ben")
         with self.assertNumQueries(3):
-            response = self.client.put(self.url)
-        test_utils.assert_403_not_authorized(self, response)
+            self.assert_not_authorized(get_response())
 
+        # group admin rights are required
         self.login_as("alice")
         with self.assertNumQueries(3):
-            response = self.client.put(self.url)
-        test_utils.assert_403_not_authorized(self, response)     
+            self.assert_not_authorized(get_response())   
 
-        self.assertEqual(Round.objects.filter(pk=self.round["id"]).count(), 1)
+        self.assertEqual(Round.objects.filter(pk=self.ROUND_ID).count(), 1)
 
         # bob is group admin, he can delete the round:
         self.login_as("bob")
         with self.assertNumQueries(6):
             # (4) select round (5) del round (6) del plays
-            response = self.client.delete(self.url)
-        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-        self.assertEqual(response.data, None)
-        self.assertEqual(Round.objects.filter(pk=self.round["id"]).count(), 0)
+            response = get_response()
+            self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+            self.assertEqual(response.data, None)
+
+        self.assertEqual(Round.objects.filter(pk=self.ROUND_ID).count(), 0)

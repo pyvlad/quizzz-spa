@@ -1,8 +1,6 @@
-from quizzz.common.test_utils import update_pk_sequence
-from quizzz.common.testdata import TOURNAMENTS
-
 from quizzz.tournaments.models import Tournament
 
+from .data import TOURNAMENTS
 from . import SetupQuizDataMixin
 
 
@@ -18,5 +16,5 @@ class SetupTournamentsMixin(SetupQuizDataMixin):
     @classmethod
     def set_up_tournaments(cls):
         Tournament.objects.create(**TOURNAMENTS["tournament1"])
-        update_pk_sequence(Tournament)
-        cls.tournament = TOURNAMENTS["tournament1"]
+        cls.update_pk_sequence(Tournament)
+        cls.TOURNAMENTS = TOURNAMENTS
