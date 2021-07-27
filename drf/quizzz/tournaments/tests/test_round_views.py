@@ -6,10 +6,10 @@ from django.urls import reverse
 
 from quizzz.common import test_utils
 from quizzz.common.testdata import QUIZZES
+from quizzz.common.test_mixins import SetupTournamentDataMixin
 
-from ..models import Round
-from .setup_mixin import SetupTournamentDataMixin
 from quizzz.quizzes.models import Quiz
+from ..models import Round
 
 
 

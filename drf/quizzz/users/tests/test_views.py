@@ -10,9 +10,10 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 from itsdangerous import TimedJSONWebSignatureSerializer
 
-from ..models import CustomUser
-from .setup_mixin import SetupUsersMixin
 from quizzz.common import test_utils
+from quizzz.common.test_mixins import SetupUsersMixin
+
+from ..models import CustomUser
 
 
 class RegistrationViewTest(APITestCase):

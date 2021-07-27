@@ -3,10 +3,10 @@ from rest_framework.test import APITestCase
 from rest_framework import status
 
 from quizzz.common import test_utils
+from quizzz.common.test_mixins import SetupChatDataMixin
 
 from ..models import ChatMessage
 from ..views import ChatMessageList
-from .setup_mixin import SetupChatDataMixin
 
 
 class ChatMessageListTest(SetupChatDataMixin, APITestCase):

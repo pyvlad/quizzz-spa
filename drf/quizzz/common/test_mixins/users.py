@@ -1,6 +1,7 @@
 from quizzz.common.test_utils import update_pk_sequence
 from quizzz.common.testdata import USERS
-from ..models import CustomUser
+
+from quizzz.users.models import CustomUser
 
 
 class SetupUsersMixin:

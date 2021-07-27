@@ -4,9 +4,9 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from quizzz.common import test_utils
+from quizzz.common.test_mixins import SetupCommunityDataMixin, SetupQuizDataMixin
 
 from ..models import Quiz, Question, Option
-from .setup_mixin import SetupQuizDataMixin, SetupCommunityDataMixin
 
 
 class CreateQuizTest(SetupCommunityDataMixin, APITestCase):

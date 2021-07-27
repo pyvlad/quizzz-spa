@@ -5,12 +5,11 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase, APITransactionTestCase
 
-from .setup_mixin import SetupCommunityDataMixin
 from quizzz.common import test_utils
+from quizzz.common.test_mixins import SetupCommunityDataMixin
 
 from quizzz.users.models import CustomUser
 from quizzz.communities.models import Community, Membership
-
 
 
 

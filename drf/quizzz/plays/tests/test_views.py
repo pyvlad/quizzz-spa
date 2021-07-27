@@ -3,9 +3,9 @@ from rest_framework.test import APITestCase
 from django.urls import reverse
 
 from quizzz.common import test_utils
+from quizzz.common.test_mixins import SetupTournamentDataMixin
 
 from ..models import Play, PlayAnswer
-from quizzz.tournaments.tests.setup_mixin import SetupTournamentDataMixin
 
 
 
