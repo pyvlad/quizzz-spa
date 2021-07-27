@@ -27,7 +27,7 @@
     "eject": "react-scripts eject",
     "drf": "cd drf/ && ${npm_config_drf_venv}/python manage.py runserver localhost:5000",
     "drf-coverage": "cd drf/; ${npm_config_drf_venv}/coverage run --source='.' manage.py test; ${npm_config_drf_venv}/coverage report -m",
-    "drf-db": "cd drf/; DRF_VENV=${npm_config_drf_venv} bash dev-db.sh",
+    "drf-db": "cd drf/; ${npm_config_drf_venv}/python manage.py migrate; ${npm_config_drf_venv}/python manage.py loaddevdata",
     "deploy-staging": "cd deploy/ansible && ansible-playbook -i envs/staging/inventory.yml main.yml; cd ../..",
     "deploy-production": "cd deploy/ansible && ansible-playbook -i envs/production/inventory.yml main.yml -K; cd ../.."
   },
