@@ -1,15 +1,4 @@
-from quizzz.users.tests.data import USERS
-from quizzz.communities.tests.data import COMMUNITIES
-
-
-EXTRA_MEMBERSHIPS = [
-    {
-       "user_id": USERS["alice"]["id"],
-       "community_id": COMMUNITIES["group1"]["id"],
-       "is_admin": False,
-       "is_approved": True,
-    }
-]
+from . import USERS, COMMUNITIES
 
 
 MESSAGES = [

@@ -1,10 +1,9 @@
 import collections
 from quizzz.common.test_utils import update_pk_sequence
+from quizzz.common.testdata import QUIZZES, QUIZ_QUESTIONS, QUESTION_OPTIONS
 from quizzz.communities.tests.setup_mixin import SetupCommunityDataMixin
-from quizzz.communities.models import Membership
 
 from ..models import Quiz, Question, Option
-from .data import QUIZZES, QUIZ_QUESTIONS, QUESTION_OPTIONS
 
 
 class SetupQuizDataMixin(SetupCommunityDataMixin):

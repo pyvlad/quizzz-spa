@@ -1,6 +1,3 @@
-from quizzz.users.tests.data import USERS
-
-
 COMMUNITIES = {
     "group1": {
         "id": 1, 
@@ -17,11 +14,4 @@ COMMUNITIES = {
         "name": "group3",
         "password": "pass3"   
     }
-}
-
-
-ADMIN_IDS = {
-    "group1": USERS["bob"]["id"],
-    "group2": USERS["alice"]["id"],
-    "group3": USERS["bob"]["id"],
 }

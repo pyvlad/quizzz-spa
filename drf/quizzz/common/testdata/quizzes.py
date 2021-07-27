@@ -1,5 +1,4 @@
-from quizzz.users.tests.data import USERS
-from quizzz.communities.tests.data import COMMUNITIES
+from . import USERS, COMMUNITIES
 
 
 QUIZZES = {

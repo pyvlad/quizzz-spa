@@ -1,10 +1,10 @@
 from quizzz.common.test_utils import update_pk_sequence
+from quizzz.common.testdata import EXTRA_MEMBERSHIPS, MESSAGES
 
 from quizzz.communities.tests.setup_mixin import SetupCommunityDataMixin
 from quizzz.communities.models import Membership
 
 from ..models import ChatMessage
-from .data import EXTRA_MEMBERSHIPS, MESSAGES
 
 
 class SetupChatDataMixin(SetupCommunityDataMixin):

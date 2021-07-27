@@ -1,8 +1,8 @@
 from quizzz.common.test_utils import update_pk_sequence
+from quizzz.common.testdata import TOURNAMENTS, ROUNDS
 from quizzz.quizzes.tests.setup_mixin import SetupQuizDataMixin
 
 from ..models import Tournament, Round
-from .data import TOURNAMENTS, ROUNDS
 
 
 class SetupTournamentDataMixin(SetupQuizDataMixin):

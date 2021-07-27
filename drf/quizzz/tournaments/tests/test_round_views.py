@@ -5,10 +5,10 @@ from django.utils import timezone
 from django.urls import reverse
 
 from quizzz.common import test_utils
+from quizzz.common.testdata import QUIZZES
 
 from ..models import Round
 from .setup_mixin import SetupTournamentDataMixin
-from quizzz.quizzes.tests.data import QUIZZES
 from quizzz.quizzes.models import Quiz
 
 

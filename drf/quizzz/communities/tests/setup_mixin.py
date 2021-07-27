@@ -4,7 +4,7 @@ from quizzz.users.tests.setup_mixin import SetupUsersMixin
 from quizzz.communities.models import Community
 from quizzz.users.models import CustomUser
 
-from .data import COMMUNITIES, ADMIN_IDS
+from quizzz.common.testdata import COMMUNITIES, ADMIN_IDS
 
 
 class SetupCommunityDataMixin(SetupUsersMixin):
