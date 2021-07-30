@@ -18,9 +18,6 @@ class ChatMessageListTest(SetupChatDataMixin, APITestCase):
         return ChatMessage.objects.filter(community_id=self.GROUP_ID).all()
 
     def setUp(self):
-        self.GROUP = "group1"
-        self.GROUP_ID = self.COMMUNITIES[self.GROUP]["id"]
-
         self.num_messages = len(self._load_group_messages())
         # pagination and deletion below assume self.num_messages is 2 and pk = [1,2]
           
@@ -38,14 +35,8 @@ class ChatMessageListTest(SetupChatDataMixin, APITestCase):
         """
         get_response = lambda: self.client.get(self.url)
 
-        # authentication is required:
-        with self.assertNumQueries(0):
-            self.assert_not_authenticated(get_response())
-
-        # membership is required:
-        self.login_as("ben")
-        with self.assertNumQueries(3):
-            self.assert_not_authorized(get_response())
+        self.assert_authentication_required(get_response)
+        self.assert_membership_required(get_response)
 
         # works for a regular group member
         self.login_as("alice")
@@ -102,14 +93,8 @@ class ChatMessageListTest(SetupChatDataMixin, APITestCase):
         """
         get_response = lambda: self.client.post(self.url, self.payload)
         
-        # authentication is required:
-        with self.assertNumQueries(0):
-            self.assert_not_authenticated(get_response())
-
-        # Membership is required:
-        self.login_as("ben")
-        with self.assertNumQueries(3):  # (1-2) request.user (3) membership check
-            self.assert_not_authorized(get_response())
+        self.assert_authentication_required(get_response)
+        self.assert_membership_required(get_response)
 
         self.assertEqual(len(self._load_group_messages()), self.num_messages)
 
@@ -132,21 +117,10 @@ class ChatMessageListTest(SetupChatDataMixin, APITestCase):
 
         get_response = lambda pk: self.client.delete(get_message_url(pk))
 
-        # authentication is required:
-        with self.assertNumQueries(0):
-            self.assert_not_authenticated(get_response(1))
-
-        # membership is required:
-        self.login_as("ben")
         for pk in [1,2]:
-            with self.assertNumQueries(3):
-                self.assert_not_authorized(get_response(pk))
-
-        # alice a regular group1 member, admin rights are required to delete messages (even own):
-        self.login_as("alice")
-        for pk in [1,2]:
-            with self.assertNumQueries(3):
-                self.assert_not_authorized(get_response(pk))
+            self.assert_authentication_required(lambda: get_response(pk))
+            self.assert_membership_required(lambda: get_response(pk))
+            self.assert_group_admin_rights_required(lambda: get_response(pk))
 
         self.assertEqual(len(self._load_group_messages()), self.num_messages)
 

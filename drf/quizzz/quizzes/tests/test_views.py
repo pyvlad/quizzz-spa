@@ -17,9 +17,6 @@ QUIZ_EXPECTED_KEYS = [
 class CreateQuizTest(SetupCommunityDataMixin, APITestCase):
     
     def setUp(self):
-        self.GROUP = "group1"
-        self.GROUP_ID = self.COMMUNITIES[self.GROUP]["id"]
-
         self.url = reverse(
             'quizzes:quiz-list-create', 
             kwargs={"community_id": self.GROUP_ID}
@@ -33,14 +30,8 @@ class CreateQuizTest(SetupCommunityDataMixin, APITestCase):
         """
         get_response = lambda: self.client.post(self.url, {})
 
-        # Authentication is required:
-        with self.assertNumQueries(0):
-            self.assert_not_authenticated(get_response())
-
-        # Membership is required:
-        self.login_as("ben")
-        with self.assertNumQueries(3):
-            self.assert_not_authorized(get_response())
+        self.assert_authentication_required(get_response)
+        self.assert_membership_required(get_response)
 
         self.assertEqual(Quiz.objects.count(), 0)
 
@@ -60,9 +51,6 @@ class CreateQuizTest(SetupCommunityDataMixin, APITestCase):
 class QuizListTest(SetupQuizDataMixin, APITestCase):
     
     def setUp(self):
-        self.GROUP = "group1"
-        self.GROUP_ID = self.COMMUNITIES[self.GROUP]["id"]
-
         self.url = reverse(
             'quizzes:quiz-list-create', 
             kwargs={"community_id": self.GROUP_ID}
@@ -75,14 +63,8 @@ class QuizListTest(SetupQuizDataMixin, APITestCase):
         """
         get_response = lambda: self.client.get(self.url)
 
-        # Authentication is required:
-        with self.assertNumQueries(0):
-            self.assert_not_authenticated(get_response())
-
-        # Membership is required:
-        self.login_as("ben")
-        with self.assertNumQueries(3):
-            self.assert_not_authorized(get_response())
+        self.assert_authentication_required(get_response)
+        self.assert_membership_required(get_response)
 
         # Alice does not have any quizzes:
         self.login_as("alice")
@@ -111,9 +93,6 @@ class QuizListTest(SetupQuizDataMixin, APITestCase):
 class QuizDetailTest(SetupQuizDataMixin, APITestCase):
     
     def setUp(self):
-        self.GROUP = "group1"
-        self.GROUP_ID = self.COMMUNITIES[self.GROUP]["id"]
-
         quasi_quiz = self.QUIZZES["quiz1"]
         quiz = Quiz.objects.get(pk=quasi_quiz["id"])
         questions = {q.id: q for q in quiz.questions.all()}
@@ -154,29 +133,21 @@ class QuizDetailTest(SetupQuizDataMixin, APITestCase):
 
     def _test_permissions(
             self, method, body=None, 
-            non_auth_queries=0, non_member_queries=3, non_owner_queries=6
+            non_member_queries=3, non_owner_queries=6
         ):
         """
         Helper method to check that non-authenticated, non-members, and non-owners 
         cannot access quiz instances using any allowed method.
         """
-        # Anonymous user cannot see the quiz:
-        self.logout()
-        with self.assertNumQueries(non_auth_queries):
-            response = getattr(self.client, method)(self.url, body)
-            self.assert_not_authenticated(response)
+        get_response = lambda: getattr(self.client, method)(self.url, body)
 
-        # Non-member cannot see the quiz:
-        self.login_as("ben")
-        with self.assertNumQueries(non_member_queries):
-            response = getattr(self.client, method)(self.url, body)
-            self.assert_not_authorized(response)
+        self.assert_authentication_required(get_response)
+        self.assert_membership_required(get_response, non_member_queries)
 
         # Non-owner cannot see the quiz:
         self.login_as("alice")
         with self.assertNumQueries(non_owner_queries):
-            response = getattr(self.client, method)(self.url, body)
-            self.assert_not_authorized(response)
+            self.assert_not_authorized(get_response())
 
 
     def test_get_quiz(self):

@@ -42,3 +42,8 @@ class SetupUsersMixin(BaseTestUtils):
     def login_as(self, username):
         self.logout()
         return self.login(username, self.USERS[username]["password"])
+
+    def assert_authentication_required(self, get_response):
+        self.logout()
+        with self.assertNumQueries(0):
+            self.assert_not_authenticated(get_response())

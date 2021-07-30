@@ -245,9 +245,7 @@ class UserListViewTest(SetupUsersMixin, APITestCase):
         """
         get_response = lambda: self.client.get(self.url)
 
-        # authentication is required:
-        with self.assertNumQueries(0):
-            self.assert_not_authenticated(get_response())
+        self.assert_authentication_required(get_response)
 
         # view is not shown to non-superusers
         self.login_as("bob")

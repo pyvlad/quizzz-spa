@@ -29,16 +29,14 @@ class CommunityListTest(SetupCommunityDataMixin, APITestCase):
         """
         get_response = lambda: self.client.get(self.url)
 
-        # authentication is required
-        with self.assertNumQueries(0):
-            self.assert_not_authenticated(get_response())
+        self.assert_authentication_required(get_response)
 
         # regular users have no access
         self.login_as("bob")
         with self.assertNumQueries(2):
             self.assert_not_authorized(get_response())
 
-        # superuser can has access
+        # superuser has access
         self.login_as("admin")
         with self.assertNumQueries(3):
             response = get_response()
@@ -70,9 +68,7 @@ class UserCommunitiesTest(SetupCommunityDataMixin, APITestCase):
         """
         get_response = lambda: self.client.get(self.url)
 
-        # Authentication is required:
-        with self.assertNumQueries(0):
-            self.assert_not_authenticated(get_response())
+        self.assert_authentication_required(get_response)
 
         # Regular users cannot see someone else's list of communities:
         self.login_as("alice")
@@ -111,9 +107,7 @@ class CreateCommunityTest(SetupCommunityDataMixin, APITestCase):
         """
         get_response = lambda: self.client.post(self.url, self.payload)
 
-        # Authentication is required:
-        with self.assertNumQueries(0):
-            self.assert_not_authenticated(get_response())
+        self.assert_authentication_required(get_response)
 
         self.assertEqual(Community.objects.count(), self.num_communities)
 
@@ -152,8 +146,6 @@ class JoinCommunityTest(SetupCommunityDataMixin, APITestCase):
         # consider "ben" trying to join "group1":
         self.USER = "ben"
         self.USER_ID = self.USERS["ben"]["id"]
-        self.GROUP = "group1"
-        self.GROUP_ID = self.COMMUNITIES[self.GROUP]["id"]
 
         self.num_memberships = Membership.objects.count()
 
@@ -171,9 +163,7 @@ class JoinCommunityTest(SetupCommunityDataMixin, APITestCase):
         """
         get_response = lambda: self.client.post(self.url, self.payload)
 
-        # Authentication is required:
-        with self.assertNumQueries(0):
-            self.assert_not_authenticated(get_response())
+        self.assert_authentication_required(get_response)
         
         self.assertEqual(Membership.objects.count(), self.num_memberships)
 
@@ -277,9 +267,6 @@ class MembershipListTest(SetupCommunityDataMixin, APITestCase):
     A community member can get a list of all group members.
     """
     def setUp(self):
-        self.GROUP = "group1"
-        self.GROUP_ID = self.COMMUNITIES[self.GROUP]["id"]
-
         self.num_members = Membership.objects.filter(community_id=self.GROUP_ID).count()
 
         self.url = reverse(
@@ -295,14 +282,8 @@ class MembershipListTest(SetupCommunityDataMixin, APITestCase):
         """
         get_response = lambda: self.client.get(self.url)
 
-        # authentication is required
-        with self.assertNumQueries(0):
-            self.assert_not_authenticated(get_response())
-
-        # membership is required
-        self.login_as("ben")
-        with self.assertNumQueries(3):  # (3) is member check 
-            self.assert_not_authorized(get_response())
+        self.assert_authentication_required(get_response)
+        self.assert_membership_required(get_response)
 
         # alice is a regular member:
         self.login_as("alice")
@@ -324,9 +305,6 @@ class MembershipListTest(SetupCommunityDataMixin, APITestCase):
 
 class CommunityDetailTest(SetupCommunityDataMixin, APITestCase):
     def setUp(self):
-        self.GROUP = "group1"
-        self.GROUP_ID = self.COMMUNITIES[self.GROUP]["id"]
-
         self.url = reverse(
             'communities:community-detail',  
             kwargs={'community_id': self.GROUP_ID}
@@ -342,14 +320,8 @@ class CommunityDetailTest(SetupCommunityDataMixin, APITestCase):
         """
         get_response = lambda: self.client.get(self.url)
 
-        # authentication is required
-        with self.assertNumQueries(0):
-            self.assert_not_authenticated(get_response())
-
-        # membership is required
-        self.login_as("ben")
-        with self.assertNumQueries(4):  # (3) member check (4) get data
-            self.assert_not_authorized(get_response())
+        self.assert_authentication_required(get_response)
+        self.assert_membership_required(get_response, 4)
 
         # alice is a regular group member, she sees the data:
         self.login_as("alice")
@@ -365,19 +337,9 @@ class CommunityDetailTest(SetupCommunityDataMixin, APITestCase):
         """
         get_response = lambda: self.client.put(self.url, self.update_payload)
 
-        # authentication is required:
-        with self.assertNumQueries(0):
-            self.assert_not_authenticated(get_response())
-
-        # membership is required:
-        self.login_as("ben")
-        with self.assertNumQueries(3):
-            self.assert_not_authorized(get_response())
-
-        # alice is a regular group member, admin rights are required:
-        self.login_as("alice")
-        with self.assertNumQueries(3):  # (3) is admin check
-            self.assert_not_authorized(get_response())
+        self.assert_authentication_required(get_response)
+        self.assert_membership_required(get_response)
+        self.assert_group_admin_rights_required(get_response)
 
         self.assertNotEqual(Community.objects.get(name=self.GROUP).password, self.new_password)
 
@@ -414,19 +376,9 @@ class CommunityDetailTest(SetupCommunityDataMixin, APITestCase):
         """
         get_response = lambda: self.client.delete(self.url)
 
-        # authentication is required
-        with self.assertNumQueries(0):
-            self.assert_not_authenticated(get_response())
-
-        # membership is required:
-        self.login_as("ben")
-        with self.assertNumQueries(3):
-            self.assert_not_authorized(get_response())
-
-        # alice is a regular group member, admin rights are required:
-        self.login_as("alice")
-        with self.assertNumQueries(3):
-            self.assert_not_authorized(get_response())
+        self.assert_authentication_required(get_response)
+        self.assert_membership_required(get_response)
+        self.assert_group_admin_rights_required(get_response)
 
         self.assertEqual(Community.objects.filter(name=self.GROUP).count(), 1)
 
@@ -447,9 +399,6 @@ class MembershipDetailTest(SetupCommunityDataMixin, APITestCase):
         # consider bob's membership in group1:
         self.USER = "bob"
         self.USER_ID = self.USERS["bob"]["id"]
-
-        self.GROUP = "group1"
-        self.GROUP_ID = self.COMMUNITIES[self.GROUP]["id"]
         
         self.url = reverse(
             'communities:membership-detail',  
@@ -468,14 +417,8 @@ class MembershipDetailTest(SetupCommunityDataMixin, APITestCase):
         """
         get_response = lambda: self.client.get(self.url)
 
-        # aauthentication is required:
-        with self.assertNumQueries(0):
-            self.assert_not_authenticated(get_response())
-
-        # membership is required:
-        self.login_as("ben")
-        with self.assertNumQueries(4):
-            self.assert_not_authorized(get_response())
+        self.assert_authentication_required(get_response)
+        self.assert_membership_required(get_response, 4)
 
         # alice is a regular group member, works for her:
         self.login_as("alice")
@@ -499,14 +442,8 @@ class MembershipDetailTest(SetupCommunityDataMixin, APITestCase):
         """
         get_response = lambda: self.client.put(self.url, self.update_payload)
 
-        # authentication is required:
-        with self.assertNumQueries(0):
-            self.assert_not_authenticated(get_response())
-
-        # membership is required:
-        self.login_as("ben")
-        with self.assertNumQueries(3):
-            self.assert_not_authorized(get_response())
+        self.assert_authentication_required(get_response)
+        self.assert_membership_required(get_response)
 
         # alice is a regular group member, admin rights are required:
         self.login_as("alice")
@@ -567,19 +504,9 @@ class MembershipDetailTest(SetupCommunityDataMixin, APITestCase):
         """
         get_response = lambda: self.client.delete(self.url)
 
-        # authentication is required:
-        with self.assertNumQueries(0):
-            self.assert_not_authenticated(get_response())
-
-        # membership is required:
-        self.login_as("ben")
-        with self.assertNumQueries(3):
-            self.assert_not_authorized(get_response())
-
-        # alice is a regular community member, admin rights are required:
-        self.login_as("alice")
-        with self.assertNumQueries(3):
-            self.assert_not_authorized(get_response())
+        self.assert_authentication_required(get_response)
+        self.assert_membership_required(get_response)
+        self.assert_group_admin_rights_required(get_response)
 
         # bob is group admin, but he cannot delete himself:
         self.login_as("bob")

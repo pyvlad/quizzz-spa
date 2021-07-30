@@ -12,9 +12,6 @@ TOURNAMENT_EXPECTED_KEYS = ['id', 'name', 'is_active', 'community', 'time_create
 
 class CreateTournamentTest(SetupCommunityDataMixin, APITestCase):
     def setUp(self):
-        self.GROUP = "group1"
-        self.GROUP_ID = self.COMMUNITIES[self.GROUP]["id"]
-
         self.url = reverse(
             'tournaments:tournament-list-create', 
             kwargs={"community_id": self.GROUP_ID}
@@ -29,19 +26,9 @@ class CreateTournamentTest(SetupCommunityDataMixin, APITestCase):
         """
         get_response = lambda: self.client.post(self.url, self.payload)
 
-        # authentication is required
-        with self.assertNumQueries(0):
-            self.assert_not_authenticated(get_response())
-
-        # membership is required
-        self.login_as("ben")
-        with self.assertNumQueries(3):
-            self.assert_not_authorized(get_response())
-
-        # group admin rights are required
-        self.login_as("alice")
-        with self.assertNumQueries(3):
-            self.assert_not_authorized(get_response())
+        self.assert_authentication_required(get_response)
+        self.assert_membership_required(get_response)
+        self.assert_group_admin_rights_required(get_response)
 
         self.assertEqual(Tournament.objects.count(), 0)
 
@@ -58,9 +45,6 @@ class CreateTournamentTest(SetupCommunityDataMixin, APITestCase):
 
 class TournamentListTest(SetupTournamentsMixin, APITestCase):
     def setUp(self):
-        self.GROUP = "group1"
-        self.GROUP_ID = self.COMMUNITIES[self.GROUP]["id"]
-
         self.url = reverse(
             'tournaments:tournament-list-create', 
             kwargs={"community_id": self.GROUP_ID}
@@ -73,14 +57,8 @@ class TournamentListTest(SetupTournamentsMixin, APITestCase):
         """
         get_response = lambda: self.client.get(self.url)
 
-        # authentication is required
-        with self.assertNumQueries(0):
-            self.assert_not_authenticated(get_response())
-
-        # membership is required
-        self.login_as("ben")
-        with self.assertNumQueries(4):  # TODO 2 membership queries
-            self.assert_not_authorized(get_response())
+        self.assert_authentication_required(get_response)
+        self.assert_membership_required(get_response, 4)
 
         # a regular group members can see group tournaments
         self.login_as("alice")
@@ -94,9 +72,6 @@ class TournamentListTest(SetupTournamentsMixin, APITestCase):
 
 class TournamentDetailTest(SetupTournamentsMixin, APITestCase):
     def setUp(self):
-        self.GROUP = "group1"
-        self.GROUP_ID = self.COMMUNITIES[self.GROUP]["id"]
-
         self.TOURNAMENT = "tournament1"
         self.TOURNAMENT_ID = self.TOURNAMENTS[self.TOURNAMENT]["id"]
         self.TOURNAMENT_NAME = self.TOURNAMENTS[self.TOURNAMENT]["name"]
@@ -116,14 +91,8 @@ class TournamentDetailTest(SetupTournamentsMixin, APITestCase):
     def test_get_tournament(self):
         get_response = lambda: self.client.get(self.url)
 
-        # authentication is required
-        with self.assertNumQueries(0):
-            self.assert_not_authenticated(get_response())
-
-        # membership is required
-        self.login_as("ben")
-        with self.assertNumQueries(4):
-            self.assert_not_authorized(get_response())
+        self.assert_authentication_required(get_response)
+        self.assert_membership_required(get_response, 4)
 
         # a regular group member sees the data
         self.login_as("alice")
@@ -137,19 +106,9 @@ class TournamentDetailTest(SetupTournamentsMixin, APITestCase):
     def test_update_tournament_works_for_group_admins(self):
         get_response = lambda: self.client.put(self.url, self.update_payload)
 
-        # authentication is required
-        with self.assertNumQueries(0):
-            self.assert_not_authenticated(get_response())
-
-        # membership is required
-        self.login_as("ben")
-        with self.assertNumQueries(3):
-            self.assert_not_authorized(get_response())
-
-        # group admin rights are required
-        self.login_as("alice")
-        with self.assertNumQueries(3):
-            self.assert_not_authorized(get_response())     
+        self.assert_authentication_required(get_response)
+        self.assert_membership_required(get_response)
+        self.assert_group_admin_rights_required(get_response)
 
         tournament = Tournament.objects.get(pk=1)
         self.assertNotEqual(tournament.name, self.update_payload["name"])
@@ -171,19 +130,9 @@ class TournamentDetailTest(SetupTournamentsMixin, APITestCase):
     def test_delete_community_works_for_group_admins(self):
         get_response = lambda: self.client.delete(self.url)
         
-        # authentication is required
-        with self.assertNumQueries(0):
-            self.assert_not_authenticated(get_response())
-
-        # membership is required
-        self.login_as("ben")
-        with self.assertNumQueries(3):
-            self.assert_not_authorized(get_response())
-
-        # group admin rights are required:
-        self.login_as("alice")
-        with self.assertNumQueries(3):
-            self.assert_not_authorized(get_response())     
+        self.assert_authentication_required(get_response)
+        self.assert_membership_required(get_response)
+        self.assert_group_admin_rights_required(get_response)
 
         self.assertEqual(Tournament.objects.filter(pk=1).count(), 1)
 

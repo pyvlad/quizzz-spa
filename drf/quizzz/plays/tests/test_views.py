@@ -20,9 +20,6 @@ REVIEWED_PLAY_EXPECTED_KEYS = [
 
 class StartRoundTest(SetupRoundsMixin, APITestCase):
     def setUp(self):
-        self.GROUP = "group1"
-        self.GROUP_ID = self.COMMUNITIES[self.GROUP]["id"]
-
         self.ROUND = "round1"
         self.ROUND_ID = self.ROUNDS[self.ROUND]["id"]
         self.QUIZ_ID = self.ROUNDS[self.ROUND]["quiz_id"]
@@ -48,14 +45,8 @@ class StartRoundTest(SetupRoundsMixin, APITestCase):
 
         get_response = lambda: self.client.post(self.url, {})
 
-        # authentication is required
-        with self.assertNumQueries(0):
-            self.assert_not_authenticated(get_response())
-
-        # membership is required
-        self.login_as("ben")
-        with self.assertNumQueries(3):
-            self.assert_not_authorized(get_response())
+        self.assert_authentication_required(get_response)
+        self.assert_membership_required(get_response)
 
         self.assertEqual(Play.objects.count(), init_count)
 
@@ -91,9 +82,6 @@ class StartRoundTest(SetupRoundsMixin, APITestCase):
 
 class SubmitRoundTest(SetupRoundsMixin, APITestCase):
     def setUp(self):
-        self.GROUP = "group1"
-        self.GROUP_ID = self.COMMUNITIES[self.GROUP]["id"]
-
         self.ROUND = "round1"
         self.ROUND_ID = self.ROUNDS[self.ROUND]["id"]
         self.QUIZ_ID = self.ROUNDS[self.ROUND]["quiz_id"]
@@ -129,14 +117,8 @@ class SubmitRoundTest(SetupRoundsMixin, APITestCase):
 
         get_response = lambda: self.client.post(self.url, self.payload)
 
-        # authentication is required
-        with self.assertNumQueries(0):
-            self.assert_not_authenticated(get_response())
-
-        # membership is required
-        self.login_as("ben")
-        with self.assertNumQueries(3):
-            self.assert_not_authorized(get_response())
+        self.assert_authentication_required(get_response)
+        self.assert_membership_required(get_response)
 
         self.assertEqual(Play.objects.count(), init_play_count)
         self.assertEqual(PlayAnswer.objects.count(), init_answer_count)
@@ -257,9 +239,6 @@ class SubmitRoundTest(SetupRoundsMixin, APITestCase):
 
 class ReviewRoundTest(SetupRoundsMixin, APITestCase):
     def setUp(self):
-        self.GROUP = "group1"
-        self.GROUP_ID = self.COMMUNITIES[self.GROUP]["id"]
-
         self.ROUND = "round1"
         self.ROUND_ID = self.ROUNDS[self.ROUND]["id"]
         self.QUIZ_ID = self.ROUNDS[self.ROUND]["quiz_id"]
@@ -298,14 +277,8 @@ class ReviewRoundTest(SetupRoundsMixin, APITestCase):
         """
         get_response = lambda: self.client.get(self.url)
 
-        # authentication is required
-        with self.assertNumQueries(0):
-            self.assert_not_authenticated(get_response())
-
-        # membership is required
-        self.login_as("ben")
-        with self.assertNumQueries(3):
-            self.assert_not_authorized(get_response())
+        self.assert_authentication_required(get_response)
+        self.assert_membership_required(get_response)
 
         self.login_as("alice")
         self.client.post(self.start_url, {}) # start round

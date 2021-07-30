@@ -18,9 +18,6 @@ ROUND_EXPECTED_KEYS = [
 
 class CreateRoundTest(SetupTournamentsMixin, APITestCase):
     def setUp(self):
-        self.GROUP = "group1"
-        self.GROUP_ID = self.COMMUNITIES[self.GROUP]["id"]
-
         self.TOURNAMENT = "tournament1"
         self.TOURNAMENT_ID = self.TOURNAMENTS[self.TOURNAMENT]["id"]
 
@@ -52,19 +49,9 @@ class CreateRoundTest(SetupTournamentsMixin, APITestCase):
 
         get_response = lambda: self.client.post(self.url, self.payload)
 
-        # authentication is required
-        with self.assertNumQueries(0):
-            self.assert_not_authenticated(get_response())
-
-        # membership is required
-        self.login_as("ben")
-        with self.assertNumQueries(3):
-            self.assert_not_authorized(get_response())
-
-        # group admin rights are required
-        self.login_as("alice")
-        with self.assertNumQueries(3):
-            self.assert_not_authorized(get_response())
+        self.assert_authentication_required(get_response)
+        self.assert_membership_required(get_response)
+        self.assert_group_admin_rights_required(get_response)
 
         self.assertEqual(Round.objects.count(), init_count)
 
@@ -109,9 +96,6 @@ class CreateRoundTest(SetupTournamentsMixin, APITestCase):
 
 class RoundListTest(SetupRoundsMixin, APITestCase):
     def setUp(self):
-        self.GROUP = "group1"
-        self.GROUP_ID = self.COMMUNITIES[self.GROUP]["id"]
-
         self.TOURNAMENT = "tournament1"
         self.TOURNAMENT_ID = self.TOURNAMENTS[self.TOURNAMENT]["id"]
 
@@ -130,14 +114,8 @@ class RoundListTest(SetupRoundsMixin, APITestCase):
         """
         get_response = lambda: self.client.get(self.url)
 
-        # authentication is required
-        with self.assertNumQueries(0):
-            self.assert_not_authenticated(get_response())
-
-        # membership is required
-        self.login_as("ben")
-        with self.assertNumQueries(4):
-            self.assert_not_authorized(get_response())
+        self.assert_authentication_required(get_response)
+        self.assert_membership_required(get_response, 4)
 
         # a regular member sees the data
         self.login_as("alice")
@@ -151,9 +129,6 @@ class RoundListTest(SetupRoundsMixin, APITestCase):
 
 class RoundDetailTest(SetupRoundsMixin, APITestCase):
     def setUp(self):
-        self.GROUP = "group1"
-        self.GROUP_ID = self.COMMUNITIES[self.GROUP]["id"]
-
         self.ROUND = "round1"
         self.ROUND_ID = self.ROUNDS[self.ROUND]["id"]
         self.QUIZ_ID = self.ROUNDS[self.ROUND]["quiz_id"]
@@ -184,14 +159,8 @@ class RoundDetailTest(SetupRoundsMixin, APITestCase):
     def test_get_round(self):
         get_response = lambda: self.client.get(self.url)
 
-        # authentication is required
-        with self.assertNumQueries(0):
-            self.assert_not_authenticated(get_response())
-
-        # membership is required
-        self.login_as("ben")
-        with self.assertNumQueries(4):
-            self.assert_not_authorized(get_response())
+        self.assert_authentication_required(get_response)
+        self.assert_membership_required(get_response, 4)
 
         # alice is a group member, she sees the data:
         self.login_as("alice")
@@ -209,19 +178,9 @@ class RoundDetailTest(SetupRoundsMixin, APITestCase):
     def test_update_round_works_for_group_admins(self):
         get_response = lambda: self.client.put(self.url, self.update_payload)
 
-        # authentication is required
-        with self.assertNumQueries(0):
-            self.assert_not_authenticated(get_response())
-
-        # membership is required
-        self.login_as("ben")
-        with self.assertNumQueries(3):
-            self.assert_not_authorized(get_response())
-
-        # group admin rights are required
-        self.login_as("alice")
-        with self.assertNumQueries(3):
-            self.assert_not_authorized(get_response())   
+        self.assert_authentication_required(get_response)
+        self.assert_membership_required(get_response)
+        self.assert_group_admin_rights_required(get_response)
 
         round = Round.objects.get(pk=self.ROUND_ID)
         self.assertNotEqual(round.start_time, self.update_payload["start_time"])
@@ -242,19 +201,9 @@ class RoundDetailTest(SetupRoundsMixin, APITestCase):
     def test_delete_round_works_for_group_admins(self):
         get_response = lambda: self.client.delete(self.url)
 
-        # authentication is required
-        with self.assertNumQueries(0):
-            self.assert_not_authenticated(get_response())
-
-        # membership is required
-        self.login_as("ben")
-        with self.assertNumQueries(3):
-            self.assert_not_authorized(get_response())
-
-        # group admin rights are required
-        self.login_as("alice")
-        with self.assertNumQueries(3):
-            self.assert_not_authorized(get_response())   
+        self.assert_authentication_required(get_response)
+        self.assert_membership_required(get_response)
+        self.assert_group_admin_rights_required(get_response)
 
         self.assertEqual(Round.objects.filter(pk=self.ROUND_ID).count(), 1)
 
