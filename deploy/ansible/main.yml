@@ -50,8 +50,6 @@
   # When using 'vars:' within the 'roles:' section of a playbook, 
   # the variables are added to the play variables, making them available 
   # to all tasks within the play before and after the role.
-  # TODO: maybe use variables like 'nginx__wsgi_port' in subsequent plays? 
-  #       but then there is a dependency on order, what if I want to skip nginx role? 
 
   roles:
     - "firewall"

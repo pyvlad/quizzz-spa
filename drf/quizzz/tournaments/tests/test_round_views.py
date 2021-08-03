@@ -119,7 +119,7 @@ class RoundListTest(SetupRoundsMixin, APITestCase):
 
         # a regular member sees the data
         self.login_as("alice")
-        with self.assertNumQueries(7): # (3) member (4) round (5) plays (6) quiz (7) users # TODO: N+1 (users)
+        with self.assertNumQueries(5): # (3) member (4) rounds with quizzes and authors (5) my plays
             response = get_response()
             self.assertEqual(response.status_code, status.HTTP_200_OK)
             self.assertEqual(len(response.data), 1)

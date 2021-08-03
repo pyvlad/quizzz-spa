@@ -65,6 +65,7 @@ class RoundListOrCreate(APIView):
         
         rounds = Round.objects\
             .filter(tournament_id=tournament_id)\
+            .select_related('quiz').select_related('quiz__user')\
             .prefetch_related(Round.get_user_plays_prefetch_object(request.user.id))\
             .all()
         serializer = ListedRoundSerializer(rounds, many=True, context={'request': request})

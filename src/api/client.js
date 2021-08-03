@@ -10,7 +10,7 @@ export async function client(endpoint, { body, ...customConfig } = {}) {
   /*
     Returns:
     - on success: body of the response;
-    - on failure: rejected promise with clientError object.
+    - on failure: rejected promise with an ApiError/FetchError object.
   */
   const csrfToken = getCookie("csrftoken");
   
@@ -35,17 +35,21 @@ export async function client(endpoint, { body, ...customConfig } = {}) {
 
   // get response data / error message
   try {
-    await timeout(1000);  // TODO: remove this in production
+    // fake network latency during development
+    if (process.env.NODE_ENV === "development") await timeout(1000);
+
+    // response headers
     const response = await window.fetch(endpoint, config);
 
-    // This shouldn't be needed but React proxy doesn't return json on proxy fails
-    if (response.status === 500) {
+    // React proxy doesn't return json on proxy fails
+    if ((process.env.NODE_ENV === "development") && (response.status === 500)) {
       throw new Error('Internal Server Error');
     }
 
+    // response body
     let body;
-    try {
-      body = await response.json();
+    try { 
+      body = await response.json() 
     } catch(e) {
       body = null;  // some endpoints return an empty body, e.g. logout
     }
@@ -53,11 +57,10 @@ export async function client(endpoint, { body, ...customConfig } = {}) {
     if (response.ok) {
       return body;
     } else {
-      // throw apiError(response, body);
-      return Promise.reject(apiError(response, body));
+      return Promise.reject(new ApiError(response, body));
     }
   } catch (err) {
-    return Promise.reject(clientError(err));
+    return Promise.reject(new FetchError(err));
   }
 }
 
@@ -78,26 +81,23 @@ client.delete = function (endpoint, customConfig = {}) {
 }
 
 
-function apiError(response, body) {
+function ApiError(response, body) {
   /*
-    Handle api responses with non-OK status codes.
+    Returns an object representing an API response with a non-OK status code.
   */
-  return {
-    message: (body && body.detail) ? body.detail : response.statusText,
-    status: response.status,
-    formErrors: body ? body.form_errors : undefined,
-  }
+  this.message = (body && body.detail) ? body.detail : response.statusText;
+  this.status = response.status;
+  this.formErrors = body ? body.form_errors : undefined;
 }
 
 
-export function clientError(e) {
+function FetchError(e) {
   /* 
-    Handle other request errors other than `apiError`.
+    Returns an object with `message` string of the error that 
+    was thrown during the fetch process.
     Make error serializable so that it can be passed as action.payload.
   */
-  return {
-    message: e.message,
-  }
+  this.message = e.message;
 }
 
 

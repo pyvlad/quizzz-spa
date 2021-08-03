@@ -1,6 +1,4 @@
 ---
-# Postfix
-# TODO: add mail forwarding from root to external email
 
 - name: "Install and configure Postfix mail transfer agent"
   become: true

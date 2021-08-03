@@ -1,7 +1,31 @@
-# TODO: improve security of login/logout/register views
-# By default, drf views are only protected if the client has authenticated:
-# https://stackoverflow.com/questions/49275069/csrf-is-only-checked-when-authenticated-in-drf
-# https://stackoverflow.com/a/47491560
+"""
+Authentication/Registration views.
+
+Notes on CSRF-protection of login/logout/register views
+
+By default, drf views have CSRF protection when the client has authenticated:
+    CSRF validation in REST framework works slightly differently to standard Django 
+    due to the need to support both session and non-session based authentication 
+    to the same views. This means that only authenticated requests require CSRF tokens, 
+    and anonymous requests may be sent without CSRF tokens. This behaviour is not suitable 
+    for login views, which should always have CSRF validation applied.
+    [https://www.django-rest-framework.org/api-guide/authentication/#sessionauthentication]
+Besides, the session cookie has 'SameSite' flag set to 'lax' 
+(via settings.SESSION_COOKIE_SAMESITE) which prevents it from being sent 
+in CSRF-prone request methods (e.g. POST) from external websites.
+
+Anonymous requests can be sent without CSRF tokens, which makes publicly available
+views (most views here) vulnerable to CSRF attacks, e.g. 
+https://en.wikipedia.org/wiki/Cross-site_request_forgery#Forging_login_requests
+
+Some hints for a potential solution (if this ever becomes an issue):
+https://stackoverflow.com/questions/49275069/csrf-is-only-checked-when-authenticated-in-drf
+https://stackoverflow.com/a/47491560
+https://github.com/encode/django-rest-framework/blob/master/rest_framework/views.py#L144
+https://github.com/encode/django-rest-framework/blob/master/rest_framework/authentication.py#L112-L142
+https://github.com/encode/django-rest-framework/issues/6104
+https://github.com/encode/django-rest-framework/issues/6795
+"""
 from django.contrib.auth import login, logout, get_user_model
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import never_cache

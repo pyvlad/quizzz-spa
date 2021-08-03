@@ -1,8 +1,4 @@
 export {
-  clientError
-} from './client';
-
-export {
   login, 
   logout,
   register,

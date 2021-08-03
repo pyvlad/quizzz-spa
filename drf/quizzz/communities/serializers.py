@@ -12,9 +12,6 @@ class JoinCommunitySerializer(serializers.Serializer):
     name = serializers.CharField(max_length=100)
     password = serializers.CharField(allow_blank=True, max_length=20, default="")
     
-    # not putting these methods in .validate(data) method to skip if data is not valid
-    # order of validation: https://stackoverflow.com/a/27591842
-    # TODO: add .validate method but run it conditionally if field-level validators pass
     def get_community(self, data):
         try:
             community = Community.objects.get(name=data["name"])

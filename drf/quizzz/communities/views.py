@@ -122,9 +122,7 @@ class JoinCommunity(APIView):
             serializer.check_password(data, community)
             membership = serializer.create_membership(request.user, community)
 
-            # return membership and community data to user
-            ms = MembershipSerializer(membership)
-            return Response(ms.data)
+            return Response(MembershipSerializer(membership).data)
 
 
 
