@@ -32,7 +32,7 @@ class SetupCommunityDataMixin(SetupUsersMixin):
         cls.GROUP = "group1"
         cls.GROUP_ID = cls.COMMUNITIES[cls.GROUP]["id"]
 
-    def assert_membership_required(self, get_response, num_queries=3):
+    def assert_membership_required(self, get_response):
         """
         Helper method to check permissions for 'group1' (default self.GROUP).
         Send request as 'ben' who is not a member of 'group1'.
@@ -40,7 +40,7 @@ class SetupCommunityDataMixin(SetupUsersMixin):
         if self.GROUP != "group1":
             raise RuntimeError("self.GROUP must be 'group1'")
         self.login_as("ben")
-        with self.assertNumQueries(num_queries):
+        with self.assertNumQueries(3):
             self.assert_not_authorized(get_response())
 
     def assert_group_admin_rights_required(self, get_response, num_queries=3):

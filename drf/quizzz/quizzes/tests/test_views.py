@@ -131,10 +131,7 @@ class QuizDetailTest(SetupQuizDataMixin, APITestCase):
         self.question_expected_keys = ['id', 'text', 'explanation', 'options']
         self.option_expected_keys = ['id', 'text', 'is_correct']
 
-    def _test_permissions(
-            self, method, body=None, 
-            non_member_queries=3, non_owner_queries=6
-        ):
+    def _test_permissions(self, method, body=None, non_owner_queries=6):
         """
         Helper method to check that non-authenticated, non-members, and non-owners 
         cannot access quiz instances using any allowed method.
@@ -142,7 +139,7 @@ class QuizDetailTest(SetupQuizDataMixin, APITestCase):
         get_response = lambda: getattr(self.client, method)(self.url, body)
 
         self.assert_authentication_required(get_response)
-        self.assert_membership_required(get_response, non_member_queries)
+        self.assert_membership_required(get_response)
 
         # Non-owner cannot see the quiz:
         self.login_as("alice")

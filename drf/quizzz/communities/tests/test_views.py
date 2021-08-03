@@ -321,7 +321,7 @@ class CommunityDetailTest(SetupCommunityDataMixin, APITestCase):
         get_response = lambda: self.client.get(self.url)
 
         self.assert_authentication_required(get_response)
-        self.assert_membership_required(get_response, 4)
+        self.assert_membership_required(get_response)
 
         # alice is a regular group member, she sees the data:
         self.login_as("alice")
@@ -418,7 +418,7 @@ class MembershipDetailTest(SetupCommunityDataMixin, APITestCase):
         get_response = lambda: self.client.get(self.url)
 
         self.assert_authentication_required(get_response)
-        self.assert_membership_required(get_response, 4)
+        self.assert_membership_required(get_response)
 
         # alice is a regular group member, works for her:
         self.login_as("alice")

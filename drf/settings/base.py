@@ -69,6 +69,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    
+    'quizzz.membership_middleware.MembershipMiddleware',
 ]
 
 ROOT_URLCONF = 'quizzz.urls'
