@@ -20,5 +20,6 @@ urlpatterns = [
         'password-reset/<token_uuid>/',
         views.ResetPassword.as_view(),
         name="password-reset"
-    )
+    ),
+    path('wsgi/', views.Wsgi.as_view(), name='wsgi'),
 ]

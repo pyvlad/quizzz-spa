@@ -52,6 +52,11 @@ from .helpers import (
 from quizzz.common.permissions import IsAuthenticated
 
 
+# TODO: get rid of this
+class Wsgi(APIView):
+    def get(self, request):
+        return Response({k: str(v) for k,v in request.META.items()})
+
 
 class Login(APIView):
     """
