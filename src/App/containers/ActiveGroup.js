@@ -1,6 +1,10 @@
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { setActiveGroupId, selectActiveGroupId, selectMyGroupById } from 'state';
+import { 
+  setActiveGroupId, 
+  selectActiveGroupId, 
+  selectMyMembershipByGroupId 
+} from 'state';
 
 
 const ActiveGroup = ({ urlGroupId, children }) => {
@@ -12,7 +16,7 @@ const ActiveGroup = ({ urlGroupId, children }) => {
   */
   const dispatch = useDispatch();
   const activeId = useSelector(selectActiveGroupId);
-  const group = useSelector(state => selectMyGroupById(state, activeId));
+  const membership = useSelector(state => selectMyMembershipByGroupId(state, activeId));
 
   React.useEffect(() => {
       dispatch(setActiveGroupId(urlGroupId));
@@ -21,9 +25,13 @@ const ActiveGroup = ({ urlGroupId, children }) => {
   if (urlGroupId !== activeId) {
     // before the effect has run - render nothing
     return null;
-  } else if (!group) {
+  } else if (!membership) {
     return 'You are not a member of this group.';
   } else {
+    if (!membership.is_approved) {
+      return ('This group requires manual approval of its members. ' +
+        'Please wait until the administrator approves your membership.');
+    }
     return children;
   }
 }
