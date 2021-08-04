@@ -26,6 +26,8 @@ https://github.com/encode/django-rest-framework/blob/master/rest_framework/authe
 https://github.com/encode/django-rest-framework/issues/6104
 https://github.com/encode/django-rest-framework/issues/6795
 """
+import datetime
+from django.utils import timezone
 from django.contrib.auth import login, logout, get_user_model
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import never_cache
@@ -39,7 +41,7 @@ from rest_framework import status
 from rest_framework import permissions
 from rest_framework.serializers import ValidationError
 
-from .models import CustomUser
+from .models import CustomUser, PasswordResetToken
 from .serializers import (
     UserSerializer, NewUserSerializer, LoginSerializer, 
     UserEmailSerializer, UserPasswordSerializer,
@@ -144,6 +146,14 @@ class RequestPasswordResetEmail(APIView):
         if serializer.is_valid(raise_exception=True):
             email = serializer.validated_data["email"]
             user = get_object_or_404(get_user_model().objects.filter(email=email))
+
+            # throttle when requested more than N times per day per email address
+            num_sent = PasswordResetToken.objects.filter(
+                user=user, 
+                time_created__gte=timezone.now()-datetime.timedelta(days=1),
+            ).count()
+            if num_sent >= settings.QUIZZZ_PASSWORD_RESET_REQUESTS_PER_EMAIL_PER_DAY:
+                raise ValidationError("Too many requests. Try again tomorrow.")
             
             if user.is_superuser:
                 raise ValidationError("Superuser password cannot be reset.")

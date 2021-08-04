@@ -21,6 +21,50 @@ USER_EXPECTED_KEYS = [
 ]
 
 
+class RequestPasswordResetEmailViewTest(SetupUsersMixin, APITestCase):
+    """
+    Ensure password can be reset.
+    """
+    def setUp(self):
+        self.url = reverse('users:request-password-reset-email')
+        self.payload = {
+            "email": self.USERS["bob"]["email"],
+        }
+        
+    def test_normal(self):
+        """
+        When correct email is submitted, an email with password reset link is sent.
+        """
+        with self.assertNumQueries(3):
+            response = self.client.post(self.url, self.payload)
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            self.assertIsNone(response.data)
+
+        # one email was sent with url to reset password:
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].subject, '[Quizzz] Reset Your Password')
+
+    def test_throttling(self):
+        """
+        Only three attempts per day are permitted.
+        """
+        for i in range(settings.QUIZZZ_PASSWORD_RESET_REQUESTS_PER_EMAIL_PER_DAY):
+            response = self.client.post(self.url, self.payload)
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+        
+        self.assertEqual(len(mail.outbox), settings.QUIZZZ_PASSWORD_RESET_REQUESTS_PER_EMAIL_PER_DAY)
+        
+        # next attempts for this email are blocked
+        response = self.client.post(self.url, self.payload)
+        self.assert_validation_failed(response, ["Too many requests. Try again tomorrow."])
+        self.assertEqual(len(mail.outbox), settings.QUIZZZ_PASSWORD_RESET_REQUESTS_PER_EMAIL_PER_DAY)
+
+        # but not for other emails
+        response = self.client.post(self.url, {"email": self.USERS["alice"]["email"]})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(mail.outbox), 1 + settings.QUIZZZ_PASSWORD_RESET_REQUESTS_PER_EMAIL_PER_DAY)
+
+
 class RegistrationViewTest(BaseTestUtils, APITestCase):
     """
     Ensure registration view works as expected.
