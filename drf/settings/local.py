@@ -31,6 +31,13 @@ DATABASES = {
 #     }
 # }
 
+# LocMemCache is the default: it is per-process and thread-safe 
+#   and uses the LRU (least-recently-used) culling strategy
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+    }
+}
 
 # Email
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'

@@ -1,3 +1,6 @@
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
+
 from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -146,6 +149,7 @@ class QuizPool(APIView):
 class TournamentStandings(APIView):
     permission_classes = [ IsAuthenticated,  IsCommunityMember ]
     
+    @method_decorator(cache_page(30))
     def get(self, request, community_id, tournament_id):
         tournament = get_object_or_404(Tournament.objects.filter(pk=tournament_id))
         standings = tournament.get_standings()

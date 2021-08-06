@@ -40,9 +40,12 @@
     - "{{ app__repo_remote_bare_path }}"
     - "{{ app__repo_remote_clone_path }}"
 
+- name: 'Set up memcached'
+  import_tasks: "memcached.yml"
+
 - name: 'Set up database for application'
   import_tasks: 'db.yml'
-
+  
 - name: 'Set up gunicorn'
   import_tasks: 'gunicorn.yml'
 

@@ -1,0 +1,22 @@
+---
+
+- name: "Install Memcached"
+  become: true
+  apt:
+    name: "memcached"
+    state: "present"
+    update_cache: yes
+
+- name: "Install pylibmc dependencies"
+  become: true
+  apt:
+    name: "{{ item }}"
+    state: "present"
+    update_cache: yes
+  loop:
+    - "libmemcached-dev"
+
+- name: "Install Memcached Python bindings: pylibmc"
+  pip:
+    name: "pylibmc==1.6.1"
+    virtualenv: "{{ app__venv_path }}"
