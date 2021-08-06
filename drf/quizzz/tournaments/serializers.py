@@ -1,5 +1,5 @@
+from django.conf import settings
 from rest_framework import serializers
-from django.contrib.auth import get_user_model
 
 from .models import Tournament, Round
 from quizzz.quizzes.models import Quiz
@@ -100,12 +100,19 @@ class EditableRoundSerializer(serializers.ModelSerializer):
         if not quiz.is_finalized:
             raise serializers.ValidationError({"quiz": ["Quiz has not been submitted yet."]})
 
+    def enforce_rounds_per_tournament_limit(self, tournament_id):
+        num_rounds = Round.objects.filter(tournament_id=tournament_id).count()
+        if num_rounds >= settings.QUIZZZ_ROUNDS_PER_TOURNAMENT_LIMIT:
+            raise serializers.ValidationError("Too many rounds. Please start a new tournament.")
+
+
     def create(self, validated_data):
         """
         Requires 'tournament_id' to be injected when calling '.save()'.
         """
         assert "tournament_id" in validated_data
 
+        self.enforce_rounds_per_tournament_limit(validated_data["tournament_id"])
         self.check_selected_quiz(validated_data["quiz"], validated_data["tournament_id"])
         
         return Round.objects.create(**validated_data)

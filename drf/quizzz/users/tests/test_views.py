@@ -5,6 +5,7 @@
 import re
 from django.urls import reverse
 from django.core import mail
+from django.core.cache import caches
 from django.conf import settings
 from rest_framework import status
 from rest_framework.test import APITestCase
@@ -19,6 +20,46 @@ USER_EXPECTED_KEYS = [
     "id", "username", "first_name", "last_name", "email", 
     "is_active", "date_joined", "last_login", "is_email_confirmed"
 ]
+
+
+
+class ThrottlingTest(SetupUsersMixin, APITestCase):
+    """
+    Ensure throttling works for registration attempts.
+    """
+    def setUp(self):
+        self.url = reverse('users:register')
+        self.get_payload = lambda x: {
+            "username": f"bob{x}", 
+            "password": self.USERS["bob"]["password"], 
+            "email": f"bob{x}@example.com",
+        }
+
+    def test_registration_throttling(self):
+        cache = caches['default']
+        cache.clear()
+
+        # assert that correct values have been set
+        self.assertEqual(settings.REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]["burst"], "60/minute")
+        self.assertEqual(settings.REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]["sustained"], "1200/day")
+
+        # test that on N requests returns 200, N+1 returns 429 
+        ORIGINAL_SETTING = settings.REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]["burst"]
+        TEST_VALUE = 3
+
+        from rest_framework.settings import api_settings
+        api_settings.DEFAULT_THROTTLE_RATES["burst"] = f'{TEST_VALUE}/minute'
+
+        for i in range(TEST_VALUE):
+            response = self.client.post(self.url, self.get_payload(i))
+            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+            self.logout()
+        response = self.client.post(self.url, self.get_payload(i+1))
+        self.assertEqual(response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
+
+        api_settings.DEFAULT_THROTTLE_RATES["burst"] = ORIGINAL_SETTING
+        cache.clear()
+
 
 
 class RequestPasswordResetEmailViewTest(SetupUsersMixin, APITestCase):
@@ -230,6 +271,29 @@ class LoginViewTest(SetupUsersMixin, APITestCase):
                 "non_field_errors": ["Wrong credentials."]
             })
             self.assertTrue("sessionid" not in response.cookies)
+
+    def test_throttling(self):
+        """
+        Only 10 attempts per hour are permitted.
+        """
+        cache = caches['default']
+        cache.clear()
+
+        for i in range(10):
+            response = self.client.post(self.url, self.payload)
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            self.assertTrue("sessionid" in response.cookies)
+            self.logout()
+
+        # next attempt for this IP is blocked
+        response = self.client.post(self.url, self.payload)
+        self.assertEqual(response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
+
+        # but works for another IP:
+        response = self.client.post(self.url, self.payload, REMOTE_ADDR='127.0.0.2')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        cache.clear()
 
 
 

@@ -1,8 +1,6 @@
-from django.http import Http404
 from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import permissions
 from rest_framework import status
 
 from .serializers import MembershipSerializer, CommunitySerializer, \
@@ -117,7 +115,7 @@ class JoinCommunity(APIView):
         
         if serializer.is_valid(raise_exception=True):
             data = serializer.validated_data
-            
+
             community = serializer.get_community(data)
             serializer.check_password(data, community)
             membership = serializer.create_membership(request.user, community)

@@ -14,6 +14,13 @@ class IsAuthenticated(permissions.BasePermission):
             and request.user.is_email_confirmed
         )
 
+class IsNotAuthenticated(permissions.BasePermission):
+    """
+    Allows access to non authenticated users only.
+    """
+    def has_permission(self, request, view):
+        return request.user.is_anonymous
+
 
 class IsSafeMethod(permissions.BasePermission):
     def has_permission(self, request, view):

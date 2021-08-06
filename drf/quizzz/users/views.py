@@ -51,7 +51,8 @@ from .helpers import (
     validate_email_confirmation_token, send_confirmation_email, 
     get_password_reset_token, send_password_reset_email,
 )
-from quizzz.common.permissions import IsAuthenticated
+from quizzz.common.permissions import IsAuthenticated, IsNotAuthenticated
+from quizzz.throttles import LoginRateThrottle
 
 
 # TODO: get rid of this
@@ -64,6 +65,9 @@ class Login(APIView):
     """
     Log user in.
     """
+    permission_classes = [IsNotAuthenticated]
+    throttle_classes = [LoginRateThrottle]
+
     @method_decorator(never_cache)
     def post(self, request):
         serializer = LoginSerializer(data=request.data)
@@ -87,6 +91,8 @@ class UserCreate(APIView):
     """ 
     Register new user and automatically log in.
     """
+    permission_classes = [IsNotAuthenticated]
+
     def post(self, request):
         serializer = NewUserSerializer(data=request.data)
         if serializer.is_valid(raise_exception=True):

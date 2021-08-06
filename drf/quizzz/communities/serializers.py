@@ -1,3 +1,4 @@
+from django.conf import settings
 from rest_framework import serializers
 from rest_framework.settings import api_settings
 
@@ -27,7 +28,16 @@ class JoinCommunitySerializer(serializers.Serializer):
                 api_settings.NON_FIELD_ERRORS_KEY: ["Wrong password."]
             })
 
+    def enforce_joined_communities_limit(self, user):
+        num_joined_communities = user.membership_set.filter(is_admin=False).count()
+        if num_joined_communities >= settings.QUIZZZ_JOINED_COMMUNITIES_LIMIT:
+            raise serializers.ValidationError(
+                "You have reached the limit for communities joined."
+            )
+
     def create_membership(self, user, community):
+        self.enforce_joined_communities_limit(user)
+
         try:
             return community.join(user=user)
         except MemberLimitException:
@@ -53,13 +63,23 @@ class CommunitySerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['time_created']
     
+    def enforce_created_communities_limit(self, user):
+        num_created_communities = user.membership_set.filter(is_admin=True).count()
+        if num_created_communities >= settings.QUIZZZ_CREATED_COMMUNITIES_LIMIT:
+            raise serializers.ValidationError(
+                "You have reached the limit for communities created."
+            )
+
     def create(self, validated_data):
         """
         Create a new community and become an admin there.
         Requires 'user' to be injected when calling '.save()'.
         """
         user = validated_data.pop("user")
+        self.enforce_created_communities_limit(user)
         return Community.create(user, **validated_data)
+
+
 
 
 class MembershipSerializer(serializers.ModelSerializer):

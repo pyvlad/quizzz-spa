@@ -151,7 +151,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # of its app (usually called 0001_initial); otherwise, you’ll have dependency issues.
 AUTH_USER_MODEL = 'users.CustomUser' # (app_label, model_name)
 
-        
 REST_FRAMEWORK = {
     # By default, 'rest_framework.authentication.BasicAuthentication' is 
     # the first in the list. I remove it for clarity because I am using 
@@ -168,13 +167,26 @@ REST_FRAMEWORK = {
 
     # miltipart (default) uploads don't support nesting:
     'TEST_REQUEST_DEFAULT_FORMAT': 'json',
+
+    # add throttling for each user (when logged in) / IP (when not not logged in):
+    'DEFAULT_THROTTLE_CLASSES': [
+        'quizzz.throttles.BurstRateThrottle',
+        'quizzz.throttles.SustainedRateThrottle'
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'burst': '60/minute',
+        'sustained': '1200/day',
+        'login': '10/hour',
+    }
 }
 
 
 # Custom project-specific settings:
 QUIZZZ_PASSWORD_RESET_TOKEN_VALID_SECONDS = 3600
 QUIZZZ_PASSWORD_RESET_REQUESTS_PER_EMAIL_PER_DAY = 3
-
+QUIZZZ_CREATED_COMMUNITIES_LIMIT = 5
+QUIZZZ_JOINED_COMMUNITIES_LIMIT = 20
+QUIZZZ_ROUNDS_PER_TOURNAMENT_LIMIT = 100
 QUIZZZ_CHAT_PAGE_SIZE = 2
 
 # for external links used when sending out emails:

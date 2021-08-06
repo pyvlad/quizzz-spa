@@ -1,4 +1,5 @@
 from django.urls import reverse
+from django.conf import settings
 from rest_framework import status
 from rest_framework.test import APITestCase, APITransactionTestCase
 
@@ -113,7 +114,7 @@ class CreateCommunityTest(SetupCommunityDataMixin, APITestCase):
 
         # Works for bob:
         self.login_as("bob")
-        with self.assertNumQueries(5): # (1-2) request.user (3) unique check (4-5) com & mem
+        with self.assertNumQueries(6): # (1-2) request.user (3) unique check (4) com num (5-6) com & mem
             response = get_response()
             self.assertEqual(response.status_code, status.HTTP_201_CREATED)
             self.assertListEqual(list(response.data.keys()), self.expected_keys)
@@ -135,6 +136,17 @@ class CreateCommunityTest(SetupCommunityDataMixin, APITestCase):
             })
         self.assertEqual(Community.objects.count(), self.num_communities)
 
+    def test_communities_created_limit(self):
+        """
+        User cannot create an inifinite number of communities.
+        """
+        self.login_as("ben")
+        for i in range(settings.QUIZZZ_CREATED_COMMUNITIES_LIMIT):
+            response = self.client.post(self.url, {"name": f"test-group-{i}"})
+            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        response = self.client.post(self.url, {"name": "pushthelimit"})
+        self.assert_validation_failed(response, 
+            data=["You have reached the limit for communities created."])
 
 
 class JoinCommunityTest(SetupCommunityDataMixin, APITestCase):
@@ -169,7 +181,7 @@ class JoinCommunityTest(SetupCommunityDataMixin, APITestCase):
 
         # Works for a regular non-member:
         self.login_as(self.USER)
-        with self.assertNumQueries(5): # (3) get com (4) member count (5) insert
+        with self.assertNumQueries(6): # (3) get com (4) member count (5) user memberships count (6) insert
             response = get_response()
             self.assertEqual(response.status_code, status.HTTP_200_OK)
             self.assertListEqual(list(response.data.keys()), self.expected_keys)
@@ -189,7 +201,7 @@ class JoinCommunityTest(SetupCommunityDataMixin, APITestCase):
         group_members = Membership.objects.filter(community_id=self.GROUP_ID).count()
         Community.objects.filter(pk=self.GROUP_ID).update(max_members=group_members)
         
-        with self.assertNumQueries(4):
+        with self.assertNumQueries(5):
             response = self.client.post(self.url, self.payload)
             self.assert_validation_failed(response, data={
                 "non_field_errors": ["This group has reached its member limit."]
@@ -228,6 +240,26 @@ class JoinCommunityTest(SetupCommunityDataMixin, APITestCase):
             })
         self.assertEqual(Membership.objects.count(), self.num_memberships)
 
+    def test_communities_joined_limit(self):
+        """
+        User cannot join an inifinite number of communities.
+        """
+        self.assertEqual(settings.QUIZZZ_JOINED_COMMUNITIES_LIMIT, 20)
+
+        with self.settings(QUIZZZ_JOINED_COMMUNITIES_LIMIT=3):
+            self.login_as("admin")
+            for i in range(settings.QUIZZZ_JOINED_COMMUNITIES_LIMIT):
+                response = self.client.post(reverse('communities:create-community'), {"name": f"test-group-{i}"})
+                self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+            self.login_as("ben")
+            for i in range(settings.QUIZZZ_JOINED_COMMUNITIES_LIMIT):
+                response = self.client.post(self.url, {"name": f"test-group-{i}"})
+                self.assertEqual(response.status_code, status.HTTP_200_OK)
+            response = self.client.post(self.url, self.payload)
+            self.assert_validation_failed(response, 
+                data=["You have reached the limit for communities joined."])
+
+
 
 
 class JoinAlreadyJoinedCommunityTest(SetupCommunityDataMixin, APITransactionTestCase):
@@ -253,7 +285,7 @@ class JoinAlreadyJoinedCommunityTest(SetupCommunityDataMixin, APITransactionTest
         """
         self.login_as("bob")
 
-        with self.assertNumQueries(5):
+        with self.assertNumQueries(6):
             response = self.client.post(self.url, self.payload)
             self.assert_validation_failed(response, data={
                 "non_field_errors": ["You are already a member of this group."]

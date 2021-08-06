@@ -3,6 +3,7 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 from django.utils import timezone
 from django.urls import reverse
+from django.conf import settings
 
 from quizzz.common.test_mixins import SetupTournamentsMixin, SetupRoundsMixin
 
@@ -57,7 +58,7 @@ class CreateRoundTest(SetupTournamentsMixin, APITestCase):
 
         # Group admin can create a new round, but need to finalize the quiz first:
         self.login_as("bob")
-        with self.assertNumQueries(6):
+        with self.assertNumQueries(7):
             response = get_response()
             self.assert_validation_failed(response, data={
                 "quiz": ["Quiz has not been submitted yet."]
@@ -69,7 +70,7 @@ class CreateRoundTest(SetupTournamentsMixin, APITestCase):
         quiz.save()
 
         # now it works:
-        with self.assertNumQueries(9):
+        with self.assertNumQueries(10):
             response = get_response()
             self.assertEqual(response.status_code, status.HTTP_201_CREATED)
             self.assertListEqual(list(response.data.keys()), self.expected_keys)
@@ -91,6 +92,24 @@ class CreateRoundTest(SetupTournamentsMixin, APITestCase):
             "finish_time": ["This field is required."],
             "quiz": ["This field is required."],
         })
+
+    def test_rounds_per_tournament_limit(self):
+        self.assertEqual(settings.QUIZZZ_ROUNDS_PER_TOURNAMENT_LIMIT, 100)
+
+        init_count = Round.objects.count()
+
+        # finalize quiz
+        quiz = Quiz.objects.get(pk=self.payload["quiz"])
+        quiz.is_finalized = True
+        quiz.save()
+        with self.settings(QUIZZZ_ROUNDS_PER_TOURNAMENT_LIMIT=0):
+            self.login_as("bob")
+            response = self.client.post(self.url, self.payload)
+            self.assert_validation_failed(response, data=[
+                "Too many rounds. Please start a new tournament."
+            ])
+        self.assertEqual(Round.objects.count(), init_count)
+
 
 
 
