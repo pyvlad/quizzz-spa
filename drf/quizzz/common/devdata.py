@@ -137,7 +137,7 @@ def create_quizzes():
                     question=question_obj
                 )
 
-    quiz1 = Quiz.create_with_questions(
+    quiz1 = Quiz.objects.create(
         name="Mixed Bag",
         description="Just a couple questions about counting and sounds.",
         introduction="",
@@ -172,7 +172,7 @@ def create_quizzes():
     ])
 
 
-    quiz2 = Quiz.create_with_questions(
+    quiz2 = Quiz.objects.create(
         name="Cities",
         description="How well do you know Russian cities?",
         introduction="",
@@ -207,7 +207,7 @@ def create_quizzes():
     ])
 
 
-    quiz3 = Quiz.create_with_questions(
+    quiz3 = Quiz.objects.create(
         name="Programming",
         description="Just a couple questions about counting and sounds.",
         introduction="",
@@ -242,7 +242,7 @@ def create_quizzes():
     ])
 
 
-    quiz4 = Quiz.create_with_questions(
+    quiz4 = Quiz.objects.create(
         name="Song Questions",
         description="How do famous songs answer important questions?",
         introduction="Provide the most complete answer.",
