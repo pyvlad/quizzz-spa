@@ -1,6 +1,6 @@
 from django.contrib.auth import authenticate
 from django.core.exceptions import ValidationError
-from django.contrib.auth.validators import UnicodeUsernameValidator
+from django.contrib.auth.validators import ASCIIUsernameValidator
 from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 
@@ -35,7 +35,7 @@ class NewUserSerializer(serializers.ModelSerializer):
 
 class LoginSerializer(serializers.Serializer):
     username = serializers.CharField(required=True, max_length=150, 
-        validators=[UnicodeUsernameValidator])
+        validators=[ASCIIUsernameValidator])
     password = serializers.CharField(required=True, max_length=64)
 
     def validate(self, data):

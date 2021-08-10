@@ -37,6 +37,17 @@ class LowercaseEmailField(models.EmailField):
         return value
 
 
+class LowercaseCharField(models.CharField):
+    """
+    Override CharField to convert username to lowercase before saving.
+    """
+    def to_python(self, value):
+        """ Convert char to lowercase. """
+        value = super().to_python(value)
+        # Value can be None so check that it's a string before lowercasing.
+        return value.lower() if isinstance(value, str) else value
+
+
 class CustomUser(AbstractUser):
     # remove default 'blank=True' and add unique=True:
     email = LowercaseEmailField(_('email address'), unique=True, null=False, blank=False)
@@ -52,6 +63,17 @@ class CustomUser(AbstractUser):
 
     # get rid of unicode in usernames:
     username_validator = ASCIIUsernameValidator() 
+    # field copied from AbstractBaseUser but with LowercaseCharField:
+    username = LowercaseCharField(
+        _('username'),
+        max_length=150,
+        unique=True,
+        help_text=_('Required. 150 characters or fewer. Lower-case letters, digits and @/./+/-/_ only.'),
+        validators=[username_validator],
+        error_messages={
+            'unique': _("A user with that username already exists."),
+        },
+    )
 
     class Meta:
         db_table = "users"
