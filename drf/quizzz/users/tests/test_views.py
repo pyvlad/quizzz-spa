@@ -214,6 +214,34 @@ class RegistrationViewTest(BaseTestUtils, APITestCase):
             })
         self.assertEqual(CustomUser.objects.count(), 0)
 
+    def test_email_plus_suffix_behaviour(self):
+        """
+        Provided email suffix is stripped.
+        Providing same email with different suffix means duplicate user. 
+        """
+        self.assertEqual(CustomUser.objects.filter(email="bob@example.com").count(), 0)
+       
+        # a. create user 'bob'
+        payload = self.payload.copy()
+        payload["email"] = "bob+1@example.com"
+        response = self.client.post(self.url, payload)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(CustomUser.objects.count(), 1)
+        self.assertEqual(CustomUser.objects.filter(email="bob@example.com").count(), 1)
+
+        # b. try creating user 'bob2'
+        self.client.logout()
+        payload = self.payload.copy()
+        payload["email"] = "bob+2@example.com"
+        response = self.client.post(self.url, payload)
+        self.assert_validation_failed(response, data={
+            "username": ["A user with that username already exists."],
+        })
+        self.assertEqual(CustomUser.objects.count(), 1)
+        self.assertEqual(CustomUser.objects.filter(email="bob@example.com").count(), 1)
+
+
+
     def test_duplicate_user(self):
         """
         Trying to create same user returns 400 with 

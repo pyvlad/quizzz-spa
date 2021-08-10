@@ -12,6 +12,16 @@ class LowercaseEmailField(models.EmailField):
     """
     Override EmailField to convert emails to lowercase before saving.
     """
+    @staticmethod
+    def clean_email_value(value):
+        """ Remove + suffix from email address if present """
+        username, domain = value.split("@", 1)
+        if "+" not in username:
+            return value
+        else:
+            clean_username, suffix = username.split("+")
+            return f"{clean_username}@{domain}"
+
     def to_python(self, value):
         """
         Convert email to lowercase.
@@ -21,7 +31,9 @@ class LowercaseEmailField(models.EmailField):
         value = super(LowercaseEmailField, self).to_python(value)
         # Value can be None so check that it's a string before lowercasing.
         if isinstance(value, str):
-            return value.lower()
+            v = value.lower()
+            v = self.clean_email_value(v)
+            return v
         return value
 
 
