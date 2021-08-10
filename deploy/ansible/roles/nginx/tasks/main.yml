@@ -47,14 +47,14 @@
         src: "{{ nginx__config_template }}"
         dest: "/etc/nginx/sites-available/{{ nginx__project_name }}"
       notify:
-      - restart nginx
+      - "restart nginx"
 
     - name: "Remove default Nginx site config"
       file:
         path: "/etc/nginx/sites-enabled/default"
         state: "absent"
       notify:
-      - restart nginx
+      - "restart nginx"
 
     - name: "Enable as available site for Nginx"
       file:
@@ -62,4 +62,4 @@
         dest: "/etc/nginx/sites-enabled/{{ nginx__project_name }}"
         state: "link"
       notify:
-      - restart nginx
+      - "restart nginx"

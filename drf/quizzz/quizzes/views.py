@@ -1,4 +1,5 @@
 from django.shortcuts import get_object_or_404
+from django.conf import settings
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import permissions
@@ -36,8 +37,8 @@ class QuizListOrCreate(APIView):
         quiz = Quiz.create_with_questions(
             user=request.user,
             community_id=community_id,
-            num_questions=NUM_QUESTIONS,
-            num_options=NUM_OPTIONS,
+            num_questions=settings.QUIZZZ_QUESTIONS_PER_QUIZ,
+            num_options=settings.QUIZZZ_OPTIONS_PER_QUESTION,
         )
         serializer = ListedQuizSerializer(quiz)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
