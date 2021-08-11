@@ -9,7 +9,7 @@ from ..views import ChatMessageList
 
 
 CHAT_PAGE_EXPECTED_KEYS = ['count', 'next', 'previous', 'results']
-MESSAGE_EXPECTED_KEYS = ['id', 'text', 'time_created', 'time_updated', 'user', "community"]
+MESSAGE_EXPECTED_KEYS = ['id', 'text', 'time_created', 'time_updated', 'user', "community", "round"]
 
 
 class ChatMessageListTest(SetupChatDataMixin, APITestCase):

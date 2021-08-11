@@ -7,14 +7,14 @@ import FormHelp from 'common/FormHelp';
 import { useSubmit } from 'common/useApi';
 
 
-const NewMessageForm = ({ groupId, onMessagePosted }) => {
+const NewMessageForm = ({ groupId, roundId, onMessagePosted }) => {
   
   // local state
   const [text, setText] = React.useState('');
 
   // submission state
   const { isLoading, formErrors, handleSubmit } = useSubmit(
-    async () => await api.postChatMessage(groupId, { text }),
+    async () => await api.postChatMessage(groupId, roundId, { text }),
     msg => onMessagePosted(msg)
   );
 

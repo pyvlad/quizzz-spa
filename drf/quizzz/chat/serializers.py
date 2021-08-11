@@ -19,5 +19,6 @@ class ChatMessageSerializer(serializers.ModelSerializer):
             # foreign keys:
             'user', 
             'community',
+            'round',
         ]
-        read_only_fields = ['id', 'time_created', 'time_updated', 'user', 'community']
+        read_only_fields = ['id', 'time_created', 'time_updated', 'user', 'community', 'round']

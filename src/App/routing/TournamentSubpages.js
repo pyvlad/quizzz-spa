@@ -10,6 +10,7 @@ import TournamentStandingsPage from 'pages/tournament/TournamentStandingsPage';
 import RoundPage from 'pages/tournament/RoundPage';
 import PlayPage from 'pages/tournament/PlayPage';
 import ReviewPage from 'pages/tournament/ReviewPage';
+import RoundChatPage from 'pages/tournament/RoundChatPage';
 import { TournamentsNavbar, ActiveTournamentNavbar } from 'common/Navbar';
 
 import ActiveTournament from '../containers/ActiveTournament';
@@ -36,6 +37,9 @@ const TournamentSubpages = ({ urlTournamentId }) => {
           />
           <Route exact path={`${path}/rounds/:roundId/review/`} 
             render={ ({match}) => <ReviewPage roundId={ parseInt(match.params.roundId) } /> }
+          />
+          <Route exact path={`${path}/rounds/:roundId/discuss/`} 
+            render={ ({match}) => <RoundChatPage roundId={ parseInt(match.params.roundId) } /> }
           />
           <Redirect to={`${path}/rounds/`} />
         </Switch>

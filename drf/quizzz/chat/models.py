@@ -10,6 +10,7 @@ class ChatMessage(TimeStampedModel):
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     community = models.ForeignKey(Community, on_delete=models.CASCADE)
+    round = models.ForeignKey('tournaments.Round', on_delete=models.CASCADE, null=True, blank=True)
 
     def __str__(self):
         return "[%r] %r" % (self.id, self.text[:20])

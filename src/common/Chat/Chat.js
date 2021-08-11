@@ -14,7 +14,7 @@ import useListUpdateDeleteViews from 'common/useListUpdateDeleteViews';
 const PAGE_SIZE = 2;
 
 
-const Chat = ({ groupId }) => {
+const Chat = ({ groupId, roundId }) => {
   
   // pagination
   const [page, setPage] = React.useState(1);
@@ -23,10 +23,10 @@ const Chat = ({ groupId }) => {
   // fetch array of messages on mount
   const fetchFunc = React.useCallback(
     async () => {
-      const data = await api.getCommunityChatMessages(groupId, page);
+      const data = await api.getCommunityChatMessages(groupId, roundId, page);
       setLastPage(Math.max(1, Math.ceil(data["count"] / PAGE_SIZE)));
       return data["results"];
-    }, [groupId, page, setLastPage]
+    }, [groupId, roundId, page, setLastPage]
   )
   const [messages, setMessages] = useFetchedListOfItems(fetchFunc);
 
@@ -69,6 +69,7 @@ const Chat = ({ groupId }) => {
         </button>
         <NewMessageForm 
           groupId={ groupId } 
+          roundId={ roundId }
           onMessagePosted={ handleMessageUpdated } 
         />
       </div>

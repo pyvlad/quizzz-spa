@@ -72,6 +72,19 @@ const RoundTable = ({ round, groupId }) => {
           }
         </td>
       </tr>
+      {
+        (isPlaySubmitted || isAuthor) 
+        ? <tr>
+            <td>Chat</td>
+            <td>
+              <Link 
+                className="btn btn--secondary my-3"
+                to={ urlFor("DISCUSS_ROUND", { groupId, tournamentId, roundId }) }
+              >Open</Link>
+            </td>
+          </tr>
+        : null
+      }
     </tbody>
   </table>
 }

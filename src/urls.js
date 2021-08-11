@@ -47,6 +47,8 @@ const urlFor = (label, params) => {
       return `/group/${params.groupId}/tournaments/${params.tournamentId}/rounds/${params.roundId}/play/`
     case 'REVIEW_ROUND':
       return `/group/${params.groupId}/tournaments/${params.tournamentId}/rounds/${params.roundId}/review/`
+    case 'DISCUSS_ROUND':
+      return `/group/${params.groupId}/tournaments/${params.tournamentId}/rounds/${params.roundId}/discuss/`
 
     // default
     default:
