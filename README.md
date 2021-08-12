@@ -5,6 +5,24 @@
 Quizzz is a web application where users can participate in quiz competitions 
 with people that they know.
 
+[LIVE VERSION](https://quizzz.su)
+
+This is a hobby/study project where I wanted to combine in a single project multiple technologies that I've learned in recent months and years.
+This version of the application is written as a Single-Page Application (SPA) using the following technologies and assumptions:
+1. Frontend:
+    - Create-React-App as frontend toolchain
+    - React-Redux for global state management
+    - React-router-dom for navigation
+    - Custom CSS with Sass (mostly copied from the previous version - no CSS framework used)
+2. Backend:
+    - Django-Rest-Framework for backend API
+3. Deployment:
+    - Ansible playbook for an automated single-server deployment (with Nginx, Gunicorn, Postgresql, Postfix, Memcached); 
+    - 2 environments are assumed: production (Ubuntu VPS) and staging (Ubuntu Vagrant VM).
+
+The [original version](https://github.com/pyvlad/quizzz) was written as a classical monolith application with Flask & Sqlalchemy on the backend, custom CSS built with Sass, some simple plain Javascript functionality added here and there, and the Ansible playbook for a one-server deployment.
+
+
 # Frontend
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
