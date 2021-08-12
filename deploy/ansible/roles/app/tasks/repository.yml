@@ -18,9 +18,9 @@
 - debug: var=app__git_push_ssh_command
 - debug: var=app__remote_host
 
-- name: "Push master branch from control machine to remote repository"
+- name: "Push main branch from control machine to remote repository"
   delegate_to: localhost
-  command: "git push ssh://{{ app__remote_user }}@{{ app__remote_host }}:/{{ app__repo_remote_bare_path }} master"
+  command: "git push ssh://{{ app__remote_user }}@{{ app__remote_host }}:/{{ app__repo_remote_bare_path }} main"
   args:
     chdir: "{{ app__repo_local_path }}"
   environment:
@@ -35,3 +35,4 @@
   git:
     repo: "{{ app__repo_remote_bare_path }}"
     dest: "{{ app__repo_remote_clone_path }}"
+    version: main
