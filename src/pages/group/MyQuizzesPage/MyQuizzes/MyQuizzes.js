@@ -14,7 +14,7 @@ const MyQuizzes = ({ onEditQuiz }) => {
   const groupId = useSelector(selectActiveGroupId);
 
   const fetchFunc = React.useCallback(async () => await api.getMyQuizzes(groupId), [groupId]);
-  const [quizzes] = useFetchedListOfItems(fetchFunc);
+  const [quizzes, , isLoading] = useFetchedListOfItems(fetchFunc);
 
   // define filters
   const filters = ["submitted", "unfinished", "all"];
@@ -42,17 +42,19 @@ const MyQuizzes = ({ onEditQuiz }) => {
   });
 
   return (
-    <React.Fragment>
-      <FilterTabs 
-        filters={ filters } 
-        activeFilter={ activeFilter } 
-        onSelectFilter={ setActiveFilter } 
-      />
-      <MyQuizzesTable 
-        quizzes={ rows } 
-        onEditQuiz={ onEditQuiz } 
-      />
-    </React.Fragment>
+    isLoading 
+    ? "Please, wait..."
+    : <React.Fragment>
+        <FilterTabs 
+          filters={ filters } 
+          activeFilter={ activeFilter } 
+          onSelectFilter={ setActiveFilter } 
+        />
+        <MyQuizzesTable 
+          quizzes={ rows } 
+          onEditQuiz={ onEditQuiz } 
+        />
+      </React.Fragment>
   )
 }
 

@@ -48,43 +48,34 @@ const RoundTable = ({ round, groupId }) => {
         <td>{ moment(finishTime).format("MMM D, YYYY [at] h:mm a") }</td>
       </tr>
       <tr>
-        <td className="pr-4">
-          Your Action
-        </td>
-        <td>
+        <td colSpan="2" className="py-2">
           {
             (!(isPlaySubmitted || isAuthor) && status === "current")
             ? <Link 
-                className="btn btn--primary my-3" 
+                className="btn btn--primary" 
                 to={ urlFor("PLAY_ROUND", {groupId, tournamentId, roundId}) }
               >
                 { isPlayStarted ? "Continue Quiz" : "Take Quiz" }
               </Link>
             : ((isPlaySubmitted || isAuthor) 
                 ? <Link 
-                    className="btn btn--secondary my-3"
+                    className="btn btn--primary"
                     to={ urlFor("REVIEW_ROUND", {groupId, tournamentId, roundId}) }
                   >
-                    Review Quiz
+                    Review
                   </Link>
                 : null
               )
           }
+          {
+            (isPlaySubmitted || isAuthor) ?
+            <Link className="btn btn--secondary"
+              to={ urlFor("DISCUSS_ROUND", { groupId, tournamentId, roundId }) }
+            >Discuss</Link>
+            : null
+          }
         </td>
       </tr>
-      {
-        (isPlaySubmitted || isAuthor) 
-        ? <tr>
-            <td>Chat</td>
-            <td>
-              <Link 
-                className="btn btn--secondary my-3"
-                to={ urlFor("DISCUSS_ROUND", { groupId, tournamentId, roundId }) }
-              >Open</Link>
-            </td>
-          </tr>
-        : null
-      }
     </tbody>
   </table>
 }

@@ -35,7 +35,7 @@ const TournamentsPage = () => {
 
   // fetch tournaments array on page mount
   const fetchFunc = React.useCallback(async () => await api.getCommunityTournaments(groupId), [groupId])
-  const [tournaments, setTournaments] = useFetchedListOfItems(fetchFunc);
+  const [tournaments, setTournaments, isLoading] = useFetchedListOfItems(fetchFunc);
   
   // views and handlers
   const {
@@ -84,29 +84,35 @@ const TournamentsPage = () => {
             </FormWrapper>
           </div>
         : <div>
-            {
-              loggedAsGroupAdmin 
-              ? <button 
-                  className="btn btn--primary mb-3"
-                  onClick={ () => setEditedTournamentId(0) }
-                >
-                  Create Tournament
-                </button>
-              : null
-            }
             <h3 className="heading heading--2">
+              {
+                loggedAsGroupAdmin 
+                ? <button 
+                    className="btn btn--primary btn--fab mr-2"
+                    onClick={ () => setEditedTournamentId(0) }
+                  >
+                    +
+                  </button>
+                : null
+              }
               Tournament List
             </h3>
-            <FilterTabs 
-              filters={ filters } 
-              activeFilter={ activeFilter } 
-              onSelectFilter={ setActiveFilter } 
-            />
-            <TournamentsTable 
-              tournaments={ rows } 
-              loggedAsGroupAdmin={ loggedAsGroupAdmin } 
-              onEditTournament={ tournamentId => setEditedTournamentId(tournamentId) }
-            />
+            {
+              isLoading 
+              ? "Please, wait..."
+              : <React.Fragment>
+                  <FilterTabs 
+                    filters={ filters } 
+                    activeFilter={ activeFilter } 
+                    onSelectFilter={ setActiveFilter } 
+                  />
+                  <TournamentsTable 
+                    tournaments={ rows } 
+                    loggedAsGroupAdmin={ loggedAsGroupAdmin } 
+                    onEditTournament={ tournamentId => setEditedTournamentId(tournamentId) }
+                  />
+                </React.Fragment>
+            }
           </div>
       }
     </div>

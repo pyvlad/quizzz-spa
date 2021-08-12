@@ -8,24 +8,34 @@ const FormCheckboxInput = ({
   labelText, 
   value, 
   onValueChange,
-  errors
+  errors,
+  helpText=null,
 }) => {
   
   const [htmlId] = React.useState(_uniqueId('html-id-'));
 
   return (
-    <div className="form__item">
-      <input 
-        type="checkbox"
-        checked={ value } 
-        onChange={ onValueChange }
-        className="form__input"
-        id={ htmlId }
-      />
-      <label htmlFor={ htmlId }>
-        { labelText }
-      </label>
+    <div className="form__item form__item--outlined">
+      <div style={{ display: "flex" }}>
+        <input 
+          type="checkbox"
+          checked={ value } 
+          onChange={ onValueChange }
+          id={ htmlId }
+          style={{ width: "1rem", height: "1rem" }}
+        />
+        <label htmlFor={ htmlId } className="ml-2">
+          { labelText }
+        </label>
+      </div>
       <FormFieldErrors errors={ errors } />
+      {
+        helpText
+        ? <div className="form__input-help">
+            { helpText }
+          </div>
+        : null
+      }
     </div>
   )
 }

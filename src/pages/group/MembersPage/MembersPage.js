@@ -36,7 +36,7 @@ const MembersPage = () => {
 
   // fetch members on component mount
   const apiFunc = React.useCallback(async () => await api.getCommunityMembers(groupId), [groupId]);
-  const [members, setMembers] = useFetchedListOfItems(apiFunc);
+  const [members, setMembers, isLoading] = useFetchedListOfItems(apiFunc);
 
   // update/delete/back views
   const getItemId = item => item.user.id;
@@ -76,11 +76,15 @@ const MembersPage = () => {
             <h3 className="heading heading--2">
               Members List
             </h3>
-            <MembersTable 
-              members={ members } 
-              loggedAsGroupAdmin={ loggedAsGroupAdmin } 
-              onEditMember={ userId => setEditedItemId(userId) }
-            />
+            {
+              isLoading 
+              ? "Please, wait..."
+              : <MembersTable 
+                  members={ members } 
+                  loggedAsGroupAdmin={ loggedAsGroupAdmin } 
+                  onEditMember={ userId => setEditedItemId(userId) }
+                />
+            }
           </div>
       }
     </div>

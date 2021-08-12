@@ -1,9 +1,11 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 import { useSelector } from 'react-redux';
-import { selectActiveGroupId, selectActiveTournamentId } from 'state';
+import { selectActiveGroupId, selectActiveTournamentId, selectTournament } from 'state';
 import { selectMyMembershipByGroupId } from 'state';
 import * as api from 'api';
+import urlFor from 'urls';
 
 import RoundsTable from './Table';
 import FormWrapper from './FormWrapper';
@@ -20,6 +22,7 @@ const TournamentRoundsPage = () => {
   // page parameters
   const groupId = useSelector(selectActiveGroupId);
   const tournamentId = useSelector(selectActiveTournamentId);
+  const tournamentName = useSelector(selectTournament).name;
   const membership = useSelector(state => selectMyMembershipByGroupId(state, groupId));
   const { is_admin: loggedAsGroupAdmin } = membership;
 
@@ -30,7 +33,7 @@ const TournamentRoundsPage = () => {
     async () => await api.getTournamentRounds(groupId, tournamentId), 
     [groupId, tournamentId]
   )
-  const [rounds, setRounds] = useFetchedListOfItems(fetchFunc);
+  const [rounds, setRounds, isLoading] = useFetchedListOfItems(fetchFunc);
 
   // page views and handlers
   const {
@@ -58,7 +61,7 @@ const TournamentRoundsPage = () => {
   return (
     <div>
       <h2 className="heading heading--1">
-        Tournament Rounds
+        Tournament: "{ tournamentName }"
       </h2>
       {
         (editedRoundId !== null)
@@ -82,29 +85,41 @@ const TournamentRoundsPage = () => {
             </FormWrapper>
           </div>
         : <div>
-            {
-              loggedAsGroupAdmin 
-              ? <button 
-                  className="btn btn--primary mb-3"
-                  onClick={ () => setEditedRoundId(0) }
-                >
-                  Create Round
-                </button>
-              : null
-            }
             <h3 className="heading heading--2">
+              {
+                loggedAsGroupAdmin 
+                ? <button 
+                    className="btn btn--primary btn--fab mr-2"
+                    onClick={ () => setEditedRoundId(0) }
+                  >
+                    +
+                  </button>
+                : null
+              }
               Round List
             </h3>
-            <FilterTabs 
-              filters={ filters } 
-              activeFilter={ activeFilter } 
-              onSelectFilter={ setActiveFilter } 
-            />
-            <RoundsTable 
-              rounds={ rows } 
-              loggedAsGroupAdmin={ loggedAsGroupAdmin } 
-              onEditRound={ roundId => setEditedRoundId(roundId) }
-            />
+            <div className="my-2 text-right">
+              <Link to={ urlFor("TOURNAMENT_STANDINGS", {groupId, tournamentId}) } 
+                    className="link">
+                View Tournament Standings
+              </Link>
+            </div>
+            {
+              isLoading 
+              ? "Please, wait..."
+              : <React.Fragment>
+                  <FilterTabs 
+                    filters={ filters } 
+                    activeFilter={ activeFilter } 
+                    onSelectFilter={ setActiveFilter } 
+                  />
+                  <RoundsTable 
+                    rounds={ rows } 
+                    loggedAsGroupAdmin={ loggedAsGroupAdmin } 
+                    onEditRound={ roundId => setEditedRoundId(roundId) }
+                  />
+                </React.Fragment>              
+            }
           </div>
       }
     </div>

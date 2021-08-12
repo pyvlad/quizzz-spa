@@ -3,7 +3,6 @@ import * as api from 'api';
 
 import FormFieldErrors from 'common/FormFieldErrors';
 import FormHeader from 'common/FormHeader';
-import FormHelp from 'common/FormHelp';
 import { useSubmit } from 'common/useApi';
 
 
@@ -27,9 +26,7 @@ const NewMessageForm = ({ groupId, roundId, onMessagePosted }) => {
   return (
     <form onSubmit={ handleSubmit } className="form">
       <FormFieldErrors errors={ nonFieldErrors } />
-      <FormHeader text="Compose New Message" />
-      <FormHelp text="Please enter your message below." />
-
+      <FormHeader text="Enter Your Message" />
       <div className="form__item">
         <textarea 
           className="form__textarea form__textarea--lg" 
@@ -40,7 +37,7 @@ const NewMessageForm = ({ groupId, roundId, onMessagePosted }) => {
       </div>
 
       <div className="form__item">
-        <input className="btn btn--secondary btn--block"
+        <input className="btn btn--primary btn--block"
           type="submit"
           value="Submit"
           disabled={ isLoading }

@@ -15,14 +15,21 @@ const TournamentsTable = ({ tournaments, loggedAsGroupAdmin, onEditTournament })
       </tr>
     </thead>
     <tbody>
-      { tournaments.map((t,i) => 
-        <TournamentsTableRow 
-          key={ t.id } 
-          tournament={ t } 
-          num={ i + 1 }
-          loggedAsGroupAdmin={ loggedAsGroupAdmin }
-          onEdit={ () => onEditTournament(t.id) }
-        />) 
+      { 
+        tournaments.length 
+        ? tournaments.map((t,i) => 
+          <TournamentsTableRow 
+            key={ t.id } 
+            tournament={ t } 
+            num={ i + 1 }
+            loggedAsGroupAdmin={ loggedAsGroupAdmin }
+            onEdit={ () => onEditTournament(t.id) }
+          />) 
+        : <tr className={ "table__tr table__tr--odd" }>
+            <td className="table__td" colSpan="5">
+              Nothing here.
+            </td>
+          </tr>
       }
     </tbody>
   </table>

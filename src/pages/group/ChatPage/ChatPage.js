@@ -30,7 +30,7 @@ const ChatPage = () => {
       </h2>
       <div className="container">
         <div className="row">
-          <div className="col-12 col-lg-8 col-lg-offset-2">
+          <div className="col-12 col-lg-8">
             <Chat groupId={ groupId } />
           </div>
         </div>

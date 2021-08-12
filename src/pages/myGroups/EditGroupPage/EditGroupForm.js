@@ -83,25 +83,34 @@ const EditGroupForm = ({ groupId }) => {
     <React.Fragment>
       <Form onSubmit={ handleSubmit }>
         <FormFieldErrors errors={ nonFieldErrors } />
-        <FormHeader text={ community ? 'Edit' : 'Create' } />
-        <FormHelp text='Please fill in the form below and hit "save".' />
+        <FormHeader text={ community ? 'Edit Group' : 'Create Group' } />
+        <FormHelp text='Please fill in the form below and submit.' />
         <FormTextInput 
           labelText="Name:" 
           value={ name }
           onValueChange={ (e) => setName(e.target.value) }
           errors={ nameErrors }
+          helpText="This field is required and must be unique across the website."
         />
         <FormTextInput 
           labelText="Password:" 
           value={ password }
           onValueChange={ (e) => setPassword(e.target.value) }
           errors={ passwordErrors }
+          helpText={`
+            Password is optional - use it if you want to prevent strangers 
+            from joining in by guessing the group name.
+          `}
         />
         <FormCheckboxInput 
-          labelText="Require approval of new members from group admins?"
+          labelText="Require approval of new members by group admin?"
           value={ approve }
           onValueChange={ (e) => setApprove(e.target.checked) }
           errors={ approveErrors }
+          helpText={`
+            If you select this option, no one will be able to join in 
+            until manually approved by the group admin.
+          `}
         />
         <FormSubmitButton 
           text="Submit"

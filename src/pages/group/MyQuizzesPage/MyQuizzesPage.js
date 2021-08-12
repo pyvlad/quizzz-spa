@@ -14,10 +14,10 @@ const MyQuizzesPage = () => {
 
   const groupId = useSelector(selectActiveGroupId);
   
-  useGroupPageTitle(groupId, "My Quizzes");
+  useGroupPageTitle(groupId, "Your Quizzes");
 
   const getItem = React.useCallback(() => ({
-    text: "My Quizzes", 
+    text: "Your Quizzes", 
     url: urlFor("GROUP_MY_QUIZZES", {groupId}), 
     isName: false
   }), [groupId]);

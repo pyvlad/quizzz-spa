@@ -10,8 +10,7 @@ import { useFetchedListOfItems } from 'common/useApi';
 import useListUpdateDeleteViews from 'common/useListUpdateDeleteViews';
 
 
-
-const PAGE_SIZE = 2;
+const PAGE_SIZE = (process.env.NODE_ENV === "development") ? 2 : 10;
 
 
 const Chat = ({ groupId, roundId }) => {
@@ -28,7 +27,7 @@ const Chat = ({ groupId, roundId }) => {
       return data["results"];
     }, [groupId, roundId, page, setLastPage]
   )
-  const [messages, setMessages] = useFetchedListOfItems(fetchFunc);
+  const [messages, setMessages, isLoading] = useFetchedListOfItems(fetchFunc);
 
   // page views and handlers
   const {
@@ -41,16 +40,18 @@ const Chat = ({ groupId, roundId }) => {
   return (editedMessageId === null)
     // a. show current page messages
     ? <div>
-        <button className="btn btn--secondary" onClick={ () => setEditedMessageId(0) }>
+        <button className="btn btn--primary" onClick={ () => setEditedMessageId(0) }>
           New Message
         </button>
-        <div>
+        <div className="my-4">
           {
-            messages.length
-            ? messages.map(m => <Message key={ m.id } msg={ m } />)
-            : <p className="heading--3 my-4">
-                No messages here yet. Be the first to say something!
-              </p>
+            isLoading
+            ? "Loading..."
+            : messages.length
+              ? messages.map(m => <Message key={ m.id } msg={ m } />)
+              : <p className="heading--3 my-4">
+                  No messages here yet. Be the first to say something!
+                </p>
           }
         </div>
         <Pagination 

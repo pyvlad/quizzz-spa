@@ -9,7 +9,6 @@ import { useSubmit } from 'common/useApi';
 import FormFieldErrors from 'common/FormFieldErrors';
 import Form from 'common/Form';
 import FormHeader from 'common/FormHeader';
-import FormHelp from 'common/FormHelp';
 import FormCheckboxInput from 'common/FormCheckboxInput';
 import FormTextInput from 'common/FormTextInput';
 
@@ -51,22 +50,30 @@ const EditTournamentForm = ({ tournament={}, onTournamentUpdate }) => {
     <Form>
       <FormFieldErrors errors={ nonFieldErrors } />
       <FormHeader text={ id ? "Edit Tournament" : "New Tournament" } />
-      <FormHelp text="Please fill in the form below and hit 'save'"/>
       <FormTextInput 
         labelText="Tournament Name:"
         value={ name } 
         onValueChange={ (e) => setName(e.target.value) } 
         errors={ nameErrors }
+        helpText={`
+          For example, 'August 2021' for a time-based tournament 
+          or 'Rock Music' for a theme-based tournament. 
+        `}
       />
       <FormCheckboxInput 
         labelText="Show tournament as active?"
         value={ isActive }
         onValueChange={ (e) => setIsActive(e.target.checked) }
         errors={ isActiveErrors }  
+        helpText={`
+          Use this flag to inform others that the tournament is going on
+          or unflag to show that the tournament has either finished or 
+          not started yet.
+        `}
       />
       <div className='form__item'>
         <button 
-          className="btn btn--secondary btn--block" 
+          className="btn btn--primary btn--block" 
           onClick={ handleSubmit }
           disabled={ isLoading }
         >

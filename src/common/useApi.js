@@ -204,13 +204,13 @@ export default useApi;
 export const useFetchedListOfItems = (asyncApiFunc) => {
 /* Hook to asynchronously fetch list of items on component mount. */
   const [items, setItems] = React.useState([]);
-  const { data } = useApi(asyncApiFunc, {fetchOnMount: true, withLoadingOverlay: true});
+  const { data, isLoading } = useApi(asyncApiFunc, {fetchOnMount: true, withLoadingOverlay: true});
   
   React.useEffect(() => { 
     if (data) setItems(data); 
   }, [data, setItems]);
 
-  return [items, setItems];
+  return [items, setItems, isLoading];
 }
 
 

@@ -46,20 +46,21 @@ const JoinGroupForm = () => {
   return (
     <Form onSubmit={ handleSubmit }>
       <FormFieldErrors errors={ nonFieldErrors } />
-      <FormHeader text="Join" />
-      <FormHelp text="To join an existing group, enter group name and click submit. 
-          Enter password if the group is password-protected." />
+      <FormHeader text="Join Group" />
+      <FormHelp text="To join an existing group, enter group name and click 'join'." />
       <FormTextInput 
         labelText="Name:" 
         value={ name }
         onValueChange={ (e) => setName(e.target.value) }
         errors={ nameErrors }
+        helpText="This field is required. Case sensitive."
       />
       <FormTextInput 
         labelText="Password:" 
         value={ password }
         onValueChange={ (e) => setPassword(e.target.value) }
         errors={ passwordErrors }
+        helpText="Enter password if the group is password-protected. Leave empty otherwise."
       />
       <FormSubmitButton 
         text="Join"

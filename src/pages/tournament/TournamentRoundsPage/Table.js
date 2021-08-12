@@ -16,14 +16,21 @@ const RoundsTable = ({ rounds, loggedAsGroupAdmin, onEditRound }) => (
       </tr>
     </thead>
     <tbody>
-      { rounds.map((item,i) => 
-        <RoundsTableRow 
-          key={ item.id } 
-          round={ item } 
-          num={ i + 1 }
-          loggedAsGroupAdmin={ loggedAsGroupAdmin }
-          onEdit={ () => onEditRound(item.id) }
-        />) 
+      { 
+        rounds.length 
+        ? rounds.map((item,i) => 
+          <RoundsTableRow 
+            key={ item.id } 
+            round={ item } 
+            num={ i + 1 }
+            loggedAsGroupAdmin={ loggedAsGroupAdmin }
+            onEdit={ () => onEditRound(item.id) }
+          />) 
+        : <tr className={ "table__tr table__tr--odd" }>
+            <td className="table__td" colSpan="6">
+              Nothing here.
+            </td>
+          </tr>
       }
     </tbody>
   </table>

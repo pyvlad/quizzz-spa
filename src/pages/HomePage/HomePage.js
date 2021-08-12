@@ -33,20 +33,21 @@ const HomePage = () => {
               Set up an account and log in to the website.
             </li>
             <li className="my-2">
-              Create a group and tell its name to other people to join the group. 
-              Or, if someone has sent you an existing group's name, use it to join the group.
+              Create a group and tell its name to your friends. 
+              Or, if someone has sent you an existing group's name, use it to join in.
             </li>
             <li className="my-2">
-              Within a group, each group member can create quizzes and submit 
-              to group admins for use in tournaments.
+              Group members can create quizzes and submit to group admins 
+              for use in tournaments.
             </li>
             <li className="my-2">
-              Group admins can set up quiz tournaments and schedule quizzes 
-              submitted by group members as tournament rounds.
+              Group admins can set up quiz tournaments 
+              and schedule submitted quizzes as tournament rounds.
             </li>
             <li className="my-2">
-              Group members can play quizzes submitted by others, view round and 
-              tournament standings, and discuss each quiz only with people who already took it.
+              Group members can play quizzes submitted by others, 
+              view round and tournament standings, 
+              and discuss each quiz after they take it.
             </li>
           </ol>
         </div>
