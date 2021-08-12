@@ -55,3 +55,7 @@ export {
   submitRound,
   reviewRound,
 } from './plays';
+
+export {
+  fetchQuestionsFromOpenTriviaDB,
+} from './openTriviaDB';

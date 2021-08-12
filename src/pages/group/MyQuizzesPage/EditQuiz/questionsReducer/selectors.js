@@ -19,6 +19,5 @@ export const selectQuestionsToSubmit = (state) => {
       }
     })
   })
-  console.log(questions);
   return questions;
 }
