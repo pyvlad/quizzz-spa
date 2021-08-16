@@ -28,9 +28,9 @@ const EmailNotConfirmedPage = () => {
     <div className="container">
       <div className="row">
         <div className="col-sm-offset-2 col-sm-8 bg-grey p-4">
-          <h1 className="heading heading--1">
+          <h2 className="heading heading--1">
             Confirm Your Email
-          </h1>
+          </h2>
           <p className="my-3">
             Dear User,
             <br/><br/>

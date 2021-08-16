@@ -1,3 +1,4 @@
+import 'normalize.css';
 import 'styles/_reset.scss';
 import 'styles/bg.scss';
 import 'styles/btn.scss';
