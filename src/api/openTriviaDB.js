@@ -1,10 +1,16 @@
 import { shuffleArray } from 'utils';
 
 
-export async function fetchQuestionsFromOpenTriviaDB(originalQuiz) {
+export async function fetchQuestionsFromOpenTriviaDB(originalQuiz, difficulty, category) {
 
   const numQuestions = originalQuiz.questions.length;
-  const url = `https://opentdb.com/api.php?amount=${numQuestions}&type=multiple&encode=base64`;
+  let url = `https://opentdb.com/api.php?amount=${numQuestions}&type=multiple&encode=base64`;
+  if (difficulty && difficulty !== "any") {
+    url += "&difficulty=" + difficulty;
+  };
+  if (category && category !== "any") {
+    url += "&category=" + category;
+  };
 
   const response = await fetch(url);
   const OTDBData = await response.json();
