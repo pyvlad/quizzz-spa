@@ -24,15 +24,17 @@ const QuizDeleteButton = ({ quizId, groupId, onFinished }) => {
     <React.Fragment>
       <FormFieldErrors errors={ nonFieldErrors } />
       <div className='form__item bg-grey'>
-        <button 
-          className="btn btn--red btn--mw150" 
-          onClick={ handleDeleteWithConfirm }
-          disabled={ isLoading }
-        >
-          Delete
-        </button>
-        <div className='form__help'>
-          Delete the quiz.
+        <div style={{ display: "flex", alignItems: "center"}}>
+          <button 
+            className="btn btn--red btn--mw150" 
+            onClick={ handleDeleteWithConfirm }
+            disabled={ isLoading }
+          >
+            Delete
+          </button>
+          <div className='form__help p-2'>
+            Delete this quiz.
+          </div>
         </div>
       </div>
     </React.Fragment>

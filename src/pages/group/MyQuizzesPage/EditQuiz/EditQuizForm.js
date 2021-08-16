@@ -89,9 +89,7 @@ const EditQuizForm = ({ quiz=null, quizId, handleDone, groupId }) => {
       <Form>
         <FormFieldErrors errors={ nonFieldErrors } />
         <FormHeader text="Create Quiz" />
-        <FormHelp text="Please fill in the form below and hit 'save'.
-            A saved quiz will remain available for updates 
-            until you 'submit' it for a group competition." />
+        <FormHelp text="Fill this form to create a quiz." />
         <FormTextInput 
           labelText="Quiz Name:"
           value={ name } 

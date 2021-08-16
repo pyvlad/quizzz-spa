@@ -41,8 +41,11 @@ const EditQuiz = ({ quizId, handleDone }) => {
     ? <div>Loading...</div>
     : <div>
         <div style={{ display: "flex", justifyContent: "space-between" }}>
-          <button className="btn btn--primary" onClick={ handleDone }>
-            Back
+          <button 
+            onClick={ handleDone } 
+            className="btn btn--grey btn--mw150"
+          >
+            ⏎ back
           </button>
           { 
             editedQuiz 
