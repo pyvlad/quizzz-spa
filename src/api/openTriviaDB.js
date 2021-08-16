@@ -1,3 +1,6 @@
+import { shuffleArray } from 'utils';
+
+
 export async function fetchQuestionsFromOpenTriviaDB(originalQuiz) {
 
   const numQuestions = originalQuiz.questions.length;
@@ -29,10 +32,11 @@ function OTDBQuestionsToQuiz(originalQuizQuestions, OTDBQuestions) {
   originalQuizQuestions.forEach((oldQuestion,i) => {
 
     const OTDBQuestion = OTDBQuestions[i];
-    const OTDBQuestionOptions = [
+    const OTDBQuestionOptions = shuffleArray([
       OTDBQuestion["correct_answer"], 
       ...OTDBQuestion["incorrect_answers"]
-    ];
+    ]);
+
 
     const newQuestion = {
       explanation: "",
