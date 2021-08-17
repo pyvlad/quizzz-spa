@@ -8,14 +8,15 @@ with people that they know.
 [LIVE VERSION](https://quizzz.su)
 
 This is a hobby/study project where I wanted to combine in a single project multiple technologies that I've learned in recent months and years.
+
 This version of the application is written as a Single-Page Application (SPA) using the following technologies and assumptions:
 1. Frontend:
     - Create-React-App as frontend toolchain
     - React-Redux for global state management
-    - React-router-dom for navigation
+    - React Router for navigation
     - Custom CSS with Sass (mostly copied from the previous version - no CSS framework used)
 2. Backend:
-    - Django-Rest-Framework for backend API
+    - Django REST Framework for backend API
 3. Deployment:
     - Ansible playbook for an automated single-server deployment (with Nginx, Gunicorn, Postgresql, Postfix, Memcached); 
     - 2 environments are assumed: production (Ubuntu VPS) and staging (Ubuntu Vagrant VM).
@@ -44,11 +45,11 @@ In short, Create React App is an officially supported way to create *single-page
 
 # Backend 
 
-Backend is developed with the Django-Rest-Framework at './drf'.
+Backend is developed with Django REST Framework at './drf'.
 
 ## Useful backend commands
 
-Define `drf_venv` in an `.nrpmc` file (as a path to the /bin directory 
+Define `drf_venv` in an `.npmrc` file (as a path to the /bin directory 
 of the respective virtual environment) and run API during development:
 ### `$ npm run drf` 
 

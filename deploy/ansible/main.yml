@@ -52,45 +52,45 @@
   # to all tasks within the play before and after the role.
 
   roles:
-    # - "firewall"
+    - "firewall"
 
-    # - role: "ssl"
-    #   vars:
-    #     ssl__local_crt: "{{ ssl['dir_local'] }}/{{ ssl['crt'] }}"
-    #     ssl__local_key: "{{ ssl['dir_local'] }}/{{ ssl['key'] }}"
-    #     ssl__remote_dir: "{{ ssl['dir_remote'] }}"
-    #     ssl__remote_crt: "{{ ssl['dir_remote'] }}/{{ ssl['crt'] }}"
-    #     ssl__remote_key: "{{ ssl['dir_remote'] }}/{{ ssl['key'] }}"
+    - role: "ssl"
+      vars:
+        ssl__local_crt: "{{ ssl['dir_local'] }}/{{ ssl['crt'] }}"
+        ssl__local_key: "{{ ssl['dir_local'] }}/{{ ssl['key'] }}"
+        ssl__remote_dir: "{{ ssl['dir_remote'] }}"
+        ssl__remote_crt: "{{ ssl['dir_remote'] }}/{{ ssl['crt'] }}"
+        ssl__remote_key: "{{ ssl['dir_remote'] }}/{{ ssl['key'] }}"
 
-    # - role: "nginx"
-    #   vars:
-    #     nginx__project_name: "{{ project_name }}"
-    #     nginx__static_root: "{{ static_root }}"
-    #     nginx__http_host: "{{ http_host }}"
-    #     nginx__wsgi_host: "{{ wsgi['host'] }}"
-    #     nginx__wsgi_port: "{{ wsgi['port'] }}"
-    #     nginx__use_ssl: "{{ ssl['enable_https'] }}"
-    #     nginx__ssl_crt: "{{ ssl['dir_remote'] }}/{{ ssl['crt'] }}"
-    #     nginx__ssl_key: "{{ ssl['dir_remote'] }}/{{ ssl['key'] }}"
+    - role: "nginx"
+      vars:
+        nginx__project_name: "{{ project_name }}"
+        nginx__static_root: "{{ static_root }}"
+        nginx__http_host: "{{ http_host }}"
+        nginx__wsgi_host: "{{ wsgi['host'] }}"
+        nginx__wsgi_port: "{{ wsgi['port'] }}"
+        nginx__use_ssl: "{{ ssl['enable_https'] }}"
+        nginx__ssl_crt: "{{ ssl['dir_remote'] }}/{{ ssl['crt'] }}"
+        nginx__ssl_key: "{{ ssl['dir_remote'] }}/{{ ssl['key'] }}"
 
-    # - role: "postfix"
-    #   vars:
-    #     postfix__host: "{{ postfix_host }}"
-    #     postfix__ssl_crt: "{{ ssl['dir_remote'] }}/{{ ssl['crt'] }}"
-    #     postfix__ssl_key: "{{ ssl['dir_remote'] }}/{{ ssl['key'] }}"
+    - role: "postfix"
+      vars:
+        postfix__host: "{{ postfix_host }}"
+        postfix__ssl_crt: "{{ ssl['dir_remote'] }}/{{ ssl['crt'] }}"
+        postfix__ssl_key: "{{ ssl['dir_remote'] }}/{{ ssl['key'] }}"
 
-    # - role: "python"
-    #   vars:
-    #     python__major_version: "{{ python['major_version'] }}"
-    #     python__minor_version: "{{ python['minor_version'] }}"
-    #     python__tgz_md5: "{{ python['tgz_md5'] }}"
-    #     python__ubuntu_distro: "{{ ubuntu_distro }}"
+    - role: "python"
+      vars:
+        python__major_version: "{{ python['major_version'] }}"
+        python__minor_version: "{{ python['minor_version'] }}"
+        python__tgz_md5: "{{ python['tgz_md5'] }}"
+        python__ubuntu_distro: "{{ ubuntu_distro }}"
 
-    # - role: "postgres"
-    #   vars:
-    #     postgres__version: "12"
-    #     postgres__user: "{{ ansible_user }}"
-    #     postgres__database: "{{ project_name }}"
+    - role: "postgres"
+      vars:
+        postgres__version: "12"
+        postgres__user: "{{ ansible_user }}"
+        postgres__database: "{{ project_name }}"
    
     - role: "app"
       vars:

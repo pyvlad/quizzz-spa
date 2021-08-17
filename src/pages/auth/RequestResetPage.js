@@ -58,7 +58,7 @@ const RequestResetForm = () => {
     <Form onSubmit={ handleSubmit }>
       <FormHeader text={"Request Password Reset"} />
       <FormHelp text={`
-        Please enter the email address you used to register with this wesbite.
+        Please enter the email address you used to register with this website.
         An email with instructions on how to select a new password will be sent to that address.`
       } />
       <FormFieldErrors errors={nonFieldErrors} />
