@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 For the checklist for staging/production enviroment, see
 https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
 """
+import os
 import json
 from pathlib import Path
 from django.core.exceptions import ImproperlyConfigured
@@ -193,3 +194,24 @@ QUIZZZ_OPTIONS_PER_QUESTION = 4
 
 # for external links used when sending out emails:
 QUIZZZ_FRONTEND_BASE_URL = "http://localhost:3000"
+
+
+# Add Sentry if "SENTRY_DSN" environment variable is set:
+SENTRY_DSN = os.environ.get("SENTRY_DSN")
+if SENTRY_DSN:
+    import sentry_sdk
+    from sentry_sdk.integrations.django import DjangoIntegration
+
+    sentry_sdk.init(
+        dsn=SENTRY_DSN,
+        integrations=[DjangoIntegration()],
+
+        # Set traces_sample_rate to 1.0 to capture 100%
+        # of transactions for performance monitoring.
+        # We recommend adjusting this value in production.
+        traces_sample_rate=1.0,
+
+        # If you wish to associate users to errors (assuming you are using
+        # django.contrib.auth) you may enable sending PII data.
+        send_default_pii=True
+    )

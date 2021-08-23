@@ -6,6 +6,8 @@
 #
 asgiref==3.3.1
     # via django
+certifi==2021.5.30
+    # via sentry-sdk
 django==3.1.7
     # via djangorestframework
 djangorestframework==3.12.4
@@ -18,5 +20,9 @@ python-dotenv==0.18.0
     # via -r requirements/main.in
 pytz==2021.1
     # via django
+sentry-sdk==1.3.1
+    # via -r requirements/main.in
 sqlparse==0.4.1
     # via django
+urllib3==1.26.6
+    # via sentry-sdk
