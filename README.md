@@ -5,8 +5,6 @@
 Quizzz is a web application where users can participate in quiz competitions 
 with people that they know.
 
-[LIVE VERSION](https://quizzz.su)
-
 This is a hobby/study project where I wanted to combine in a single project multiple technologies that I've learned in recent months and years.
 
 This version of the application is written as a Single-Page Application (SPA) using the following technologies and assumptions:
